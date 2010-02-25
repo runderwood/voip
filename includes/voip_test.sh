@@ -1,7 +1,7 @@
 #!/usr/bin/php -q
 <?php
 
-foreach (array('includes/voip_api.inc') as $file) {
+foreach (array('voip_api.inc') as $file) {
   require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . $file); 
 }
 
