@@ -19,6 +19,5 @@ echo('result: ' . print_r($result, TRUE) . "\n");
 echo("about to call Voip Drupal process inbound requests\n");
 $request['request_id'] = 'test';
 $result = voip_process_inbound_request($voip_server, $request);
-echo('result: ' . print_r($result, TRUE) . "\n");
-
+echo('result: ' . print_r($result) . "\n");
 ?>

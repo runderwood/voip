@@ -1,0 +1,38 @@
+<?
+/**
+ * @file test VOIP hooks.
+ */ 
+
+/**
+ * Implementation of hook_voip_inbound_validate().
+ */
+function tester_voip_inbound_validate($request, $response) {
+
+  // mymodule validates request...
+  $response['tester'] = 'Tester module validating inbound request.';
+  $response['tester_message'] = "Validation passes (we're not picky, we pass everybody)";
+
+  // if validation fails, do this
+  //  $response['result'] = 0;
+
+  // it's good practice to log a message with watchdog
+  $response['watchdog'] = "This is a test. Tester module validating inbound call."; // TODO give a better example. Return array? 
+
+  return $response; 
+}
+
+/**
+ * Implementation of hook_voip_inbound().
+ */
+function tester_voip_inbound($request, $response) {
+
+  // mymodule processes request...
+
+  // it's good practice to log a message with watchdog
+  $response['watchdog'] = "Foo bar baz."; // TODO give a better example. Return array? 
+
+  // mymodule's response
+  $response['tester_foo'] = 'bar';  
+
+  return $response; 
+}

@@ -18,7 +18,7 @@ Example:
  */
 function mymodule_voip_inbound_validate($request, $response) {
 
-  // mymodule processes request...
+  // mymodule validates request...
 
   // if validation fails, do this
   $response['result'] = 0;
