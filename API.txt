@@ -1,0 +1,67 @@
+hook_voip_inbound_validate()
+--------------------------------------------------------------------
+Modules can use this function to validate inbound calls. 
+
+Example: 
+
+/**
+ * Implementation of hook_voip_inbound_validate().
+ * 
+ * @param $request 
+ *   Array. TODO add more detail here. 
+ * 
+ * @param $response
+ *   Array. TODO add more detail.
+ * 
+ * @return $response
+ *   Array. $response['result'] = 0 forces validation to fail.
+ */
+function mymodule_voip_inbound_validate($request, $response) {
+
+  // mymodule processes request...
+
+  // if validation fails, do this
+  $response['result'] = 0;
+
+  // it's good practice to log a message with watchdog
+  $response['watchdog'] = "Mymodule call received a phone call on $date."; // TODO give a better example. Return array? 
+
+  return $response; 
+}
+
+hook_voip_inbound()
+---------------------------------------------------------------------
+Use this hook to pass inbound VOIP calls along to Drupal modules.
+
+Drupal modules can handle inbound calls in different ways. For example:
+ - A module can return a response to the inbound call (more on this below)
+ - @TODO Add more examples here. 
+   @TODO Make inbound calls and outbound calls available as triggers (actions).
+     Then modules can do things like this: Add a 'your subscription is about to expire'
+     message to messages being played to users who have not paid their dues. Or let 
+     people use a UI to add special messages for targetted  callers according to their interests.
+
+/**
+ * Implementation of hook_voip_inbound().
+ * 
+ * @param $request 
+ *   Array. TODO add more detail here. 
+ * 
+ * @param $response
+ *   Array. TODO add more detail.
+ * 
+ * @return $response
+ *   Array. TODO detail.
+ */
+function mymodule_voip_inbound($request, $response) {
+
+  // mymodule processes request...
+
+  // it's good practice to log a message with watchdog
+  $response['watchdog'] = "Mymodule call received a phone call on $date."; // TODO give a better example. Return array? 
+
+  // mymodule's response
+  $response['mymodule_foo'] = 'bar';  
+
+  return $response; 
+}

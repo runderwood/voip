@@ -64,7 +64,13 @@ function xmls_voip_process_inbound_request($request)
 
   }
 
+  // give modules an opportunity to validate request
+  $response = module_invoke_all('voip_inbound_validate', $request, $response);
+
   // process request
+  if ($respons['result']) {
+    $response = module_invoke_all('voip_inbound', $request, $response);
+  }   
 
   // return
   return $response;
@@ -75,3 +81,11 @@ function xmls_voip_process_inbound_request($request)
 function xmlc_voip_outbound_request($request, &$response)
 {
 }
+
+/**
+ * Implements hook_action_info().
+ */
+function voip_action_info() {
+  // TODO 
+}
+
