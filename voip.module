@@ -1,0 +1,77 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ * Enables communication between Drupal and VoIP servers.
+ */
+
+/**
+ * Implementation of hook_xmlrpc().
+ * Map external names of XML-RPC methods to PHP callback functions.
+ */
+function voip_xmlrpc() {
+  $methods = array();
+
+  $methods[] = array(
+    'voip.hello',      // External method name.
+    'xmls_voip_hello', // PHP function to run.
+    array('string', 'string'),// The return value's type, then any parameter types.
+    t('Greets XML-RPC clients by name.')  // Description.
+  );
+
+  $methods[] = array(
+    'voip.processInboundRequest',      // External method name.
+    'xmls_voip_process_inbound_request', // PHP function to run.
+    array('array', 'array'),// The return value's type, then any parameter types.
+    t('Processes incoming requests from VoIP servers.')  // Description.
+  );
+
+  return $methods;
+}
+
+/**
+ * Internal functions
+ */
+
+/**
+ * Greet a user.
+ */
+function xmls_voip_hello($name) {
+  if (!$name) {
+    return xmlrpc_error(1, t('I cannot greet you by name if you do not provide one.'));
+  }
+  return t('Hello, @name!', array('@name' => $name));
+}
+
+
+/**
+ * Process requests received from VoIP servers.
+ */
+function xmls_voip_process_inbound_request($request)
+{
+  $response = array();
+
+// TODO: return results via xmlrpc_error?
+  $response['result'] = 1; // TODO: Define constants in common .inc file
+
+  // validate request
+  if(!isset($request['request_id'])){
+    $response['result'] = 0; // TODO: Define constants in common .inc file
+  }
+  else {
+    // validate with other voip-related modules
+
+  }
+
+  // process request
+
+  // return
+  return $response;
+}
+
+
+
+function xmlc_voip_outbound_request($request, &$response)
+{
+}
