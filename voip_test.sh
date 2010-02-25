@@ -1,11 +1,11 @@
 #!/usr/bin/php -q
 <?php
 
-foreach (array('voip_api.inc') as $file) {
-  require_once($file);
+foreach (array('includes/voip_api.inc') as $file) {
+  require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . $file); 
 }
 
-$voip_server = 'http://localhost/drupal6/xmlrpc.php';
+$voip_server = 'http://localhost/pf_voip1/xmlrpc.php';
 
 echo("about to call system.listMethods\n");
 $result = xmlrpc($voip_server, 'system.listMethods');
