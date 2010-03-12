@@ -6,6 +6,43 @@
  * Enables communication between Drupal and VoIP servers.
  */
 
+
+/**
+ * Sends a command to the active voip server
+ *
+ * @param $command
+ *   The command to be executed
+ *
+ * @param $options
+ *   An array of additional options as defined by each command
+ */
+function voip_send_command($command, $options = array()) {
+  $response[status] = TRUE;
+  $voip_server = voip_default_server();
+
+  if (function_exists($voip_server['send'])) {
+    $response = $voip_server['send']($command, $options);
+  }
+
+  if ($response['status']) {
+    $rc = TRUE;
+  }
+  else {
+    $error_message = 'Executing voip command %command failed.';
+    $variables['%command'] = $command;
+    if ($response['message']) {
+      $error_message .= ' The server said '. $response['message'];
+      if (!empty($response['variables'])) {
+        $variables = array_merge($variables, $response['variables']);
+      }
+    }
+    watchdog('voip', $error_message, $variables, WATCHDOG_ERROR);
+    $rc = FALSE;
+  }
+  return $rc;
+}
+
+
 /**
  * Implementation of hook_xmlrpc().
  * Map external names of XML-RPC methods to PHP callback functions.
@@ -30,9 +67,172 @@ function voip_xmlrpc() {
   return $methods;
 }
 
+
+/**
+ * Implementation of hook_menu().
+ */
+function voip_menu() {
+  $items = array();
+
+  $items['admin/voip'] = array(
+    'title' => 'Voip Drupal',
+    'description' => 'Control how your site interacts with VoIP servers.',
+    'position' => 'right',
+    'page callback' => 'system_admin_menu_block_page',
+    'access arguments' => array('administer voip drupal framework'),
+    'file' => 'system.admin.inc',
+    'file path' => drupal_get_path('module', 'system')
+  );
+
+  $items['admin/voip/servers'] = array(
+    'title' => 'Voip server configuration',
+    'description' => 'Configure voip servers and choose the default server.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('voip_admin_default_form', NULL),
+    'access arguments' => array('administer voip drupal framework'),
+    'file' => 'voip.admin.inc',
+  );
+
+  $items['admin/voip/servers/%'] = array(
+    'title callback' => 'voip_admin_server_title',
+    'title arguments' => array(3),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('voip_admin_server_form', 3),
+    'access arguments' => array('administer voip drupal framework'),
+    'type' => MENU_CALLBACK,
+    'file' => 'voip.admin.inc',
+  );
+
+  return $items;
+}
+
+/**
+ * Implementation of hook_perm().
+ */
+function voip_perm() {
+  return array('administer voip drupal framework');
+}
+
+
+/**
+ * Implementation of hook_theme().
+ */
+function voip_theme() {
+  $items['voip_admin_default_form'] = 
+       array('arguments' => array('form' => NULL));
+
+  return $items;
+}
+
+
 /**
  * Internal functions
  */
+
+/**
+ * Voip server menu title callback.
+ */
+function voip_admin_server_title($server_id) {
+  $server = voip_servers('server', $server_id);
+  return sprintf('%s server', $server['name']);
+}
+
+/**
+ * Returns the current default voip server.
+ */
+function voip_default_server() {
+  return voip_servers('server', variable_get('voip_default_server', 'log'));
+}
+
+/**
+ * Calls hook_voip_server_info to retrieve a list of all voip servers
+ * defined in the system.
+ *
+ * Similar to the SMS framework (http://drupal.org/node/362261),
+ * hook_voip_server_info() might be defined as follows:
+ *
+ * function mymodule_voip_server_info() {
+ *   return array(
+ *     'my_voip_server_id' => array(
+ *       'name' => 'My Voip Server',
+ *       'send' => 'mymodule_send',
+ *       'receive' => TRUE,
+ *       'configure form' => 'mymodule_admin_form',
+ *       'send form' => 'mymodule_send_form',
+ *     );
+ *   );
+ * }
+ * 
+ * Where
+ *    * name - Human readable name for the voip server.
+ *    * send - Callback function that the Voip Framework will call to send a comand to the server
+ *    * receive (optional) - Set to true if the server has support for handling incoming requests
+ *    * configure form (optional) - Form function for server configuration options
+ *    * send form (optional) - Form function for adding server-specific fields to the sending form
+ *
+ *
+ *
+ * @param $op
+ *   The format in which to return the list. When set to 'server' or 'name',
+ *   only the specified server is returned. When set to 'servers' or 'names',
+ *   all servers are returned.
+ *
+ * @param $server
+ *   A server identifier string that indicates the server to return. Leave
+ *   at the default value (NULL) to return all servers.
+ *
+ * @return
+ *   Either an array of all servers or a single server, in a variable format.
+ */
+function voip_servers($op = 'servers', $server = NULL) {
+  $_servers = array();
+  $_names = array();
+
+  $server_array = module_invoke_all('voip_server_info');
+  foreach ($server_array as $identifier => $info) {
+    // retrieve server-specific configuration
+    $info['configuration'] = variable_get('voip_'. $identifier .'_settings', '');
+    $_servers[$identifier] = $info;
+    $_names[$identifier] = $info['name'];
+  }
+  asort($_names);
+
+  switch ($op) {
+    case 'servers':
+      return $_servers;
+    case 'server':
+      $rc = $_servers[$server];
+      $rc['identifier'] = $server;
+      return $rc;
+    case 'names':
+      return $_names;
+    case 'name':
+      return $_names[$server];
+  }
+}
+
+
+/**
+ * Implementation of hook_voip_server_info().
+ */
+function voip_voip_server_info() {
+  return array(
+    'log' => array(
+      'name' => t('Log only'),
+      'send' => 'voip_send_log',
+    ),
+  );
+}
+
+function voip_send_log($command, $options) {
+  watchdog('voip', 'Voip command %command sent with the following options: @options', array('%command' => $command, '@options' => print_r($options, TRUE)), WATCHDOG_INFO);
+  return array('status' => TRUE);
+}
+
+
+
+
+
 
 /**
  * Greet a user.
@@ -74,18 +274,5 @@ function xmls_voip_process_inbound_request($request)
 
   // return
   return $response;
-}
-
-
-
-function xmlc_voip_outbound_request($request, &$response)
-{
-}
-
-/**
- * Implements hook_action_info().
- */
-function voip_action_info() {
-  // TODO 
 }
 

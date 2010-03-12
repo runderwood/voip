@@ -5,7 +5,7 @@ foreach (array('voip_api.inc') as $file) {
   require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . $file); 
 }
 
-$voip_server = 'http://localhost/pf_voip1/xmlrpc.php';
+$voip_server = 'http://localhost/d6/xmlrpc.php';
 
 echo("about to call system.listMethods\n");
 $result = xmlrpc($voip_server, 'system.listMethods');
