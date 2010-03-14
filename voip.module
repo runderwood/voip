@@ -273,8 +273,8 @@ function xmls_voip_process_request($request_id, $options=array())
       // NOTE: in case of success, modules are not supposed to return 'status' set to TRUE. That would mess $response after the array_merge_recursive() below. In case of failure, modules should return 'status' set to FALSE and an appropriate 'error_msg'
       $result = call_user_func($function, $request_id, $options);
       // stop at the first execution error
-      if (isset($result) {
-        if ($result['status'] == FALSE)) {
+      if (isset($result)) {
+        if ($result['status'] == FALSE) {
           $response = array('status' => FALSE,
                             'error_msg' => $result['error_msg']);
           break;

@@ -9,10 +9,10 @@
 function tester_voip_inbound_validate($request_id, $options) {
 
   switch($request_id) {
-    case 'test':
-    case 'echo':
+    case 'test_failure':
+    case 'test_echo':
       break;
-    case 'invalid':
+    case 'test_invalid':
       $response['status'] = FALSE;
       $response['error_msg'] = 'Invalid option selected';
       break;
@@ -26,11 +26,11 @@ function tester_voip_inbound_validate($request_id, $options) {
  */
 function tester_voip_inbound($request_id, $options) {
   switch($request_id) {
-    case 'test':
+    case 'test_failure':
       $response['status'] = FALSE;
       $response['error_msg'] = 'test failure, as expected';
       break;
-    case 'echo':
+    case 'test_echo':
       // never return status == TRUE as in $response['status'] = TRUE;
       $response['echo'] = $options;
       break;

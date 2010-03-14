@@ -16,13 +16,13 @@ $result = xmlrpc($voip_server, 'voip.hello', 'John');
 echo('result: ' . print_r($result, TRUE) . "\n");
 
 
-$request_id = 'invalid';
+$request_id = 'test_invalid';
 echo("about to call voip_process_request($request_id)\n");
 $options = array('arg1' => '1', 'arg2' => 'blue');
 $result = voip_process_request($voip_server, $request_id, $options);
 echo('result: ' . print_r($result) . "\n");
 
-$request_id = 'echo';
+$request_id = 'test_echo';
 echo("about to call voip_process_request($request_id)\n");
 $options = array('arg1' => '1', 'arg2' => 'blue');
 $result = voip_process_request($voip_server, $request_id, $options);
@@ -34,7 +34,7 @@ $options = array('arg1' => '1', 'arg2' => 'blue');
 $result = voip_process_request($voip_server, $request_id, $options);
 echo('result: ' . print_r($result) . "\n");
 
-$request_id = 'test';
+$request_id = 'test_failure';
 echo("about to call voip_process_request($request_id)\n");
 $options = array('arg1' => '1', 'arg2' => 'blue');
 $result = voip_process_request($voip_server, $request_id, $options);
