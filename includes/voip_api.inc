@@ -20,10 +20,6 @@ foreach (array('common.inc', 'xmlrpc.inc') as $file) {
 // constants
 // -----------------------------------------------------------------------------
 
-define('VOIP_SUCCESS', 1);
-define('VOIP_ERROR', 0);
-// TODO: How to define other error codes?
-
 
 // -----------------------------------------------------------------------------
 // global variables
@@ -42,28 +38,24 @@ define('VOIP_ERROR', 0);
 /*
  * Sends request to be processed by Voip Drupal site.
  *
- * @param $voip_server
+ * @param $drupal_server
  *   string with the URL of the xmlrpc.php file of the Drupal site where voip.module is located.
  * 
- * @param $request
- *   array with the request to be processed.
+ * @param $request_id
+ *   Id of the request
+ *
+ * @param $options
+ *   array with the options associated with the request
  *
  * @return
  *   array with
  */
-function voip_process_inbound_request($voip_server, $request) {
-  $result['error_code'] = VOIP_SUCCESS;
-  $result = @xmlrpc($voip_server, 'voip.processInboundRequest', $request);
+function voip_process_request($drupal_server, $request_id, $options=array()) {
+  $result = @xmlrpc($drupal_server, 'voip.processRequest', $request_id, $options);
   if ($error = xmlrpc_error()) {
-    if ($error->code <= 0) {
 //TODO: Error messages should also be translated with something similar to t()
-      $error->message = 'Outgoing HTTP request failed because the socket could not be opened.';
-    }
-    $result['error_code'] = VOIP_ERROR;
-    $result['error_msg'] =  "XMLRPC error: " . $error>message . ' ('. $error->code . ').';
-  }
-  if ($result === FALSE) {
-    // if xmlrpc call fails...
+    $result = array('status' => FALSE,
+      'error_msg' =>  "XMLRPC error: " . $error->message . ' ('. $error->code . ').');
   }
   return $result;
 }

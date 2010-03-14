@@ -58,9 +58,9 @@ function voip_xmlrpc() {
   );
 
   $methods[] = array(
-    'voip.processInboundRequest',      // External method name.
-    'xmls_voip_process_inbound_request', // PHP function to run.
-    array('array', 'array'),// The return value's type, then any parameter types.
+    'voip.processRequest',      // External method name.
+    'xmls_voip_process_request', // PHP function to run.
+    array('array', 'string', 'array'),// The return value's type, then any parameter types.
     t('Processes incoming requests from VoIP servers.')  // Description.
   );
 
@@ -248,31 +248,56 @@ function xmls_voip_hello($name) {
 /**
  * Process requests received from VoIP servers.
  */
-function xmls_voip_process_inbound_request($request)
+function xmls_voip_process_request($request_id, $options=array())
 {
-  $response = array();
-
-// TODO: return results via xmlrpc_error?
-  $response['result'] = 1; // TODO: Define constants in common .inc file
-
-  // validate request
-  if(!isset($request['request_id'])){
-    $response['result'] = 0; // TODO: Define constants in common .inc file
-  }
-  else {
-    // validate with other voip-related modules
-
-  }
+  $processed = FALSE;
+  $response['status'] = TRUE;
 
   // give modules an opportunity to validate request
-  $response = module_invoke_all('voip_inbound_validate', $request, $response);
+  foreach (module_implements('voip_inbound_validate') as $module) {
+    $function = $module .'_'. 'voip_inbound_validate';
+    $result = call_user_func($function, $request_id, $options);
+    // stop at the first validation error
+    if (isset($result['status']) && ($result['status'] == FALSE)) {
+      $response = array('status' => FALSE,
+                        'error_msg' => $result['error_msg']);
+      break;
+    }
+  }
+    
+$status['debug'] = 'about to start processing';
+$status['s1'] = 'step1';
 
   // process request
-  if ($respons['result']) {
-    $response = module_invoke_all('voip_inbound', $request, $response);
+  if ($response['status']) {
+$status['s2'] = 'step2';
+    $response = NULL;
+    foreach (module_implements('voip_inbound') as $module) {
+      $function = $module .'_'. 'voip_inbound';
+      // Note: in case of success, modules are not supposed to return 'status' set to TRUE. That would mess $response after the array_merge_recursive() below. In case of failure, modules should return 'status' set to FALSE and an appropriate 'error_msg'
+      $result = call_user_func($function, $request_id, $options);
+$status['function'] = $function;
+$status['result'] = $result;
+      // stop at the first execution error
+      if (isset($result['status']) && ($result['status'] == FALSE)) {
+//      if (!$result['status']) {
+        $response = array('status' => FALSE,
+                          'error_msg' => $result['error_msg']);
+$status['s3'] = 's3';
+        break;
+      }
+$status['s4'] = 's4';
+      $response['status'] = TRUE;
+      $response = array_merge_recursive($response, $result);
+    }
+$status['s5'] = $response;
+    if (!$response) {
+$status['s6'] = 's6';
+      $response['status'] = FALSE;
+      $response['error_msg'] = 'Request not processed by any module.';
+    }
   }   
-
-  // return
+$response['debug'] = $status;
   return $response;
 }
 

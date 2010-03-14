@@ -6,17 +6,17 @@
 /**
  * Implementation of hook_voip_inbound_validate().
  */
-function tester_voip_inbound_validate($request, $response) {
+function tester_voip_inbound_validate($request_id, $options) {
 
-  // mymodule validates request...
-  $response['tester'] = 'Tester module validating inbound request.';
-  $response['tester_message'] = "Validation passes (we're not picky, we pass everybody)";
-
-  // if validation fails, do this
-  //  $response['result'] = 0;
-
-  // it's good practice to log a message with watchdog
-  $response['watchdog'] = "This is a test. Tester module validating inbound call."; // TODO give a better example. Return array? 
+  switch($request_id) {
+    case 'test':
+    case 'echo':
+      break;
+    case 'invalid':
+      $response['status'] = FALSE;
+      $response['error_msg'] = 'Invalid option selected';
+      break;
+  }
 
   return $response; 
 }
@@ -24,15 +24,18 @@ function tester_voip_inbound_validate($request, $response) {
 /**
  * Implementation of hook_voip_inbound().
  */
-function tester_voip_inbound($request, $response) {
+function tester_voip_inbound($request_id, $options) {
+  switch($request_id) {
+    case 'test':
+      $response['status'] = FALSE;
+      $response['error_msg'] = 'test failure, as expected';
+      break;
+    case 'echo':
+      $response['status'] = TRUE;
+      $response['echo'] = $options;
+      break;
+  }
 
-  // mymodule processes request...
-
-  // it's good practice to log a message with watchdog
-  $response['watchdog'] = "Foo bar baz."; // TODO give a better example. Return array? 
-
-  // mymodule's response
-  $response['tester_foo'] = 'bar';  
-
-  return $response; 
+  return $response;
 }
+

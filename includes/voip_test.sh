@@ -16,8 +16,35 @@ $result = xmlrpc($voip_server, 'voip.hello', 'John');
 echo('result: ' . print_r($result, TRUE) . "\n");
 
 
-echo("about to call Voip Drupal process inbound requests\n");
-$request['request_id'] = 'test';
-$result = voip_process_inbound_request($voip_server, $request);
+$request_id = 'invalid';
+echo("about to call voip_process_request($request_id)\n");
+$options = array('arg1' => '1', 'arg2' => 'blue');
+$result = voip_process_request($voip_server, $request_id, $options);
 echo('result: ' . print_r($result) . "\n");
+
+$request_id = 'echo';
+echo("about to call voip_process_request($request_id)\n");
+$options = array('arg1' => '1', 'arg2' => 'blue');
+$result = voip_process_request($voip_server, $request_id, $options);
+echo('result: ' . print_r($result) . "\n");
+
+$request_id = 'non existent';
+echo("about to call voip_process_request($request_id)\n");
+$options = array('arg1' => '1', 'arg2' => 'blue');
+$result = voip_process_request($voip_server, $request_id, $options);
+echo('result: ' . print_r($result) . "\n");
+
+$request_id = 'test';
+echo("about to call voip_process_request($request_id)\n");
+$options = array('arg1' => '1', 'arg2' => 'blue');
+$result = voip_process_request($voip_server, $request_id, $options);
+echo('result: ' . print_r($result) . "\n");
+
+/****
+echo("about to call voip_send_request()\n");
+$request_id = "seat!";
+$options = array('time' => 'now', 'bark' => 'loud');
+$result = voip_send_request($request_id, $options);
+echo('result: ' . print_r($result) . "\n");
+****/
 ?>
