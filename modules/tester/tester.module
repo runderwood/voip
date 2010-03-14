@@ -31,7 +31,7 @@ function tester_voip_inbound($request_id, $options) {
       $response['error_msg'] = 'test failure, as expected';
       break;
     case 'echo':
-      $response['status'] = TRUE;
+      // never return status == TRUE as in $response['status'] = TRUE;
       $response['echo'] = $options;
       break;
   }

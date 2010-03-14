@@ -265,39 +265,31 @@ function xmls_voip_process_request($request_id, $options=array())
     }
   }
     
-$status['debug'] = 'about to start processing';
-$status['s1'] = 'step1';
-
   // process request
   if ($response['status']) {
-$status['s2'] = 'step2';
     $response = NULL;
     foreach (module_implements('voip_inbound') as $module) {
       $function = $module .'_'. 'voip_inbound';
-      // Note: in case of success, modules are not supposed to return 'status' set to TRUE. That would mess $response after the array_merge_recursive() below. In case of failure, modules should return 'status' set to FALSE and an appropriate 'error_msg'
+      // NOTE: in case of success, modules are not supposed to return 'status' set to TRUE. That would mess $response after the array_merge_recursive() below. In case of failure, modules should return 'status' set to FALSE and an appropriate 'error_msg'
       $result = call_user_func($function, $request_id, $options);
-$status['function'] = $function;
-$status['result'] = $result;
       // stop at the first execution error
-      if (isset($result['status']) && ($result['status'] == FALSE)) {
-//      if (!$result['status']) {
-        $response = array('status' => FALSE,
-                          'error_msg' => $result['error_msg']);
-$status['s3'] = 's3';
-        break;
+      if (isset($result) {
+        if ($result['status'] == FALSE)) {
+          $response = array('status' => FALSE,
+                            'error_msg' => $result['error_msg']);
+          break;
+        }
+        else {
+          $response['status'] = TRUE;
+          $response = array_merge_recursive($response, $result);
+        }
       }
-$status['s4'] = 's4';
-      $response['status'] = TRUE;
-      $response = array_merge_recursive($response, $result);
     }
-$status['s5'] = $response;
     if (!$response) {
-$status['s6'] = 's6';
       $response['status'] = FALSE;
       $response['error_msg'] = 'Request not processed by any module.';
     }
   }   
-$response['debug'] = $status;
   return $response;
 }
 
