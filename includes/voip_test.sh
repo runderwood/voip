@@ -7,6 +7,11 @@ foreach (array('voip_api.inc') as $file) {
 
 $voip_server = 'http://localhost/d6/xmlrpc.php';
 
+echo("\n");
+echo("-------\n");
+echo("Testing xmlrpc infrastructure \n");
+echo("-------\n");
+
 echo("about to call system.listMethods\n");
 $result = xmlrpc($voip_server, 'system.listMethods');
 echo('result: ' . print_r($result, TRUE) . "\n");
@@ -15,6 +20,11 @@ echo("about to call voip.hello\n");
 $result = xmlrpc($voip_server, 'voip.hello', 'John');
 echo('result: ' . print_r($result, TRUE) . "\n");
 
+
+echo("\n");
+echo("-------\n");
+echo("Testing voip_process_request()\n");
+echo("-------\n");
 
 $request_id = 'test_invalid';
 echo("about to call voip_process_request($request_id)\n");
@@ -40,11 +50,22 @@ $options = array('arg1' => '1', 'arg2' => 'blue');
 $result = voip_process_request($voip_server, $request_id, $options);
 echo('result: ' . print_r($result) . "\n");
 
-/****
-echo("about to call voip_send_request()\n");
+
+echo("\n");
+echo("-------\n");
+echo("Testing voip_send_request()\n");
+echo("-------\n");
+
 $request_id = "seat!";
 $options = array('time' => 'now', 'bark' => 'loud');
-$result = voip_send_request($request_id, $options);
-echo('result: ' . print_r($result) . "\n");
-****/
+echo("about to call voip.sendRequest with request_id: $request_id\n");
+$result = xmlrpc($voip_server, 'voip.sendRequest', $request_id, $options);
+echo('result: ' . print_r($result, TRUE) . "\n");
+
+
+echo("\n");
+echo("-------\n");
+echo("End of tests\n");
+echo("-------\n");
+
 ?>

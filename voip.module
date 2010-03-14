@@ -8,38 +8,35 @@
 
 
 /**
- * Sends a command to the active voip server
+ * Sends a request to the active voip server
  *
- * @param $command
- *   The command to be executed
+ * @param $request
+ *   The request to be executed
  *
  * @param $options
- *   An array of additional options as defined by each command
+ *   An array of additional options as defined by each request
  */
-function voip_send_command($command, $options = array()) {
+function voip_send_request($request, $options = array()) {
   $response[status] = TRUE;
   $voip_server = voip_default_server();
 
   if (function_exists($voip_server['send'])) {
-    $response = $voip_server['send']($command, $options);
+    $response = $voip_server['send']($request, $options);
   }
 
-  if ($response['status']) {
-    $rc = TRUE;
-  }
-  else {
-    $error_message = 'Executing voip command %command failed.';
-    $variables['%command'] = $command;
-    if ($response['message']) {
-      $error_message .= ' The server said '. $response['message'];
-      if (!empty($response['variables'])) {
-        $variables = array_merge($variables, $response['variables']);
+  if (!$response['status']) {
+    $error_message = 'Failure executing request %request.';
+    $variables['%request'] = $request;
+    if ($response['error_msg']) {
+      $error_message .= ' The server said '. $response['error_msg'];
+      if (!empty($response['options'])) {
+        $options = array_merge($options, $response['options']);
       }
     }
-    watchdog('voip', $error_message, $variables, WATCHDOG_ERROR);
-    $rc = FALSE;
+    // TODO: shall we implement a mechanism similar to xmlrpc_error() to distinguish between processing errors and communication errors with the server? This way, we wouldn't need to report WATCHDOG_ERROR for non-system errors...
+    watchdog('voip', $error_message, $options, WATCHDOG_ERROR);
   }
-  return $rc;
+  return $response;
 }
 
 
@@ -62,6 +59,14 @@ function voip_xmlrpc() {
     'xmls_voip_process_request', // PHP function to run.
     array('array', 'string', 'array'),// The return value's type, then any parameter types.
     t('Processes incoming requests from VoIP servers.')  // Description.
+  );
+
+  // NOTE: the following method is only here for test purposes. In the real system it should never be called via xmlrpc.
+  $methods[] = array(
+    'voip.sendRequest',
+    'voip_send_request', 
+    array('array', 'string', 'array'),
+    t('Send request to default VoIP server.')
   );
 
   return $methods;
@@ -224,8 +229,8 @@ function voip_voip_server_info() {
   );
 }
 
-function voip_send_log($command, $options) {
-  watchdog('voip', 'Voip command %command sent with the following options: @options', array('%command' => $command, '@options' => print_r($options, TRUE)), WATCHDOG_INFO);
+function voip_send_log($request, $options) {
+  watchdog('voip', 'Voip request %request sent with the following options: @options', array('%request' => $request, '@options' => print_r($options, TRUE)), WATCHDOG_INFO);
   return array('status' => TRUE);
 }
 
@@ -250,7 +255,6 @@ function xmls_voip_hello($name) {
  */
 function xmls_voip_process_request($request_id, $options=array())
 {
-  $processed = FALSE;
   $response['status'] = TRUE;
 
   // give modules an opportunity to validate request
