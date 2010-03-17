@@ -1,0 +1,110 @@
+<?php
+// $I$
+
+/**
+ * @file
+ * Adds support for sending VoIP requests to Asterisk servers.
+ */
+
+/**
+ * Implementation of hook_voip_server_info().
+ */
+function voip_asterisk_voip_server_info() {
+  return array(
+    'asterisk' => array(
+      'name' => 'Asterisk',
+      'configure form' => 'voip_asterisk_admin_form',
+      'send' => 'voip_asterisk_send',
+    ),
+  );
+}
+
+function voip_asterisk_admin_form($configuration) {
+  $form['voip_asterisk_ssl'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Use SSL Encyption'),
+    '#description' => t('Drupal\'s built-in HTTP client only supports SSL on PHP 4.3 compiled with OpenSSL.'),
+    '#default_value' => $configuration['voip_asterisk_ssl'],
+  );
+  $form['voip_asterisk_url'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Asterisk server URL'),
+    '#description' => t('The URL of the Asterisk server'),
+    '#default_value' => $configuration['voip_asterisk_ssl'],
+  );
+  $form['voip_asterisk_user'] = array(
+    '#type' => 'textfield',
+    '#title' => t('AMI user'),
+    '#description' => t('The username to be used with the Asterisk Manager Interface.'),
+    '#size' => 40,
+    '#maxlength' => 255,
+    '#default_value' => $configuration['voip_asterisk_user'],
+  );
+  $form['voip_asterisk_password'] = array(
+    '#type' => 'textfield',
+    '#title' => t('AMI password'),
+    '#description' => t('The password associated with the Asterisk Manager Interface.'),
+    '#size' => 30,
+    '#maxlength' => 64,
+    '#default_value' => $configuration['voip_asterisk_password'],
+  );
+
+  return $form;
+}
+
+/**
+ * Validates the submission of the configuration form.
+ */
+function voip_asterisk_admin_form_validate($form, &$form_state) {
+/** 
+  // TODO: Send a test request to validate the configuration of the Asterisk connection
+  $result = sms_clickatell_command('auth', array(), $form_state['values']);
+  if (!$result['status']) {
+    form_set_error('', t('A Clickatell gateway error occured: @error.', array('@error' => $result['message'])));
+  }
+  variable_set('sms_clickatell_session_id_timestamp', 0);
+**/
+}
+
+/**
+ * Callback for sending requests to the Asterisk server
+ */
+function voip_asterisk_send($request_id, $options) {
+  $server = voip_servers('server', 'asterisk');
+  $config = $server['configuration'];
+  $result =  voip_asterisk_send_request($config, $request_id, $options);
+  return $result;
+}
+
+/**
+ * Executes a command using the Clickatell API
+ */
+function voip_asterisk_send_request($server_config, $request_id, $options) {
+
+  if ($server_config['voip_asterisk_ssl']) {
+    $scheme = 'https';
+  }
+  else {
+    $scheme = 'http';
+  }
+
+  switch($request_id) {
+    default:
+      $response['status'] = FALSE;
+      $response['error_msg'] = 'Invalid voip request id: ' . $request_id;
+      $msg = 'Invalid voip request id: %request_id.';
+      $msg_options = array('%request_id' => $request_id);
+      watchdog('voip', $msg, $msg_options, WATCHDOG_ERROR);
+      break;
+    case 'voip_failure':
+      $response['status'] = FALSE;
+      $response['error_msg'] = 'voip failure, as expected';
+      break;
+    case 'voip_echo':
+      $response['status'] = TRUE;
+      $response['echo'] = $options;
+      break;
+  }
+
+  return $response;
+}

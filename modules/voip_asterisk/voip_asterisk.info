@@ -1,0 +1,7 @@
+; $Id$
+name = "Voip Asterisk"
+description = "Allows the Voip Drupal framework to work with Asterisk servers."
+package = Voip Drupal
+dependencies[] = voip
+core = 6.x
+
