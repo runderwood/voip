@@ -5,8 +5,6 @@ function voip_admin_default_form() {
   $servers = voip_servers();
   
   foreach ($servers as $identifier => $server) {
-// TODO: why $active? why $options? something seems to be missing here...
-    $active = ($identifier == variable_get('voip_default_server', 'log'));
     $options[$identifier] = '';
     $form[$server['name']]['id'] = array('#value' => $identifier);
     if (function_exists($server['configure form'])) {
@@ -86,7 +84,7 @@ function voip_admin_server_form_validate($form, &$form_state) {
 function voip_admin_server_form_submit($form, &$form_state) {
   $server = $form_state['values']['server'];
   
-  // Remove uneccesary values
+  // Remove unecessary values
   unset($form_state['values']['op'], $form_state['values']['submit'], $form_state['values']['server'], $form_state['values']['form_token'], $form_state['values']['form_id']);
 
   // store server configuration

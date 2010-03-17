@@ -161,9 +161,7 @@ function voip_default_server() {
  *     'my_voip_server_id' => array(
  *       'name' => 'My Voip Server',
  *       'send' => 'mymodule_send',
- *       'receive' => TRUE,
  *       'configure form' => 'mymodule_admin_form',
- *       'send form' => 'mymodule_send_form',
  *     );
  *   );
  * }
@@ -171,10 +169,7 @@ function voip_default_server() {
  * Where
  *    * name - Human readable name for the voip server.
  *    * send - Callback function that the Voip Framework will call to send a comand to the server
- *    * receive (optional) - Set to true if the server has support for handling incoming requests
  *    * configure form (optional) - Form function for server configuration options
- *    * send form (optional) - Form function for adding server-specific fields to the sending form
- *
  *
  *
  * @param $op
