@@ -30,7 +30,7 @@ function voip_asterisk_admin_form($configuration) {
     '#type' => 'textfield',
     '#title' => t('Asterisk server URL'),
     '#description' => t('The URL of the Asterisk server'),
-    '#default_value' => $configuration['voip_asterisk_ssl'],
+    '#default_value' => $configuration['voip_asterisk_url'],
   );
   $form['voip_asterisk_user'] = array(
     '#type' => 'textfield',

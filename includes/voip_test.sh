@@ -62,6 +62,18 @@ echo("about to call voip.sendRequest with request_id: $request_id\n");
 $result = xmlrpc($voip_server, 'voip.sendRequest', $request_id, $options);
 echo('result: ' . print_r($result, TRUE) . "\n");
 
+$request_id = "voip_echo";
+$options = array('time' => 'now', 'bark' => 'loud');
+echo("about to call voip.sendRequest with request_id: $request_id\n");
+$result = xmlrpc($voip_server, 'voip.sendRequest', $request_id, $options);
+echo('result: ' . print_r($result, TRUE) . "\n");
+
+$request_id = "voip_failure";
+$options = array('time' => 'now', 'bark' => 'loud');
+echo("about to call voip.sendRequest with request_id: $request_id\n");
+$result = xmlrpc($voip_server, 'voip.sendRequest', $request_id, $options);
+echo('result: ' . print_r($result, TRUE) . "\n");
+
 
 echo("\n");
 echo("-------\n");
