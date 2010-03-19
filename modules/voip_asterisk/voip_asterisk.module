@@ -20,22 +20,24 @@ function voip_asterisk_voip_server_info() {
 }
 
 function voip_asterisk_admin_form($configuration) {
-  $form['voip_asterisk_ssl'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Use SSL Encyption'),
-    '#description' => t('Drupal\'s built-in HTTP client only supports SSL on PHP 4.3 compiled with OpenSSL.'),
-    '#default_value' => $configuration['voip_asterisk_ssl'],
-  );
   $form['voip_asterisk_url'] = array(
     '#type' => 'textfield',
     '#title' => t('Asterisk server URL'),
     '#description' => t('The URL of the Asterisk server'),
-    '#default_value' => $configuration['voip_asterisk_url'],
+    '#default_value' => ($configuration['voip_asterisk_url']?$configuration['voip_asterisk_url']:'127.0.0.1'),
+  );
+  $form['voip_asterisk_port'] = array(
+    '#type' => 'textfield',
+    '#title' => t('AMI port'),
+    '#description' => t('The port used by the Asterisk Manager Interface. Asterisk uses 5038 by default.'),
+    '#size' => 4,
+    '#maxlength' => 4,
+    '#default_value' => ($configuration['voip_asterisk_port']?$configuration['voip_asterisk_port']:'5038'),
   );
   $form['voip_asterisk_user'] = array(
     '#type' => 'textfield',
     '#title' => t('AMI user'),
-    '#description' => t('The username to be used with the Asterisk Manager Interface.'),
+    '#description' => t('The username associated with the Asterisk Manager Interface. It has to match the one in manager.conf'),
     '#size' => 40,
     '#maxlength' => 255,
     '#default_value' => $configuration['voip_asterisk_user'],
@@ -43,7 +45,7 @@ function voip_asterisk_admin_form($configuration) {
   $form['voip_asterisk_password'] = array(
     '#type' => 'textfield',
     '#title' => t('AMI password'),
-    '#description' => t('The password associated with the Asterisk Manager Interface.'),
+    '#description' => t('The password associated with the Asterisk Manager Interface. It has to match the one in manager.conf'),
     '#size' => 30,
     '#maxlength' => 64,
     '#default_value' => $configuration['voip_asterisk_password'],
@@ -57,6 +59,7 @@ function voip_asterisk_admin_form($configuration) {
  */
 function voip_asterisk_admin_form_validate($form, &$form_state) {
 /** 
+  // TODO: validate syntax for url, port fields
   // TODO: Send a test request to validate the configuration of the Asterisk connection
   $result = sms_clickatell_command('auth', array(), $form_state['values']);
   if (!$result['status']) {
@@ -77,7 +80,7 @@ function voip_asterisk_send($request_id, $options) {
 }
 
 /**
- * Executes a command using the Clickatell API
+ * Sends a request to the Asterisk Manager API (AMI) associated with the current Asterisk server
  */
 function voip_asterisk_send_request($server_config, $request_id, $options) {
 
@@ -92,6 +95,7 @@ function voip_asterisk_send_request($server_config, $request_id, $options) {
     default:
       $response['status'] = FALSE;
       $response['error_msg'] = 'Invalid voip request id: ' . $request_id;
+$response['server_config'] = $server_config;
       $msg = 'Invalid voip request id: %request_id.';
       $msg_options = array('%request_id' => $request_id);
       watchdog('voip', $msg, $msg_options, WATCHDOG_ERROR);
