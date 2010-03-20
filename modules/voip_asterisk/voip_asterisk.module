@@ -23,7 +23,7 @@ function voip_asterisk_admin_form($configuration) {
   $form['voip_asterisk_url'] = array(
     '#type' => 'textfield',
     '#title' => t('Asterisk server URL'),
-    '#description' => t('The URL of the Asterisk server'),
+    '#description' => t("IP address or URL (with no 'http://', 'https://' or the like) of the Asterisk server"),
     '#default_value' => ($configuration['voip_asterisk_url']?$configuration['voip_asterisk_url']:'127.0.0.1'),
   );
   $form['voip_asterisk_port'] = array(
