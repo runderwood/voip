@@ -89,6 +89,15 @@
     var $event_handlers;
 
    /**
+    * Alternative error log() function
+    *
+    * @access private
+    * @var string
+    */
+    var $alt_log;
+
+
+   /**
     * Constructor
     *
     * @param string $config is the name of the config file to parse or a parent agi from which to read the config
@@ -101,6 +110,13 @@
         $this->config = parse_ini_file($config, true);
       elseif(file_exists(DEFAULT_PHPAGI_CONFIG))
         $this->config = parse_ini_file(DEFAULT_PHPAGI_CONFIG, true);
+
+      // TODO: Shall we really enable log() to be redefined?
+      // provide alternative log function
+      if($optconfig['log_method']) // Added by Leo on 2010.3.23
+      {
+        $this->alt_log = $optconfig['log_method'];
+      }
 
       // If optconfig is specified, stuff vals and vars into 'asmanager' config array.
       foreach($optconfig as $var=>$val)
@@ -251,7 +267,8 @@
       if($res['Response'] != 'Success')
       {
         $this->log("Failed to login.");
-        $this->disconnect();
+        // $this->disconnect();  // Modified by Leo on 2010.3.23
+        fclose($this->socket);
         return false;
       }
       return true;
@@ -264,7 +281,7 @@
     */
     function disconnect()
     {
-      $this->logoff();
+      $this->Logoff();   // Modified by Leo on 2010.3.23
       fclose($this->socket);
     }
 
@@ -725,7 +742,12 @@
     */
     function log($message, $level=1)
     {
-      if($this->pagi != false)
+      // check for alternative log
+      if($this->alt_log)
+      {
+        $log = $this->alt_log;
+        $log($message, $level);
+      } else if($this->pagi != false)
         $this->pagi->conlog($message, $level);
       else
         error_log(date('r') . ' - ' . $message);
