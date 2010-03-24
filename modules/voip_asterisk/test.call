@@ -1,0 +1,10 @@
+#test file to bridge 2 phone lines together
+# to run: sudo cp test.call 2.call; sudo chown asterisk:asterisk 2.call; sudo mv 2.call /data/var/spool/asterisk/outgoing/
+Channel: SIP/6172130536@outbound
+MaxRetries: 2
+RetryTime: 60
+WaitTime: 30
+Context: voip_drupal_bridge
+Extension: 6177920995 
+Priority: 1
+
