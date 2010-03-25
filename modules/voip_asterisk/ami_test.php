@@ -59,7 +59,7 @@ $server_config = array(
   'ami_port' => $ami_port,
   'ami_user' => $ami_user,
   'ami_password' => $ami_pass,
-  'outbound_channel_string' => 'SIP/%origin@outbound',
+  'pstn_channel_string' => 'SIP/%number@outbound',
   'system_caller_id' => 'Voip Drupal <123456789>',
 );
 
@@ -81,7 +81,8 @@ echo('result: ' . print_r($result) . "\n\n");
 $destination = '16172130536'; // Leo's Google Voice number
 //$origin = '6177920995'; // Leo's cell phone
 //$destination = '6176888319'; // Danielle's cell phone
-$origin = '16177920995';
+//$origin = '16177920995';
+$origin = '6174525510'; // media lab office
 
 echo("about to call _voip_asterisk_dial_out($server_config, $origin, $destination)\n");
 $result = _voip_asterisk_dial_out($server_config, $origin, $destination);
@@ -157,8 +158,8 @@ function _voip_asterisk_dial_out($server_config, $origin, $destination) {
     return FALSE;
   }
 
-  $channel_string = $server_config['outbound_channel_string'];
-  $channel = str_replace("%origin", $origin, $channel_string); // Channel from which to originate the call
+  $channel_string = $server_config['pstn_channel_string'];
+  $channel = str_replace("%number", $origin, $channel_string); // Channel from which to originate the call
 /*********************
 *****************/
 $exten = $destination; // Extension to use on connect (must use Context & Priority with it) 
@@ -187,12 +188,6 @@ $priority = 1; // Priority to use on connect (must use Context & Exten with it)
   $action_id = NULL; // The request identifier. It allows you to identify the response to
                      // this request. You may use a number or a string. Useful when you make
                      // several simultaneous requests. 
-
-//$channel = 'SIP/6176888319@outbound'; // Danielle's cell phone
-//$channel = 'SIP/6172130536@outbound'; // Leo's Google Voice number
-//$exten = 's';
-//$context = 'voip_drupal_fastagi';
-//$priority = 1;
 
 echo("about to call Originate(
        channel: $channel, exten: $exten, context: $context,

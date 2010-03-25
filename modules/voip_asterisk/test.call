@@ -5,6 +5,11 @@ MaxRetries: 2
 RetryTime: 60
 WaitTime: 30
 Context: voip_drupal_bridge
-Extension: 6177920995 
+#Leo's phone number:
+#Extension: 6177920995 
+#MIT office:
+Extension: 6174525510
+#Danielle's
+#Extension: 6176888319
 Priority: 1
 
