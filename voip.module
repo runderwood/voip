@@ -6,6 +6,11 @@
  * Enables communication between Drupal and VoIP servers.
  */
 
+foreach (array('voip_error.inc') as $file) {
+  require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'includes' . DIRECTORY_SEPARATOR . $file);
+}
+
+
 
 /**
  * Sends a request to the active voip server
@@ -24,17 +29,21 @@ function voip_send_request($request, $options = array()) {
     $response = $voip_server['send']($request, $options);
   }
 
-  if (!$response['status']) {
-    $error_message = 'Failure executing request %request.';
+  if (voip_error()) {
+    $error_message = 'Failure executing request %request with options %options.';
     $variables['%request'] = $request;
-    if ($response['error_msg']) {
-      $error_message .= ' The server said '. $response['error_msg'];
-      if (!empty($response['options'])) {
-        $options = array_merge($options, $response['options']);
-      }
+    $variables['%options'] = print_r($options, TRUE);
+    if (voip_error_message()) {
+      $error_message .= ' The server said: '. voip_error_message();
     }
-    // TODO: shall we implement a mechanism similar to xmlrpc_error() to distinguish between processing errors and communication errors with the server? This way, we wouldn't need to report WATCHDOG_ERROR for non-system errors...
-    watchdog('voip', $error_message, $options, WATCHDOG_ERROR);
+    watchdog('voip', $error_message, $variables, WATCHDOG_ERROR);
+
+    // TODO: remove the following code block after xmlrpc testing is over
+    if($options['xmlrpc_test']) {
+      $error_message = ' The server said: '. voip_error_message();
+      $response = xmlrpc_error(-32500, $error_message);
+    }
+
   }
   return $response;
 }
@@ -48,10 +57,10 @@ function voip_xmlrpc() {
   $methods = array();
 
   $methods[] = array(
-    'voip.hello',      // External method name.
-    'xmls_voip_hello', // PHP function to run.
-    array('string', 'string'),// The return value's type, then any parameter types.
-    t('Greets XML-RPC clients by name.')  // Description.
+    'voip.getScript',      // External method name.
+    'xmls_voip_get_script', // PHP function to run.
+    array('array', 'string', 'array'),// The return value's type, then any parameter types.
+    t('Retrieves the specified dialplan script.')  // Description.
   );
 
   $methods[] = array(
@@ -230,18 +239,33 @@ function voip_send_log($request, $options) {
 }
 
 
-
-
-
-
 /**
- * Greet a user.
+ * Retrieves the specified dialplan script 
  */
-function xmls_voip_hello($name) {
-  if (!$name) {
-    return xmlrpc_error(1, t('I cannot greet you by name if you do not provide one.'));
+function xmls_voip_get_script($script_name, $options=array())
+{
+  $response = array();
+  voip_error_reset();
+  // process request
+  foreach (module_implements('voip_get_script') as $module) {
+    $function = $module .'_'. 'voip_get_script';
+    $result = call_user_func($function, $request_id, $options);
+    // stop at the first execution error
+    if(voip_error()) {
+      // report processing errors with code -32500 ('application error')
+      $error_message = voip_error_message(); // voip_error()->message;
+      $response = xmlrpc_error(-32500, $error_message);
+      break;
+    }
+    if (isset($result)) {
+      $response = array_merge_recursive($response, $result);
+    }
   }
-  return t('Hello, @name!', array('@name' => $name));
+  if (!$response) {
+    $error_message = "(voip.module) Script $script_name could not be found.";
+    $response = xmlrpc_error(-32500, $error_message);
+  }
+  return $response;
 }
 
 
@@ -250,45 +274,27 @@ function xmls_voip_hello($name) {
  */
 function xmls_voip_process_request($request_id, $options=array())
 {
-  $response['status'] = TRUE;
-
-  // give modules an opportunity to validate request
-  foreach (module_implements('voip_inbound_validate') as $module) {
-    $function = $module .'_'. 'voip_inbound_validate';
+  $response = array();
+  voip_error_reset();
+  // process request
+  foreach (module_implements('voip_process_request') as $module) {
+    $function = $module .'_'. 'voip_process_request';
     $result = call_user_func($function, $request_id, $options);
-    // stop at the first validation error
-    if (isset($result['status']) && ($result['status'] == FALSE)) {
-      $response = array('status' => FALSE,
-                        'error_msg' => $result['error_msg']);
+    // stop at the first execution error
+    if(voip_error()) {
+      // report processing errors with code -32500 ('application error')
+      $error_message = voip_error_message(); // voip_error()->message;
+      $response = xmlrpc_error(-32500, $error_message);
       break;
     }
+    if (isset($result)) {
+      $response = array_merge_recursive($response, $result);
+    }
   }
-    
-  // process request
-  if ($response['status']) {
-    $response = NULL;
-    foreach (module_implements('voip_inbound') as $module) {
-      $function = $module .'_'. 'voip_inbound';
-      // NOTE: in case of success, modules are not supposed to return 'status' set to TRUE. That would mess $response after the array_merge_recursive() below. In case of failure, modules should return 'status' set to FALSE and an appropriate 'error_msg'
-      $result = call_user_func($function, $request_id, $options);
-      // stop at the first execution error
-      if (isset($result)) {
-        if ($result['status'] == FALSE) {
-          $response = array('status' => FALSE,
-                            'error_msg' => $result['error_msg']);
-          break;
-        }
-        else {
-          $response['status'] = TRUE;
-          $response = array_merge_recursive($response, $result);
-        }
-      }
-    }
-    if (!$response) {
-      $response['status'] = FALSE;
-      $response['error_msg'] = 'Request not processed by any module.';
-    }
-  }   
+  if (!$response) {
+    $error_message = "(voip.module) Request $request_id not processed by any module.";
+    $response = xmlrpc_error(-32500, $error_message);
+  }
   return $response;
 }
 

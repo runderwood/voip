@@ -17,9 +17,6 @@ echo("about to call system.listMethods\n");
 $result = xmlrpc($voip_server, 'system.listMethods');
 echo('result: ' . print_r($result, TRUE) . "\n");
 
-echo("about to call voip.hello\n");
-$result = xmlrpc($voip_server, 'voip.hello', 'John');
-echo('result: ' . print_r($result, TRUE) . "\n");
 
 
 echo("\n");
@@ -27,53 +24,82 @@ echo("-------\n");
 echo("Testing voip_process_request()\n");
 echo("-------\n");
 
-$request_id = 'test_invalid';
+$request_id = 'test_failure';
 echo("about to call voip_process_request($request_id)\n");
 $options = array('arg1' => '1', 'arg2' => 'blue');
 $result = voip_process_request($voip_server, $request_id, $options);
-echo('result: ' . print_r($result) . "\n");
+echo('voip_api_error: ' . print_r(voip_api_error_message(), TRUE) . "\n");
+echo('result: ' . print_r($result, TRUE) . "\n\n");
 
 $request_id = 'test_echo';
 echo("about to call voip_process_request($request_id)\n");
 $options = array('arg1' => '1', 'arg2' => 'blue');
 $result = voip_process_request($voip_server, $request_id, $options);
-echo('result: ' . print_r($result) . "\n");
+echo('voip_api_error: ' . print_r(voip_api_error_message(), TRUE) . "\n");
+echo('result: ' . print_r($result, TRUE) . "\n\n");
 
-$request_id = 'non existent';
+$request_id = 'invalid_request';
 echo("about to call voip_process_request($request_id)\n");
 $options = array('arg1' => '1', 'arg2' => 'blue');
 $result = voip_process_request($voip_server, $request_id, $options);
-echo('result: ' . print_r($result) . "\n");
+echo('voip_api_error: ' . print_r(voip_api_error_message(), TRUE) . "\n");
+echo('result: ' . print_r($result, TRUE) . "\n\n");
 
-$request_id = 'test_failure';
-echo("about to call voip_process_request($request_id)\n");
+
+echo("\n");
+echo("-------\n");
+echo("Testing voip_get_script()\n");
+echo("-------\n");
+
+$script_name = 'test_failure';
+echo("about to call voip_get_script($script_name)\n");
 $options = array('arg1' => '1', 'arg2' => 'blue');
-$result = voip_process_request($voip_server, $request_id, $options);
-echo('result: ' . print_r($result) . "\n");
+$result = voip_get_script($voip_server, $script_name, $options);
+echo('voip_api_error: ' . print_r(voip_api_error_message(), TRUE) . "\n");
+echo('result: ' . print_r($result, TRUE) . "\n\n");
 
+$script_name = 'invalid_script';
+echo("about to call voip_get_script($script_name)\n");
+$options = array('arg1' => '1', 'arg2' => 'blue');
+$result = voip_get_script($voip_server, $script_name, $options);
+echo('voip_api_error: ' . print_r(voip_api_error_message(), TRUE) . "\n");
+echo('result: ' . print_r($result, TRUE) . "\n\n");
+
+$script_name = 'hello_world';
+echo("about to call voip_get_script($script_name)\n");
+$options = array('arg1' => '1', 'arg2' => 'blue');
+$result = voip_get_script($voip_server, $script_name, $options);
+echo('voip_api_error: ' . print_r(voip_api_error_message(), TRUE) . "\n");
+echo('result: ' . print_r($result, TRUE) . "\n\n");
 
 echo("\n");
 echo("-------\n");
 echo("Testing voip_send_request()\n");
 echo("-------\n");
 
-$request_id = "seat!";
+$request_id = 'invalid_request';
 $options = array('time' => 'now', 'bark' => 'loud');
+$options['xmlrpc_test'] = TRUE;
 echo("about to call voip.sendRequest with request_id: $request_id\n");
 $result = xmlrpc($voip_server, 'voip.sendRequest', $request_id, $options);
 echo('result: ' . print_r($result, TRUE) . "\n");
+echo('xmlrpc_error: ' . print_r(xmlrpc_error(), TRUE) . "\n\n");
 
 $request_id = "voip_echo";
 $options = array('time' => 'now', 'bark' => 'loud');
+$options['xmlrpc_test'] = TRUE;
 echo("about to call voip.sendRequest with request_id: $request_id\n");
 $result = xmlrpc($voip_server, 'voip.sendRequest', $request_id, $options);
 echo('result: ' . print_r($result, TRUE) . "\n");
+echo('xmlrpc_error: ' . print_r(xmlrpc_error(), TRUE) . "\n\n");
 
 $request_id = "voip_failure";
 $options = array('time' => 'now', 'bark' => 'loud');
+$options['xmlrpc_test'] = TRUE;
 echo("about to call voip.sendRequest with request_id: $request_id\n");
 $result = xmlrpc($voip_server, 'voip.sendRequest', $request_id, $options);
 echo('result: ' . print_r($result, TRUE) . "\n");
+echo('xmlrpc_error: ' . print_r(xmlrpc_error(), TRUE) . "\n\n");
 
 
 echo("\n");

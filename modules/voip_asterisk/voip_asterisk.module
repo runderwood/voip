@@ -1,5 +1,5 @@
 <?php
-// $I$
+// $Id$
 
 /**
  * @file
@@ -93,19 +93,18 @@ function voip_asterisk_send_request($server_config, $request_id, $options) {
 
   switch($request_id) {
     default:
-      $response['status'] = FALSE;
-      $response['error_msg'] = 'Invalid voip request id: ' . $request_id;
-$response['server_config'] = $server_config;
-      $msg = 'Invalid voip request id: %request_id.';
-      $msg_options = array('%request_id' => $request_id);
-      watchdog('voip', $msg, $msg_options, WATCHDOG_ERROR);
+      // Invalid request id
+      $response = FALSE;
+      $error_msg = "Invalid request id received: %request_id.";
+      $variables = array('%request_id' => $request_id);
+      watchdog('voip_asterisk', $error_message, $variables, WATCHDOG_ERROR);
+      voip_error("(asterisk server) Invalid request id received: " . $request_id);
       break;
-    case 'voip_failure':
-      $response['status'] = FALSE;
-      $response['error_msg'] = 'voip failure, as expected';
+    case 'voip_failure':  // included here for test purposes
+      $response = FALSE;
+      voip_error('(voip_asterisk) voip failure, as expected');
       break;
-    case 'voip_echo':
-      $response['status'] = TRUE;
+    case 'voip_echo':  // included here for test purposes
       $response['echo'] = $options;
       break;
   }

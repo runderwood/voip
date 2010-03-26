@@ -4,34 +4,34 @@
  */ 
 
 /**
- * Implementation of hook_voip_inbound_validate().
+ * Implementation of hook_get_script().
  */
-function tester_voip_inbound_validate($request_id, $options) {
-
-  switch($request_id) {
+function tester_voip_get_script($script_name, $options) {
+  $response = NULL;
+  switch($script_name) {
     case 'test_failure':
-    case 'test_echo':
+      $response = FALSE;
+      voip_error('(tester.module) test failure, as expected');
       break;
-    case 'test_invalid':
-      $response['status'] = FALSE;
-      $response['error_msg'] = 'Invalid option selected';
+    case 'hello_world':
+      $response = "<voip_script name='hello_world'><action name='say><text>Hello, world!</text></action></voip_script>";
       break;
   }
 
-  return $response; 
+  return $response;
 }
 
 /**
- * Implementation of hook_voip_inbound().
+ * Implementation of hook_voip_process_request().
  */
-function tester_voip_inbound($request_id, $options) {
+function tester_voip_process_request($request_id, $options) {
+  $response = NULL;
   switch($request_id) {
     case 'test_failure':
-      $response['status'] = FALSE;
-      $response['error_msg'] = 'test failure, as expected';
+      $response = FALSE;
+      voip_error('(tester.module) test failure, as expected');
       break;
     case 'test_echo':
-      // never return status == TRUE as in $response['status'] = TRUE;
       $response['echo'] = $options;
       break;
   }
