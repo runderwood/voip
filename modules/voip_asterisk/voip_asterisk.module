@@ -95,7 +95,7 @@ function voip_asterisk_send_request($server_config, $request_id, $options) {
     default:
       // Invalid request id
       $response = FALSE;
-      $error_msg = "Invalid request id received: %request_id.";
+      $error_message = "Invalid request id received: %request_id.";
       $variables = array('%request_id' => $request_id);
       watchdog('voip_asterisk', $error_message, $variables, WATCHDOG_ERROR);
       voip_error("(asterisk server) Invalid request id received: " . $request_id);
