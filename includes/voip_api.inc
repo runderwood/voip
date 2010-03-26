@@ -25,6 +25,9 @@ foreach (array('common.inc', 'xmlrpc.inc') as $file) {
 // global variables
 // -----------------------------------------------------------------------------
 
+// Stores the current error object
+$_voip_api_error;
+
 
 // -----------------------------------------------------------------------------
 // initialization
@@ -34,6 +37,56 @@ foreach (array('common.inc', 'xmlrpc.inc') as $file) {
 // -----------------------------------------------------------------------------
 // public function definitions
 // -----------------------------------------------------------------------------
+
+/*
+ * Report processing errors associated with the Voip Drupal infrastructure.
+ */
+function voip_api_error($message = NULL) {
+  global $_voip_api_error;
+  if ($message) {
+    $_voip_api_error = new stdClass();
+    $_voip_api_error->is_error = TRUE;
+    $_voip_api_error->message = $message;
+  }
+  return $_voip_api_error;
+}
+
+function voip_api_error_message() {
+  global $_voip_api_error;
+  return $_voip_api_error->message;
+}
+
+function voip_api_error_reset() {
+  global $_voip_api_error;
+  $_voip_api_error = NULL;
+}
+
+
+/*
+ * Retrieves the specified dialplan script from the Drupal server
+ *
+ * @param $drupal_server
+ *   string with the URL of the xmlrpc.php file of the Drupal site where voip.module is located.
+ * 
+ * @param $script_name
+ *   name of the script
+ *
+ * @param $options
+ *   array with the options associated with the request
+ *
+ * @return
+ *   array with
+ */
+function voip_get_script($drupal_server, $script_name, $options=array()) {
+  voip_api_error_reset();
+  $result = @xmlrpc($drupal_server, 'voip.getScript', $script_name, $options);
+  if ($error = xmlrpc_error()) {
+    $result = FALSE;
+    voip_api_error("XMLRPC error: " . $error->message . ' ('. $error->code . ').');
+  }
+  return $result;
+}
+
 
 /*
  * Sends request to be processed by Voip Drupal site.
@@ -51,11 +104,11 @@ foreach (array('common.inc', 'xmlrpc.inc') as $file) {
  *   array with
  */
 function voip_process_request($drupal_server, $request_id, $options=array()) {
+  voip_api_error_reset();
   $result = @xmlrpc($drupal_server, 'voip.processRequest', $request_id, $options);
   if ($error = xmlrpc_error()) {
-//TODO: Error messages should also be translated with something similar to t()
-    $result = array('status' => FALSE,
-      'error_msg' =>  "XMLRPC error: " . $error->message . ' ('. $error->code . ').');
+    $result = FALSE;
+    voip_api_error("XMLRPC error: " . $error->message . ' ('. $error->code . ').');
   }
   return $result;
 }
