@@ -11,13 +11,18 @@ function tester_voip_get_script($script_name, $options) {
   switch($script_name) {
     case 'test_failure':
       $response = FALSE;
+watchdog('tester', "1. voip_error() object: @object", array('@object' => print_r(voip_error(), TRUE)), WATCHDOG_INFO);
       voip_error('(tester.module) test failure, as expected');
+watchdog('tester', "2. voip_error() object: @object", array('@object' => print_r(voip_error(), TRUE)), WATCHDOG_INFO);
       break;
     case 'hello_world':
-      $response = "<voip_script name='hello_world'><action name='say><text>Hello, world!</text></action></voip_script>";
+      // TODO: What should the index of $response be? 'script' or 'hello_world'?
+      // TODO: in case we return 'hello_world' (the script name), shall we remove the "voip_script" tag from the script and only return the script body? This would make it easier to concatenate scripts together...
+      $response['hello_world'] = "<voip_script name='hello_world'><action name='say><text>Hello, world!</text></action></voip_script>";
       break;
   }
 
+watchdog('tester', "3. voip_error() object: @object", array('@object' => print_r(voip_error(), TRUE)), WATCHDOG_INFO);
   return $response;
 }
 

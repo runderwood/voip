@@ -247,9 +247,13 @@ function xmls_voip_get_script($script_name, $options=array())
   $response = array();
   voip_error_reset();
   // process request
+$modules = module_implements('voip_get_script');
+watchdog('voip', "module_implements('voip_get_script'): @modules", array('@modules' => print_r($modules, TRUE)), WATCHDOG_INFO);
   foreach (module_implements('voip_get_script') as $module) {
     $function = $module .'_'. 'voip_get_script';
-    $result = call_user_func($function, $request_id, $options);
+    $result = call_user_func($function, $script_name, $options);
+watchdog('voip', "%function result is: @result", array('%function' => $function, '@result' => print_r($result, TRUE)), WATCHDOG_INFO);
+watchdog('voip', "voip_error() object: @object", array('@object' => print_r(voip_error(), TRUE)), WATCHDOG_INFO);
     // stop at the first execution error
     if(voip_error()) {
       // report processing errors with code -32500 ('application error')
