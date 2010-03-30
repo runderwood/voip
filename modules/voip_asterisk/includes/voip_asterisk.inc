@@ -17,15 +17,24 @@ foreach (array('phpagi-asmanager.php') as $file) {
 
 
 /**
- * Global variables
- */
-
-$astManager = new AGI_AsteriskManager(NULL, array('log_method' =>  '_voip_asterisk_ami_log'));
-
-
-/**
  * Internal functions
  */
+
+/**
+ * Return current instance of the Asterisk Manager.  Function written to prevent the creation of a voip_asterisk_manager global variable
+ * TODO: Is this the best way to handle variables such as this one?
+ */
+function _voip_asterisk_manager()
+{
+  // by default, initialize the manager with the voip_asterisk.module logger
+  static $manager = NULL;
+  if(is_null($manager)) {
+    $manager = new AGI_AsteriskManager(NULL, array('log_method' => '_voip_asterisk_ami_log'));
+  }
+
+  return $manager;
+}
+
 
 /**
  * Define how AMI errors should be reported
@@ -39,7 +48,6 @@ function _voip_asterisk_ami_log($message, $level=1)
  * Test the connection with the Asterisk server
  */
 function _voip_asterisk_ping($server_config) {
-  global $astManager;
 
   $ami_port = $server_config['ami_port'];
   $ami_host = $server_config['ami_host'];
@@ -49,19 +57,19 @@ function _voip_asterisk_ping($server_config) {
 
   voip_error_reset();
 
-  $result = $astManager->connect($ami_host, $ami_user, $ami_pass);
+  $result = _voip_asterisk_manager()->connect($ami_host, $ami_user, $ami_pass);
   if(voip_error()) {
     voip_error("Connection to Asterisk manager failed: " . voip_error_message());
     return FALSE;
   }
 
-  $result = $astManager->Ping();
+  $result = _voip_asterisk_manager()->Ping();
   if($result['Response'] != 'Success'){
     voip_error("AMI command Ping failed: " . print_r($result, TRUE));
     return FALSE;
   }
 
-  $astManager->disconnect();
+  _voip_asterisk_manager()->disconnect();
   return TRUE;
 }
 
@@ -70,17 +78,16 @@ function _voip_asterisk_ping($server_config) {
  *
  */
 function _voip_asterisk_dial_out($server_config, $origin, $destination) {
-  global $astManager;
 
-  $ami_port = $server_config['ami_port'];
   $ami_host = $server_config['ami_host'];
   $ami_host = ($ami_port)? $ami_host.':'.$ami_port : $ami_host;
+  $ami_port = $server_config['ami_port'];
   $ami_user = $server_config['ami_user'];
   $ami_pass = $server_config['ami_password'];
 
   voip_error_reset();
 
-  $result = $astManager->connect($ami_host, $ami_user, $ami_pass);
+  $result = _voip_asterisk_manager()->connect($ami_host, $ami_user, $ami_pass);
   if(voip_error()) {
     voip_error("Connection to Asterisk manager failed: " . voip_error_message());
     return FALSE;
@@ -121,7 +128,7 @@ echo("about to call Originate(
        channel: $channel, exten: $exten, context: $context,
        priority: $priority, application: $application, data: $application_data,
        timeout: $timeout, callerid: $caller_id, variable: $variable, account: $account, async: $async, action_id: $action_id)\n");
-  $result = $astManager->Originate(
+  $result = _voip_asterisk_manager()->Originate(
      $channel, $exten, $context, $priority, $application, $application_data,
      $timeout, $caller_id, $variable, $account, $async, $action_id);
 echo('result: ' . print_r($result) . "\n");
@@ -130,7 +137,7 @@ echo('result: ' . print_r($result) . "\n");
     return FALSE;
   }
 
-  $astManager->disconnect();
+  _voip_asterisk_manager()->disconnect();
   return TRUE;
 }
 
