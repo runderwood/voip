@@ -1,0 +1,3 @@
+<?php
+
+include_once('vf_voip_script.features.inc');
