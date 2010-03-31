@@ -1,0 +1,94 @@
+<?php 
+/**
+ * @file
+ *   Install Voip Directory module and related content types.
+ */
+
+/**
+ * Implementation of hook_install().
+ */
+function voip_extension_install() {
+  drupal_install_schema('voip_extension');
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function voip_extension_uninstall() {
+  drupal_uninstall_schema('voip_extension');
+}
+
+/**
+ * Implementation of hook_schema().
+ */
+function voip_extension_schema() {
+  // voip_extensions table
+  $schema['voip_extension'] = array(
+    'fields' => array(
+      'nid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'vid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'r_nid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => t('Node id of related node. '
+            .'Note: If nid is not 0, uid should be 0.'),
+      ),
+      'r_uid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => t("Related user's id. This is a user's " 
+             .'extension number. Note: If uid is not 0, '
+             .'nid should be 0.'),
+      ),
+      'r_type' => array(
+        'type' => 'varchar',
+        'length' => '100',
+        'not null' => TRUE,
+        'default' => '',
+        'description' => t("Related node type or 'user'."),
+      ), 
+      'is_active' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 1,
+        'description' => '', // TODO add description
+      ),
+/*
+TODO Listings of extensions should be handled by directory module. 
+      'is_listed' => array(
+        'type' => 'int'
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 1,
+        'description' => t('List extension in listings.'),
+      ),
+*/
+      'script_nid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => t('Node ID of script to be called '
+                         .'when user selects this extension.'),
+      ),
+    ), 
+    'primary key' => array('ext'),
+  );
+
+  return $schema;
+}

@@ -1,0 +1,148 @@
+<?php
+/**
+ * @file
+ *   Implement create directory of extensions to voip nodes and users. 
+ */ 
+
+/**
+ * Implementation of hook_help(). 
+ */
+function voip_extension_help($path, $arg) {
+  if ($path == 'admin/help#voip_extension') {
+    $txt = t('This module creates voip extensions '
+            .'for voip-enabled users and nodes. ');
+    return $txt;
+  }
+}
+
+/**
+ * Implementation of hook_perm().
+ */
+function voip_extension_perm() {
+  return array(
+    'create extension',
+    'delete extension',
+    'edit extension',
+    'view extension', 
+  ); 
+}
+
+/**
+ * Implementation of hook_access().
+ */
+function voip_extension_access($op, $node, $account) {
+  switch ($op) {
+    case 'create':
+      return user_access('create extension', $account);
+    case 'delete': 
+      return user_access('delete extension', $account);
+    case 'update': 
+      return user_access('edit extension', $account);
+    case 'view': 
+      return user_access('view extension', $account);
+  }
+}
+
+/**
+ * Implementation hook_node_info().
+ */
+function voip_extension_node_info() {
+return array(
+  'voip_extension' => array(
+    'name' => t('Voip Extension'),
+    'module' => 'voip_extension',
+    'description' => t("Phone extension for voip-enabled nodes and users.'"),
+    'help' => t(''), // TODO add instructions for manual extension management? 
+    'has_title' => FALSE,
+    'has_body' => FALSE,
+    'locked' => TRUE,
+  ),
+);
+}
+
+/**
+ * Implementation of hook_form().
+ */
+function voip_extension_form(&$node, $form_state) {
+  $type = node_get_types('type', $node);
+  require_once('voip_extension.node_form.inc');
+  
+  return $form;
+}
+
+/**
+ * Implementation of hook_insert().
+ */
+function voip_extension_insert($node) {
+  if (!isset($node->r_nid)) {
+    $node->r_nid = 0;
+  } 
+  if (!isset($node->r_uid)) {
+    $node->r_uid = 0;
+  } 
+  if (!isset($node->r_type)) {
+    $node->r_type = '';
+  } 
+  if (!isset($node->is_active)) {
+    $node->is_active = 1;
+  } 
+  if (!isset($node->script_nid)) {
+    $node->script_nid = 0;
+  } 
+
+  db_query('INSERT INTO {voip_extension} '
+          .'(nid, vid, '
+          .'r_nid, r_uid, r_type, is_active, script_nid) ' 
+          ."VALUES (%d, %d, '%s', %d, %d)",
+          $node->nid,
+          $node->vid,
+          $node->r_nid, 
+          $node->r_uid,
+          $node->r_type,
+          $node->is_active,
+          $node->script_nid);
+}
+
+/**
+ * Implementation of hook_update().
+ */
+function voip_extension_update(){
+  if ($node->revision) {
+    voip_extension_insert($node);
+  } else {
+    db_query("UPDATE {voip_extension} "
+            ."SET r_nid = %d, r_uid = %d, r_type = '%s', "
+            ."is_active = %d, script_nid = %d "
+            ."WHERE vid = %d ", 
+            $node->r_nid, 
+            $node->r_uid,
+            $node->r_type,
+            $node->is_active,
+            $node->script_nid,
+            $node->vid);
+  }
+}
+
+/**
+ * Implementation of hook_delete().
+ */
+function voip_extension_delete() {
+  db_query('DELETE FROM {voip_extension} WHERE nid = %d', 
+            $node->nid);
+}
+
+/**
+ * Implementation of hook_nodeapi().
+ */
+function voip_extension_nodeapi(&$node, $op, $teaser, $page) {
+  if ($op == 'delete revision') {
+    db_query('DELETE FROM {voip_extension} WHERE vid = %d', 
+             $node->vid);
+  }  
+}
+
+/**
+ * Implementation of hook_load().
+ */
+function voip_extension_load($node) {
+}
