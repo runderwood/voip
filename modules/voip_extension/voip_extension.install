@@ -25,6 +25,11 @@ function voip_extension_schema() {
   // voip_extensions table
   $schema['voip_extension'] = array(
     'fields' => array(
+      'ext' => array(
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'description' => t('Phone extension for voip enabled node or user.'),
+      ),
       'nid' => array(
         'type' => 'int',
         'unsigned' => TRUE,

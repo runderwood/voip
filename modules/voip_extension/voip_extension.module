@@ -145,4 +145,66 @@ function voip_extension_nodeapi(&$node, $op, $teaser, $page) {
  * Implementation of hook_load().
  */
 function voip_extension_load($node) {
+  $result = db_query('SELECT ext, r_nid, r_uid, r_type, is_active, script_nid '
+                    .'FROM {voip_extension} '
+                    .'WHERE vid = %d ', $node->vid);
+  return db_fetch_object($result);
+}
+
+/**
+ * Implementation of hook_view().
+ */
+function voip_extension_view($node, $teaser = FALSE, $page = FALSE) {
+  // Prepare node
+  $node = node_prepare($node, $teaser); 
+  // Prepare extension fields
+  $node->ext = check_plain($node->ext); // maybe unnecessary, but might as well
+  $node->r_nid = check_plain($node->r_nid), 
+  $node->r_uid = check_plain($node->r_uid),
+  $node->r_type = check_plain($node->r_type),
+  $node->is_active = check_plain($node->is_active),
+  $node->script_nid = check_plain($node->script_nid),
+  // Theme extension fields
+  $node->content['voip_extension'] = array(
+    '#value' => theme('voip_extension', $node),
+    '#weight' => 1,
+  );
+
+  return $node;
+}
+
+/**
+ * Implementation of hook_theme().
+ */
+function voip_extension_theme(){
+  return array(
+    'voip_extension' => array(
+      'arguments' => array('node' => NULL),
+    ),
+  );
+}
+
+/**
+ * Theme extension content (fields).
+ */
+function theme_voip_extension($node) {
+  $ext = $node->ext;
+  $r_nid = l($node->r_nid, "/node/$node->r_nid") ; 
+  $r_uid = l($node->r_uid, "/user/$user->r_uid";
+  $r_type = $node->r_type;
+  $is_active = $node->is_active;
+  $script_nid = l($node->script_nid, "/node/$node->script_nid";
+
+  $output = '';
+  $output .= "<div class='voip-ext ext'>Extension Number: $ext</div>";
+  if ($r_nid) { // related entity is a node
+    $
+    $output .= "<div class='voip-ext r_nid'>Related Node: </div>";
+  } else { // related entity is a user
+
+  }
+  $output .= "<div class='extension'>Extension Number: $ext</div>";
+
+// CONTINUE HERE
+
 }
