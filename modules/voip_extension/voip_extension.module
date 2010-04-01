@@ -21,11 +21,22 @@ function voip_extension_help($path, $arg) {
 function voip_extension_menu() {
   $items = array();
 
+  // call back for auto-complete on node/add and node/edit form
   $items['voip_extension/autocomplete'] = array(
     'title' => 'Voip Extension Autocomplete',
     'page callback' => 'voip_extension_autocomplete',
     'access arguments' => array('edit extension'),
     'type' => MENU_CALLBACK,
+  );
+  // settings page
+  $items['admin/settings/voip_extension'] = array(
+    'title' => t('Voip Phone Extensions'),
+    'description' => t('Enable voip and set up extensions for nodes and users.'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('voip_extension_admin_settings'), 
+    'access arguments' => array('administer voip extensions'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'voip_extension.admin.inc',
   );
 
   return $items;
@@ -223,4 +234,27 @@ function voip_extension_theme(){
   );
 }
 
-
+/**
+ * Implementation of hook_form_alter
+ * 
+ * Enable users to voip enable node types on node type page
+ * (when creating or editing a node type).
+ */
+function voip_extension_form_alter(&$form, $form_state, $form_id) {
+  // Add voip settings to node type forms
+  if ($form_id == 'node_type_form') {
+    $form['voip'] = array(
+      '#type' => 'fieldset',
+      '#title' => 'Voip (voice over Internet) settings',
+      '#name' => 'Voip',
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+    );
+    $form['voip']['voip_enable'] = array(
+      '#type' => 'checkbox',
+      '#title' => 'Enable Voip',
+      '#description' => t('Voip-enable this node type.'),
+      '#default_value' => variable_get('voip_enable_'. $form['#node_type']->type, FALSE),
+    );
+  }
+}
