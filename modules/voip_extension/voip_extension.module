@@ -86,39 +86,39 @@ function voip_extension_insert($node) {
   if (!isset($node->is_active)) {
     $node->is_active = 1;
   } 
-  if (!isset($node->script_nid)) {
-    $node->script_nid = 0;
+  if (!isset($node->r_script)) {
+    $node->r_script = 0;
   } 
 
   db_query('INSERT INTO {voip_extension} '
           .'(nid, vid, '
-          .'r_nid, r_uid, r_type, is_active, script_nid) ' 
-          ."VALUES (%d, %d, '%s', %d, %d)",
+          .'r_nid, r_uid, r_type, is_active, r_script) ' 
+          ."VALUES (%d, %d, %d, %d, '%s', %d, %d)",
           $node->nid,
           $node->vid,
           $node->r_nid, 
           $node->r_uid,
           $node->r_type,
           $node->is_active,
-          $node->script_nid);
+          $node->r_script);
 }
 
 /**
  * Implementation of hook_update().
  */
-function voip_extension_update(){
+function voip_extension_update(&$node){
   if ($node->revision) {
     voip_extension_insert($node);
   } else {
     db_query("UPDATE {voip_extension} "
             ."SET r_nid = %d, r_uid = %d, r_type = '%s', "
-            ."is_active = %d, script_nid = %d "
+            ."is_active = %d, r_script = %d "
             ."WHERE vid = %d ", 
             $node->r_nid, 
             $node->r_uid,
             $node->r_type,
             $node->is_active,
-            $node->script_nid,
+            $node->r_script,
             $node->vid);
   }
 }
@@ -126,7 +126,7 @@ function voip_extension_update(){
 /**
  * Implementation of hook_delete().
  */
-function voip_extension_delete() {
+function voip_extension_delete(&$node) {
   db_query('DELETE FROM {voip_extension} WHERE nid = %d', 
             $node->nid);
 }
@@ -145,7 +145,7 @@ function voip_extension_nodeapi(&$node, $op, $teaser, $page) {
  * Implementation of hook_load().
  */
 function voip_extension_load($node) {
-  $result = db_query('SELECT ext, r_nid, r_uid, r_type, is_active, script_nid '
+  $result = db_query('SELECT ext, r_nid, r_uid, r_type, is_active, r_script '
                     .'FROM {voip_extension} '
                     .'WHERE vid = %d ', $node->vid);
   return db_fetch_object($result);
@@ -159,14 +159,14 @@ function voip_extension_view($node, $teaser = FALSE, $page = FALSE) {
   $node = node_prepare($node, $teaser); 
   // Prepare extension fields
   $node->ext = check_plain($node->ext); // maybe unnecessary, but might as well
-  $node->r_nid = check_plain($node->r_nid), 
-  $node->r_uid = check_plain($node->r_uid),
-  $node->r_type = check_plain($node->r_type),
-  $node->is_active = check_plain($node->is_active),
-  $node->script_nid = check_plain($node->script_nid),
+  $node->r_nid = check_plain($node->r_nid);
+  $node->r_uid = check_plain($node->r_uid);
+  $node->r_type = check_plain($node->r_type);
+  $node->is_active = check_plain($node->is_active);
+  $node->r_script = check_plain($node->r_script);
   // Theme extension fields
   $node->content['voip_extension'] = array(
-    '#value' => theme('voip_extension', $node),
+    '#value' => theme('voip_extension', $node, $teaser, $page),
     '#weight' => 1,
   );
 
@@ -177,34 +177,18 @@ function voip_extension_view($node, $teaser = FALSE, $page = FALSE) {
  * Implementation of hook_theme().
  */
 function voip_extension_theme(){
+  $path = drupal_get_path('module', 'voip_extension') .'/theme';
+  drupal_add_css("$path/voip_extension.css");
+  require_once "./$path/theme.inc";
+
   return array(
     'voip_extension' => array(
-      'arguments' => array('node' => NULL),
+      'template' => 'voip-extension',
+      'file' => 'theme.inc',
+      'arguments' => array('node' => NULL, 'teaser' => NULL, 'page' => NULL),
+      'path' => $path,
     ),
   );
 }
 
-/**
- * Theme extension content (fields).
- */
-function theme_voip_extension($node) {
-  $ext = $node->ext;
-  $r_nid = l($node->r_nid, "/node/$node->r_nid") ; 
-  $r_uid = l($node->r_uid, "/user/$user->r_uid";
-  $r_type = $node->r_type;
-  $is_active = $node->is_active;
-  $script_nid = l($node->script_nid, "/node/$node->script_nid";
 
-  $output = '';
-  $output .= "<div class='voip-ext ext'>Extension Number: $ext</div>";
-  if ($r_nid) { // related entity is a node
-    $
-    $output .= "<div class='voip-ext r_nid'>Related Node: </div>";
-  } else { // related entity is a user
-
-  }
-  $output .= "<div class='extension'>Extension Number: $ext</div>";
-
-// CONTINUE HERE
-
-}

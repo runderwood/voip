@@ -32,9 +32,9 @@
     '#title' => t('Is Active'),
     '#default_value' => $node->is_active,
   );
-  $form['script_nid'] = array(
+  $form['r_script'] = array(
     '#type' => 'textfield',
     '#title' => t('Script Node ID'),
     '#size' => 30,
-    '#default_value' => isset($node->script_nid) ? $node->script_nid : '',
+    '#default_value' => isset($node->r_script) ? $node->r_script : '',
   );

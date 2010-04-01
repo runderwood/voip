@@ -83,12 +83,13 @@ TODO Listings of extensions should be handled by directory module.
         'description' => t('List extension in listings.'),
       ),
 */
-      'script_nid' => array(
+      'r_script' => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
         'default' => 0,
-        'description' => t('Node ID of script to be called '
+        'description' => t('Node ID of related script, that is the '
+                         .'script to be called '
                          .'when user selects this extension.'),
       ),
     ), 
