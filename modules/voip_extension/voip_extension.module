@@ -15,6 +15,38 @@ function voip_extension_help($path, $arg) {
   }
 }
 
+/** 
+ * Implementation of hook_menu().
+ */
+function voip_extension_menu() {
+  $items = array();
+
+  $items['voip_extension/autocomplete'] = array(
+    'title' => 'Voip Extension Autocomplete',
+    'page callback' => 'voip_extension_autocomplete',
+    'access arguments' => array('edit extension'),
+    'type' => MENU_CALLBACK,
+  );
+
+  return $items;
+}
+
+/**
+ * Callback for voip_extension/autocomplete.
+ * 
+ * Populate autocomplete field in node/%/edit form for voip_extension nodes.
+ */
+function voip_extension_autocomplete() {
+  $items = array();  
+  $result = db_query("SELECT nid, title FROM {node} WHERE status = 1 AND type = 'voip_script' AND title LIKE '%s%%' ", $string);
+  
+  while($obj = db_fetch_object($result)) {
+    $items[$obj->nid] = check_plain($obj->title);
+  }
+  print drupal_to_js($items); 
+  exit();
+}
+
 /**
  * Implementation of hook_perm().
  */

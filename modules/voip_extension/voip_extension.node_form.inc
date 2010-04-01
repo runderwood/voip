@@ -9,32 +9,42 @@
     '#title' => t('Extension Number'),
     '#value' => isset($node->ext) ? $node->ext : t('(auto number)'),
   );
-  $form['r_nid'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Related node ID (nid)'),
-    '#size' => 30,
-    '#default_value' => isset($node->r_nid) ? $node->r_nid : '',
-  );
-  $form['r_uid'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Related user ID (uid)'),
-    '#size' => 30,
-    '#default_value' => isset($node->r_uid) ? $node->r_uid : '',
-  );
+
+  // get related node info
+  if ($node->r_nid) {
+    $r_node = node_load($node->r_nid);
+    $form['r_nid'] = array(
+      '#type' => 'item',
+      '#title' => t('Related Node'),
+      '#value' => ($r_node) ? l($r_node->title, "node/$r_node->nid") : '',
+    );
+  }
+
+  // get related user info
+  if ($node->r_uid) {
+    $r_user = user_load($node->r_uid);
+    $form['r_uid'] = array(
+      '#type' => 'item',
+      '#title' => t('Related User'),
+      '#value' => ($r_user) ? l($r_user->name, "user/$r_user->uid") : '',
+    );
+  }
+
   $form['r_type'] = array(
-    '#type' => 'textfield',
+    '#type' => 'item',
     '#title' => t('Related Node Type (or "user" if not a node)'),
-    '#size' => 30,
-    '#default_value' => isset($node->r_type) ? $node->r_type : '',
-  );
-  $form['is_active'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Is Active'),
-    '#default_value' => $node->is_active,
+    '#value' => isset($node->r_type) ? $node->r_type : '',
   );
   $form['r_script'] = array(
     '#type' => 'textfield',
     '#title' => t('Script Node ID'),
     '#size' => 30,
     '#default_value' => isset($node->r_script) ? $node->r_script : '',
+    '#autocomplete_path' => 'voip_extension/autocomplete'
   );
+  $form['is_active'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Is Active'),
+    '#default_value' => $node->is_active,
+  );
+
