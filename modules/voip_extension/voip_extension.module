@@ -178,10 +178,66 @@ function voip_extension_delete(&$node) {
  * Implementation of hook_nodeapi().
  */
 function voip_extension_nodeapi(&$node, $op, $teaser, $page) {
-  if ($op == 'delete revision') {
-    db_query('DELETE FROM {voip_extension} WHERE vid = %d', 
-             $node->vid);
-  }  
+  // Handle voip_extension nodes here
+  if ($node->type == 'voip_extension') {
+    if ($op == 'delete revision') {
+      // Delete specific revisions of a voip_extension node.
+        db_query('DELETE FROM {voip_extension} WHERE vid = %d', $node->vid);
+    }
+
+  // Handle all other node types (i.e. voip-enabled node types) here.
+  } else if ($node->type != 'voip_extension' && variable_get('voip_enable_'. $node->type, FALSE)) {
+    switch($op) {
+  
+    // When a voip-enabled node is created, automatically create a corresponding extension.
+    case 'insert': 
+      // Save to make nid available in $node.
+      // node_save($node);
+     
+      // Now create corresponding extension node.
+
+      // Redirect to extension edit page to select a script.
+     
+      break;
+
+    // Add extension info to voip-enabled nodes on load. 
+    // This will let other modules do things with extension info before 'view'.
+    case 'load': 
+      // TODO 
+      break;
+
+    // The node is about to be shown on the add/edit form.
+    // Display extension info as form items. Provide user a link to edit
+    // the corresponding phone extension. Specifically, the user may want to 
+    // activate/de-activate the extension when editing a node, or change the script.
+    case 'prepare': 
+      // TODO
+      break;
+
+    case 'prepare translation': 
+      // todo Prepare translated nodes with to show voip extensions.
+      break;
+
+    case 'print': 
+      // todo Prepare print view of book pages to display extensions. 
+      break;
+
+    case 'rss item': 
+      // todo Include extensions in rss items.
+      break;
+
+    case 'search result': 
+      // todo Include extensions in search results.
+      break;
+
+    // Theme extension info and attach it to to node view of voip-enabled nodes.
+    // Info was already added to node object on 'load', so just theme it here.
+    case 'view': 
+      // TODO
+      break;
+
+    }
+  }
 }
 
 /**
@@ -241,8 +297,8 @@ function voip_extension_theme(){
  * (when creating or editing a node type).
  */
 function voip_extension_form_alter(&$form, $form_state, $form_id) {
-  // Add voip settings to node type forms
-  if ($form_id == 'node_type_form') {
+  // Add voip settings to node type forms (except voip_extension).
+  if ($form_id == 'node_type_form' && $form['#node_type']->type != 'voip_extension') {
     $form['voip'] = array(
       '#type' => 'fieldset',
       '#title' => 'Voip (voice over Internet) settings',

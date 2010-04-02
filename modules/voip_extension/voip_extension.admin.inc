@@ -36,12 +36,15 @@ function voip_extension_admin_settings() {
     '#collapsed' => FALSE, 
   );
   foreach ($options as $node_type => $node_name) {
-    $var = 'voip_enable_'. $node_type;
-    $form['voip_enable'][$var] = array(
-      '#type' => 'checkbox',
-      '#title' => t($node_name),
-      '#default_value' => variable_get($var, FALSE),
-    );
+    // All node types except voip_extension should be voip enable-able.
+    if ($node_type != 'voip_extension') {
+      $var = 'voip_enable_'. $node_type;
+      $form['voip_enable'][$var] = array(
+        '#type' => 'checkbox',
+        '#title' => t($node_name),
+        '#default_value' => variable_get($var, FALSE),
+      );
+    }
   }
 
   return system_settings_form($form);
