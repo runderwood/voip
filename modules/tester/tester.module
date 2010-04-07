@@ -27,17 +27,15 @@ function tester_voip_get_script($script_name, $options) {
 function tester_voip_process_request($request_id, $options) {
   $response = NULL;
 
+  switch($request_id) {
+    case 'voip_get_script':
   // For testing purposes.
   // TODO delete when done testing.
   $response = array();
   $response['function called'] = 'tester_voip_proces_request($request_id, $options) ' . "\n";
   $response['$request_id'] = $request_id . "\n";
   $response['$options'] = $options;
-  
-
-  switch($request_id) {
-    case 'voip_get_script':
-      $response[] = 'voip_get_script called';
+       $response[] = 'voip_get_script called';
       break;
   }
 
