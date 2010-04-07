@@ -238,8 +238,26 @@ function voip_extension_nodeapi(&$node, $op, $teaser, $page) {
       $ext->uid = $user->uid; // author of extension
       $ext->r_nid = $node->nid; // related nid (from newly saved node)
       $ext->r_type = $node->type;
-      $ext->is_active = TRUE; // TODO Use user-defined default setting.
-      $ext->r_script = 12345; // TODO Use user-defined default setting.
+      // User-defined default is_active setting
+      $var = 'voip_default_is_active_'. $node->type;
+      $is_active = variable_get($var, FALSE);
+      $ext->is_active = ($is_active) ? TRUE : FALSE; 
+      // default script
+      $var = 'voip_default_script_'. $node->type;
+      $script = variable_get($var, FALSE);
+      // TODO validate script. Make sure (1) it exists, (2) it works.
+      if ($script) {
+        $ext->r_script = $script; 
+      } else {
+        $ext->is_active = FALSE; // Set to inactive if there isn't a valid script. 
+        $txt = t('This new extension does not have a valid default '
+                .'script. Without a valid script, the extension will '
+                .'not work. To activate this extension, click "Edit" below '
+                .'and add a script. To prevent this error in the future, set a '
+                .'default script !here.', 
+                array('!here' => l('here', url('admin/voip/extensions-defaults', array('absolute' => TRUE)))));
+        drupal_set_message($txt, 'warning');
+      }
       // set node options from node_type_form
       $node_options = variable_get('node_options_voip_extension', FALSE);
       $ext->status = (in_array('status', $node_options)) ? 1 : 0; 
