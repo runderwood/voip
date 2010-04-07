@@ -36,13 +36,6 @@ function tester_voip_process_request($request_id, $options) {
   
 
   switch($request_id) {
-    case 'test_failure':
-      $response = FALSE;
-      voip_error('(tester.module) test failure, as expected');
-      break;
-    case 'test_echo':
-      $response['echo'] = $options;
-      break;
     case 'voip_get_script':
       $response[] = 'voip_get_script called';
       break;
