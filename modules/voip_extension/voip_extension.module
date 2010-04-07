@@ -26,17 +26,17 @@ function voip_extension_help($path, $arg) {
 function voip_extension_menu() {
   $items = array();
 
-  // call back for auto-complete on node/add and node/edit form
+  // Call back for auto-complete on node/add and node/edit form
   $items['voip_extension/autocomplete'] = array(
     'title' => 'Voip Extension Autocomplete',
     'page callback' => 'voip_extension_autocomplete',
     'access arguments' => array('edit extension'),
     'type' => MENU_CALLBACK,
   );
-  // settings page
-  $items['admin/settings/voip_extension'] = array(
+  // Extensions configuration page
+  $items['admin/voip/extensions'] = array(
     'title' => t('Voip Phone Extensions'),
-    'description' => t('Enable voip and set up extensions for nodes and users.'),
+    'description' => t('Enable Voip and set up extensions for nodes and users.'),
     'page callback' => 'drupal_get_form',
     'page arguments' => array('voip_extension_admin_settings'), 
     'access arguments' => array('administer voip extensions'),
