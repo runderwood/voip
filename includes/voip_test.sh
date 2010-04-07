@@ -43,32 +43,6 @@ echo('result: ' . print_r($result, TRUE) . "\n\n");
 
 echo("\n");
 echo("-------\n");
-echo("Testing voip_get_script()\n");
-echo("-------\n");
-
-$script_name = 'test_failure';
-echo("about to call voip_get_script($script_name)\n");
-$options = array('arg1' => '1', 'arg2' => 'blue');
-$result = voip_get_script($voip_server, $script_name, $options);
-echo('voip_api_error: ' . print_r(voip_api_error_message(), TRUE) . "\n");
-echo('result: ' . print_r($result, TRUE) . "\n\n");
-
-$script_name = 'invalid_script';
-echo("about to call voip_get_script($script_name)\n");
-$options = array('arg1' => '1', 'arg2' => 'blue');
-$result = voip_get_script($voip_server, $script_name, $options);
-echo('voip_api_error: ' . print_r(voip_api_error_message(), TRUE) . "\n");
-echo('result: ' . print_r($result, TRUE) . "\n\n");
-
-$script_name = 'hello_world';
-echo("about to call voip_get_script($script_name)\n");
-$options = array('arg1' => '1', 'arg2' => 'blue');
-$result = voip_get_script($voip_server, $script_name, $options);
-echo('voip_api_error: ' . print_r(voip_api_error_message(), TRUE) . "\n");
-echo('result: ' . print_r($result, TRUE) . "\n\n");
-
-echo("\n");
-echo("-------\n");
 echo("Testing voip_send_request()\n");
 echo("-------\n");
 
