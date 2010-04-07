@@ -6,12 +6,12 @@
 /**
  * Implementation of hook_get_script().
  */
-function tester_voip_get_script($script_name, $options) {
+function voip_test_voip_get_script($script_name, $options) {
   $response = NULL;
   switch($script_name) {
     case 'test_failure':
       $response = FALSE;
-      voip_error('(tester.module) test failure, as expected');
+      voip_error('(voip_test.module) test failure, as expected');
       break;
     case 'hello_world':
       $response = "<voip_script name='hello_world'><action name='say><text>Hello, world!</text></action></voip_script>";
@@ -24,7 +24,7 @@ function tester_voip_get_script($script_name, $options) {
 /**
  * Implementation of hook_voip_process_request().
  */
-function tester_voip_process_request($request_id, $options) {
+function voip_test_voip_process_request($request_id, $options) {
   $response = NULL;
 
   switch($request_id) {

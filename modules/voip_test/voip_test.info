@@ -1,5 +1,5 @@
 ; $Id$
-name = Tester 
+name = Voip Test Module 
 description = Tests VOIP hooks
 package = Voip Drupal
 core = 6.x
