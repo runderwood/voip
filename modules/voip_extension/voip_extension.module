@@ -33,15 +33,23 @@ function voip_extension_menu() {
     'access arguments' => array('edit extension'),
     'type' => MENU_CALLBACK,
   );
-  // Extensions configuration page
-  $items['admin/voip/extensions'] = array(
-    'title' => t('Voip Phone Extensions'),
+  // Voip-enable page
+  $items['admin/voip/extensions-enable'] = array(
+    'title' => t('Voip-enable users and node types'),
     'description' => t('Enable Voip and set up extensions for nodes and users.'),
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('voip_extension_admin_settings'), 
+    'page arguments' => array('voip_extension_admin_enable'), 
     'access arguments' => array('administer voip extensions'),
-    'type' => MENU_NORMAL_ITEM,
     'file' => 'voip_extension.admin.inc',
+  );
+  // Extensions default settings page
+  $items['admin/voip/extensions-defaults'] = array(
+    'title' => t('Set Voip extension defaults'),
+    'description' => t('Set up default settings for Voip extensions.'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('voip_extension_admin_defaults'), 
+    'access arguments' => array('administer voip extensions'),
+    'file' => 'voip_extension.admin_defaults.inc',
   );
 
   return $items;
@@ -97,8 +105,51 @@ return array(
  */
 function voip_extension_form(&$node, $form_state) {
   $type = node_get_types('type', $node);
-  require_once('voip_extension.node_form.inc');
   
+ $form['ext'] = array(
+    '#type' => 'item',
+    '#title' => t('Extension Number'),
+    '#value' => isset($node->ext) ? $node->ext : t('(auto number)'),
+  );
+
+  // get related node info
+  if ($node->r_nid) {
+    $r_node = node_load($node->r_nid);
+    $form['r_nid'] = array(
+      '#type' => 'item',
+      '#title' => t('Related Node'),
+      '#value' => ($r_node) ? l($r_node->title, "node/$r_node->nid") : '',
+    );
+  }
+
+  // get related user info
+  if ($node->r_uid) {
+    $r_user = user_load($node->r_uid);
+    $form['r_uid'] = array(
+      '#type' => 'item',
+      '#title' => t('Related User'),
+      '#value' => ($r_user) ? l($r_user->name, "user/$r_user->uid") : '',
+    );
+  }
+
+  $form['r_type'] = array(
+    '#type' => 'item',
+    '#title' => t('Related Node Type (or "user" if not a node)'),
+    '#value' => isset($node->r_type) ? $node->r_type : '',
+  );
+  $form['r_script'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Script Node ID'),
+    '#size' => 30,
+    '#default_value' => isset($node->r_script) ? $node->r_script : '',
+    '#autocomplete_path' => 'voip_extension/autocomplete'
+  );
+  $form['is_active'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Is Active'),
+    '#default_value' => $node->is_active,
+  );
+
   return $form;
 }
 
