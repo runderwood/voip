@@ -33,7 +33,7 @@ echo('result: ' . print_r($result, TRUE) . "\n\n");
 
 $request_id = 'voip_get_script';
 echo("about to call voip_process_request($request_id)\n");
-$options = array('arg1' => '1', 'arg2' => 'blue');
+$options = array('script name' => 'hello world');
 $result = voip_process_request($voip_server, $request_id, $options);
 echo('voip_api_error: ' . print_r(voip_api_error_message(), TRUE) . "\n");
 echo('result: ' . print_r($result, TRUE) . "\n\n");
