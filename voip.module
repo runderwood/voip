@@ -57,6 +57,13 @@ function voip_xmlrpc() {
   $methods = array();
 
   $methods[] = array(
+    'voip.getScript',      // External method name.
+    'xmls_voip_get_script', // PHP function to run.
+    array('array', 'string', 'array'),// The return value's type, then any parameter types.
+    t('Retrieves the specified dialplan script.')  // Description.
+  );
+
+  $methods[] = array(
     'voip.processRequest',      // External method name.
     'xmls_voip_process_request', // PHP function to run.
     array('array', 'string', 'array'),// The return value's type, then any parameter types.
