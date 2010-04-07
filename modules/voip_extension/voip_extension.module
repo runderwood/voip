@@ -180,10 +180,7 @@ function voip_extension_nodeapi(&$node, $op, $teaser, $page) {
   
     // When a voip-enabled node is created, automatically create a corresponding extension.
     case 'insert': 
-      // Save to make nid available in $node.
-      node_save($node);
-     
-      // Now create corresponding extension node.
+      // Create corresponding extension node.
       $ext = new stdClass();
       global $user;
       $ext->type = 'voip_extension';
@@ -192,10 +189,16 @@ function voip_extension_nodeapi(&$node, $op, $teaser, $page) {
       $ext->r_type = $node->type;
       $ext->is_active = TRUE; // TODO Use user-defined default setting.
       $ext->r_script = 12345; // TODO Use user-defined default setting.
-                              // TODO Add error handling for scripts that dont exist
+      // set node options from node_type_form
+      $node_options = variable_get('node_options_voip_extension', FALSE);
+      $ext->status = (in_array('status', $node_options)) ? 1 : 0; 
+      $ext->promote = (in_array('promote', $node_options)) ? 1 : 0; 
+      $ext->sticky = (in_array('sticky', $node_options)) ? 1 : 0; 
+      $ext->revision = (in_array('revision', $node_options)) ? 1 : 0; 
+      // save it!
       node_save($ext);
 
-      // Notify user about new extension and relevant extension info.
+      // Notify user about new extension node and relevant extension info.
       $ext_nid = $node->nid + 1;
       $output = theme('voip_extension_created', $ext_nid); 
       drupal_set_message($output);
