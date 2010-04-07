@@ -1,31 +1,18 @@
-<?
+<?php
 /**
  * @file test VOIP hooks.
  */ 
-
-/**
- * Implementation of hook_get_script().
- */
-function tester_voip_get_script($script_name, $options) {
-  $response = NULL;
-  switch($script_name) {
-    case 'test_failure':
-      $response = FALSE;
-      voip_error('(tester.module) test failure, as expected');
-      break;
-    case 'hello_world':
-      $response = "<voip_script name='hello_world'><action name='say><text>Hello, world!</text></action></voip_script>";
-      break;
-  }
-
-  return $response;
-}
 
 /**
  * Implementation of hook_voip_process_request().
  */
 function tester_voip_process_request($request_id, $options) {
   $response = NULL;
+  $response = 'testin 1 2 3';
+/*
+      $response = "This is being called by tester module, \n"
+                          .'$request_id = '. $request_id ."\n"
+                          .'$options[' . "'script name'" ."] = $options['script name'] \n";
   switch($request_id) {
     case 'test_failure':
       $response = FALSE;
@@ -34,8 +21,13 @@ function tester_voip_process_request($request_id, $options) {
     case 'test_echo':
       $response['echo'] = $options;
       break;
+    case 'voip_get_script': 
+      if ($options['script name'] == 'hello world') {
+        $response['script'] = "<voip_script name='hello_world'><action name='say><text>Hello, world!</text></action></voip_script>";
+      }
+      break;
   }
-
+*/
   return $response;
 }
 

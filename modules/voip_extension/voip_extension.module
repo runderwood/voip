@@ -189,10 +189,11 @@ function voip_extension_nodeapi(&$node, $op, $teaser, $page) {
   } else if ($node->type != 'voip_extension' && variable_get('voip_enable_'. $node->type, FALSE)) {
     switch($op) {
   
-    // When a voip-enabled node is created, automatically create a corresponding extension.
+    // When a voip-enabled node is created, automatically create a
+    // a corresponding extension node.
     case 'insert': 
       // Save to make nid available in $node.
-      // node_save($node);
+      node_save($node);
      
       // Now create corresponding extension node.
 
