@@ -8,13 +8,44 @@
  * Implemenation of template_preprocess().
  */
 function template_preprocess_voip_extension(&$variables) {
-  $node = $variables['node'];
+  $variables = _voip_extension_details($variables);
+}
 
+/** 
+ * Implementation of template_preprocess().
+ */
+function template_preprocess_voip_extension_created(&$variables) {
+  $variables = _voip_extension_details($variables);
+
+  // edit link
+  $txt = t('edit');
+  $nid = $variables['nid'];
+  $edit = l($txt, "node/$nid/edit");
+  $variables['edit'] = $edit; 
+
+  // message about new extension
+  $variables['msg'] = t('A new extension has been created:'); 
+}
+
+/**
+ * Provide variables for voip_extension .tpl.php files, including 
+ * details about each of the fields in the voip_extension node.
+ */
+function _voip_extension_details($variables) {
+  if ($variables['node']) {
+    $node = $variables['node'];
+  } else if ($variables['nid']) {
+    $node = node_load($variables['nid']);
+  }
+   
+  // extension node nid
+  $variables['nid'] = $node->nid;
+ 
   // extension number
-  if ($variables['teaser']) {
-    $ext = l("Extension Number $node->ext", "node/$node->nid");
-  } else { // page view
+  if ($variables['page']) {
     $ext = "Extension Number $node->ext";
+  } else { // page view
+    $ext = l("Extension Number $node->ext", "node/$node->nid");
   }
   $variables['ext'] = $ext; 
 
@@ -42,4 +73,8 @@ function template_preprocess_voip_extension(&$variables) {
 
   $r_script = l("$node->r_script", "node/$node->r_script");
   $variables['r_script'] = $r_script;
+
+  return $variables; 
 }
+
+

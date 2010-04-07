@@ -1,8 +1,13 @@
 <?php
 /**
- * @file
- *   Implement create directory of extensions to voip nodes and users. 
+ * @file voip_extension.module
+ *   Create extension nodes for voip-enabled nodes and users. Implementation of Drupal API hooks.
+ * 
+ * @see voip_extension.inc
+ *   voip_extension's own functions (not part of Drupal API).
  */ 
+
+require_once('voip_extension.inc'); 
 
 /**
  * Implementation of hook_help(). 
@@ -40,22 +45,6 @@ function voip_extension_menu() {
   );
 
   return $items;
-}
-
-/**
- * Callback for voip_extension/autocomplete.
- * 
- * Populate autocomplete field in node/%/edit form for voip_extension nodes.
- */
-function voip_extension_autocomplete() {
-  $items = array();  
-  $result = db_query("SELECT nid, title FROM {node} WHERE status = 1 AND type = 'voip_script' AND title LIKE '%s%%' ", $string);
-  
-  while($obj = db_fetch_object($result)) {
-    $items[$obj->nid] = check_plain($obj->title);
-  }
-  print drupal_to_js($items); 
-  exit();
 }
 
 /**
@@ -192,11 +181,24 @@ function voip_extension_nodeapi(&$node, $op, $teaser, $page) {
     // When a voip-enabled node is created, automatically create a corresponding extension.
     case 'insert': 
       // Save to make nid available in $node.
-      // node_save($node);
+      node_save($node);
      
       // Now create corresponding extension node.
+      $ext = new stdClass();
+      global $user;
+      $ext->type = 'voip_extension';
+      $ext->uid = $user->uid; // author of extension
+      $ext->r_nid = $node->nid; // related nid (from newly saved node)
+      $ext->r_type = $node->type;
+      $ext->is_active = TRUE; // TODO Use user-defined default setting.
+      $ext->r_script = 12345; // TODO Use user-defined default setting.
+                              // TODO Add error handling for scripts that dont exist
+      node_save($ext);
 
-      // Redirect to extension edit page to select a script.
+      // Notify user about new extension and relevant extension info.
+      $ext_nid = $node->nid + 1;
+      $output = theme('voip_extension_created', $ext_nid); 
+      drupal_set_message($output);
      
       break;
 
@@ -234,6 +236,7 @@ function voip_extension_nodeapi(&$node, $op, $teaser, $page) {
     // Info was already added to node object on 'load', so just theme it here.
     case 'view': 
       // TODO
+
       break;
 
     }
@@ -287,6 +290,12 @@ function voip_extension_theme(){
       'arguments' => array('node' => NULL, 'teaser' => NULL, 'page' => NULL),
       'path' => $path,
     ),
+    'voip_extension_created' => array(
+      'template' => 'voip-extension-created',
+      'file' => 'theme.inc',
+      'arguments' => array('nid' => NULL),
+      'path' => $path,
+    )
   );
 }
 

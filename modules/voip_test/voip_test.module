@@ -22,3 +22,7 @@ function voip_test_voip_process_request($request_id, $options) {
   return $response;
 }
 
+/*
+function voip_test_nodeapi(&$node, $op, $teaser, $page) {
+}
+// */
