@@ -1,6 +1,6 @@
 <?php 
 /**
- * @file voipextension.admin.inc
+ * @file voipext.admin.inc
  *   admin/voip/extension form
  */
 
@@ -10,7 +10,7 @@
  * @ingroup forms
  * @see system_settings_form().
  */
-function voipextension_admin_enable() {
+function voipext_admin_enable() {
   // Get an array of node types with internal names as keys
   // and "friendly" names as values. 
   $options = node_get_types('names');
@@ -26,8 +26,8 @@ function voipextension_admin_enable() {
     '#collapsed' => FALSE, 
   );
   foreach ($options as $node_type => $node_name) {
-    // All node types except voipextension should be voip enable-able.
-    if ($node_type != 'voipextension') {
+    // All node types except voipext should be voip enable-able.
+    if ($node_type != 'voipext') {
       $var = 'voip_enable_'. $node_type;
       $form['voip_enable'][$var] = array(
         '#type' => 'checkbox',

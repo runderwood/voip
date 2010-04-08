@@ -1,6 +1,6 @@
 <?php 
 /**
- * @file voipextension.admin_defaults.inc
+ * @file voipext.admin_defaults.inc
  *   admin/voip/extension/defaults form
  */
 
@@ -10,7 +10,7 @@
  * @ingroup forms
  * @see system_settings_form().
  */
-function voipextension_admin_defaults() {
+function voipext_admin_defaults() {
   // Get an array of node types with internal names as keys
   // and "friendly" names as values. 
   $options = node_get_types('names');
@@ -21,7 +21,7 @@ function voipextension_admin_defaults() {
     $enabled = variable_get($var, FALSE); 
 
     // If it is voip-enabled, add form elements
-    if ($enabled && $node_type != 'voipextension') {
+    if ($enabled && $node_type != 'voipext') {
       $script = 'voip_default_script_'. $node_type;
       $active = 'voip_default_is_active_'. $node_type;
 
@@ -30,7 +30,7 @@ function voipextension_admin_defaults() {
         '#title' => t("Default script for $node_name"),
         '#default_value' => variable_get($script, FALSE),
         '#size' => 30,
-        '#autocomplete_path' => 'voipextension/autocomplete'
+        '#autocomplete_path' => 'voipext/autocomplete'
       );
       $form[$active] = array(
         '#type' => 'checkbox',

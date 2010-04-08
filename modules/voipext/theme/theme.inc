@@ -1,21 +1,21 @@
 <?php
 /**
  * @file
- *  Preprocess functions for voipextension templates (*.tpl.php files).
+ *  Preprocess functions for voipext templates (*.tpl.php files).
  */
 
 /**
  * Implemenation of template_preprocess().
  */
-function template_preprocess_voipextension(&$variables) {
-  $variables = _voipextension_details($variables);
+function template_preprocess_voipext(&$variables) {
+  $variables = _voipext_details($variables);
 }
 
 /** 
  * Implementation of template_preprocess().
  */
-function template_preprocess_voipextension_created(&$variables) {
-  $variables = _voipextension_details($variables);
+function template_preprocess_voipext_created(&$variables) {
+  $variables = _voipext_details($variables);
 
   // edit link
   $txt = t('edit');
@@ -28,10 +28,10 @@ function template_preprocess_voipextension_created(&$variables) {
 }
 
 /**
- * Provide variables for voipextension .tpl.php files, including 
- * details about each of the fields in the voipextension node.
+ * Provide variables for voipext .tpl.php files, including 
+ * details about each of the fields in the voipext node.
  */
-function _voipextension_details($variables) {
+function _voipext_details($variables) {
   if ($variables['node']) {
     $node = $variables['node'];
   } else if ($variables['nid']) {
