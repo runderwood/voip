@@ -260,10 +260,12 @@ function voipext_nodeapi(&$node, $op, $teaser, $page) {
       }
       // set node options from node_type_form
       $node_options = variable_get('node_options_voipext', FALSE);
-      $ext->status = (in_array('status', $node_options)) ? 1 : 0; 
-      $ext->promote = (in_array('promote', $node_options)) ? 1 : 0; 
-      $ext->sticky = (in_array('sticky', $node_options)) ? 1 : 0; 
-      $ext->revision = (in_array('revision', $node_options)) ? 1 : 0; 
+      if ($node_options) {
+        $ext->status = (in_array('status', $node_options)) ? 1 : 0; 
+        $ext->promote = (in_array('promote', $node_options)) ? 1 : 0; 
+        $ext->sticky = (in_array('sticky', $node_options)) ? 1 : 0; 
+        $ext->revision = (in_array('revision', $node_options)) ? 1 : 0; 
+      }
       // save it!
       node_save($ext);
 
@@ -361,13 +363,13 @@ function voipext_theme(){
 
   return array(
     'voipext' => array(
-      'template' => 'voip-extension',
+      'template' => 'voipext',
       'file' => 'theme.inc',
       'arguments' => array('node' => NULL, 'teaser' => NULL, 'page' => NULL),
       'path' => $path,
     ),
     'voipext_created' => array(
-      'template' => 'voip-extension-created',
+      'template' => 'voipext-created',
       'file' => 'theme.inc',
       'arguments' => array('nid' => NULL),
       'path' => $path,
