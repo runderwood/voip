@@ -111,10 +111,11 @@ return array(
  * Implementation of hook_form().
  */
 function voipext_form(&$node, $form_state) {
+dsm($node);
   $type = node_get_types('type', $node);
   
  $ext = $node->voipext_info['ext'];
- $form['ext'] = array(
+ $form['ext_item'] = array(
     '#type' => 'item',
     '#title' => t('Extension Number'),
     '#value' => isset($ext) ? $ext : t('(auto number)'),
@@ -124,10 +125,15 @@ function voipext_form(&$node, $form_state) {
   $r_nid = $node->voipext_info['r_nid'];
   if ($r_nid) {
     $r_node = node_load($r_nid);
-    $form['r_nid'] = array(
+    $form['r_nid_item'] = array(
       '#type' => 'item',
       '#title' => t('Related Node'),
       '#value' => ($r_node) ? l($r_node->title, "node/$r_node->nid") : '',
+    );
+    // store value in hidden element otherwise value is erased by voipext_update()
+    $form['r_nid'] = array(
+      '#type' => 'hidden',
+      '#value' => $r_nid,
     );
   }
 
@@ -135,19 +141,30 @@ function voipext_form(&$node, $form_state) {
   $r_uid = $node->voipext_info['r_uid'];
   if ($r_uid) {
     $r_user = user_load($r_uid);
-    $form['r_uid'] = array(
+    $form['r_uid_item'] = array(
       '#type' => 'item',
       '#title' => t('Related User'),
       '#value' => ($r_user) ? l($r_user->name, "user/$r_uid") : '',
     );
+    // store value in hidden element otherwise value is erased by voipext_update()
+    $form['r_uid'] = array(
+      '#type' => 'hidden',
+      '#value' => $r_uid,
+    );
   }
 
   $r_type = $node->voipext_info['r_type'];
-  $form['r_type'] = array(
+  $form['r_type_item'] = array(
     '#type' => 'item',
     '#title' => t('Related Node Type (or "user" if not a node)'),
     '#value' => isset($r_type) ? $r_type : '',
   );
+  // store value in hidden element otherwise value is erased by voipext_update()
+  $form['r_type'] = array(
+    '#type' => 'hidden',
+    '#value' => $r_type,
+  );
+
   $r_script = $node->voipext_info['r_script'];
   $form['r_script'] = array(
     '#type' => 'textfield',
@@ -197,6 +214,11 @@ function voipext_insert($node) {
           $node->r_type,
           $node->is_active,
           $node->r_script);
+}
+
+function voipext_validate($node, &$form) {
+dsm($node);
+dsm($form);
 }
 
 /**
