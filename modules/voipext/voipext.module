@@ -112,6 +112,7 @@ return array(
  * Implementation of hook_form().
  */
 function voipext_form(&$node, $form_state) {
+dsm($node);
   $type = node_get_types('type', $node);
   
  $form['ext'] = array(
@@ -198,6 +199,7 @@ function voipext_insert($node) {
  * Implementation of hook_update().
  */
 function voipext_update(&$node){
+dsm($node);
   if ($node->revision) {
     voipext_insert($node);
   } else {
@@ -326,12 +328,10 @@ function voipext_nodeapi(&$node, $op, $teaser, $page) {
       $access = user_access('view extension');
       if ($access) {
         $voipext_node = $node->voipext;
-//        $x = theme('voipext_ext', $voipext_node); 
         $node->content['voipext'] = array(
           '#value' => theme('voipext_ext', $voipext_node), 
           '#weight' => 1,
         ); 
-dsm($node->content);
       }
       break;
     }

@@ -24,7 +24,7 @@ function voip_test_voip_process_request($request_id, $options) {
 
 /*
 function voip_test_nodeapi(&$node, $op, $teaser, $page) {
-  if ($node->type == 'voip_extension' && $op == 'view') {
+  if ($op == 'view') {
     dsm($node);
   }
 }
