@@ -111,7 +111,6 @@ return array(
  * Implementation of hook_form().
  */
 function voipext_form(&$node, $form_state) {
-dsm($node);
   $type = node_get_types('type', $node);
   
  $ext = $node->voipext_info['ext'];
@@ -216,16 +215,10 @@ function voipext_insert($node) {
           $node->r_script);
 }
 
-function voipext_validate($node, &$form) {
-dsm($node);
-dsm($form);
-}
-
 /**
  * Implementation of hook_update().
  */
 function voipext_update(&$node){
-dsm($node);
   if ($node->revision) {
     voipext_insert($node);
   } else {
