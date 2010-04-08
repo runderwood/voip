@@ -7,6 +7,7 @@
  *   voipext's own functions (not part of Drupal API).
  */ 
 
+require_once('includes/voipext.constants.inc'); 
 require_once('includes/voipext.inc'); 
 
 /**
@@ -258,7 +259,7 @@ function voipext_nodeapi(&$node, $op, $teaser, $page) {
                 array('!here' => l('here', url('admin/voip/extensions-defaults', array('absolute' => TRUE)))));
         drupal_set_message($txt, 'warning');
       }
-      // set node options from node_type_form
+      // set node options from voipext node_type_form
       $node_options = variable_get('node_options_voipext', FALSE);
       if ($node_options) {
         $ext->status = (in_array('status', $node_options)) ? 1 : 0; 
@@ -279,7 +280,8 @@ function voipext_nodeapi(&$node, $op, $teaser, $page) {
     // Add extension info to voip-enabled nodes on load. 
     // This will let other modules do things with extension info before 'view'.
     case 'load': 
-      // TODO 
+      $node['voipext'] = voipext_get_ext($node->nid);
+      dsm($node);
       break;
 
     // The node is about to be shown on the add/edit form.

@@ -4,8 +4,6 @@
  *   Functions provided by Voip Extension module, not part of Drupal API functions.
  */
 
- //     ['error_code'] :: VOIP_SUCCESS, VOIP_EXTENSION_DOES_NOT_EXIST, VOIP_PROCESSING_FAILURE
-
 /**
  * Callback for voipext/autocomplete.
  * 
@@ -27,6 +25,7 @@ function voipext_autocomplete() {
  *
  * @param $nid
  *   integer. the id of the node that has the desired voip extension
+TODO Handle user extensions here too. Make param $id, not $nid. $uid should be a valid param.
  *
  * @return
  *   array with
@@ -34,26 +33,26 @@ function voipext_autocomplete() {
  *     ['error_msg'] :: string with eventual error message
  *     ['extension_info''] :: array with extension info
  */
-function voipext_get_info_from_nid($nid){
+function voipext_get_ext($nid, $type = 'node'){
   $rc = array();
 
   $query = "SELECT r_nid FROM {voip_extension} WHERE r_nid = %d";
   $db_result = db_query($query, $nid);
   if (!$db_result) {
-    $rc['error_code'] = VOIP_PROCESSING_FAILURE;
+    $rc['error_code'] = VOIPEXT_PROCESSING_FAILURE;
     $rc['error_msg'] = t('Processing error: could not query voip extension: %e', array('%e' => db_error()));
     return $rc;
   }
 
   $db_entry = db_fetch_array($db_result);
   if (!$db_entry) {
-    $rc['error_code'] = VOIP_EXTENSION_DOES_NOT_EXIST;
+    $rc['error_code'] = VOIPEXT_EXTENSION_DOES_NOT_EXIST;
     $rc['error_msg'] = t('Extension for node %n does not exist: %e', array('%n' => $nid_contents, '%e' => db_error()));
     return $rc;
   }
 
   $extension_node = node_load($db_entry['nid_extension']); 
-  $rc['error_code'] = VOIP_SUCCESS;
+  $rc['error_code'] = VOIPEXT_SUCCESS;
   $rc['extension_info'] = $extension_node->voipext_info;	
   
   return $rc;
