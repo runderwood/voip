@@ -1,0 +1,24 @@
+<?php
+/**
+ * @file test VOIP hooks.
+ */ 
+
+/**
+ * Implementation of hook_voip_process_request().
+ */
+function voip_test_voip_process_request($request_id, $options) {
+  $response = NULL;
+
+  switch($request_id) {
+    case 'voip_get_script':
+      if ($options['script name']  == 'hello world') {
+      $response['$request_id'] = $request_id . "\n";
+      $response['$options'] = $options;
+      $response['result'] = "<voip_script name='hello_world'><action name='say><text>Hello, world!</text></action></voip_script>";
+      break;
+      }
+  }
+
+  return $response;
+}
+

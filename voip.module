@@ -57,13 +57,6 @@ function voip_xmlrpc() {
   $methods = array();
 
   $methods[] = array(
-    'voip.getScript',      // External method name.
-    'xmls_voip_get_script', // PHP function to run.
-    array('array', 'string', 'array'),// The return value's type, then any parameter types.
-    t('Retrieves the specified dialplan script.')  // Description.
-  );
-
-  $methods[] = array(
     'voip.processRequest',      // External method name.
     'xmls_voip_process_request', // PHP function to run.
     array('array', 'string', 'array'),// The return value's type, then any parameter types.
@@ -238,6 +231,7 @@ function voip_send_log($request, $options) {
   return array('status' => TRUE);
 }
 
+<<<<<<< HEAD:voip.module
 
 /**
  * Retrieves the specified dialplan script 
@@ -269,6 +263,8 @@ function xmls_voip_get_script($script_name, $options=array())
 }
 
 
+=======
+>>>>>>> 8ec0082c2d1c7e70762a48bb96d48c34ee18d5d1:voip.module
 /**
  * Process requests received from VoIP servers.
  */

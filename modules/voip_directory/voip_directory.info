@@ -1,0 +1,7 @@
+; $Id$
+name = Voip Directory 
+description = Create a directory of voip extensions.
+package = Voip Drupal
+core = 6.x
+dependencies[] = voip
+

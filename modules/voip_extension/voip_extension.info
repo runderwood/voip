@@ -1,0 +1,7 @@
+; $Id$
+name = Voip Extension 
+description = Create a voip extension content type and provide UI for creation of voip extensions.
+package = Voip Drupal
+core = 6.x
+dependencies[] = voip
+

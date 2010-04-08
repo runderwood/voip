@@ -1,0 +1,26 @@
+<?
+/**
+ * @file
+ *   Implement create directory of extensions to voip nodes and users. 
+ */ 
+
+/**
+ * Implementation of hook_help(). 
+ */
+function voip_directory_help($path, $arg) {
+  if ($path == 'admin/help#voip_directory') {
+    $txt = t('This module creates a directory of extensions '
+            .'for voip-enabled users and nodes. It also creates '
+            .'the "Voip Script" and "Voip Extension" content types. '
+            );
+            // TODO 'ADD SOME EXPLAINATION HERE ABOUT WHAT USERS DO WITH THESE.'
+    return $txt;
+  }
+}
+
+/**
+ * Implementation hook_node_info().
+ */
+function voip_directory_node_info() {
+  require_once('voip_directory.node_info.inc');
+}
