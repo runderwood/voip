@@ -7,7 +7,7 @@
  *   voip_extension's own functions (not part of Drupal API).
  */ 
 
-require_once('voip_extension.inc'); 
+require_once('includes/voip_extension.inc'); 
 
 /**
  * Implementation of hook_help(). 
@@ -40,7 +40,7 @@ function voip_extension_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('voip_extension_admin_enable'), 
     'access arguments' => array('administer voip extensions'),
-    'file' => 'voip_extension.admin.inc',
+    'file' => 'includes/voip_extension.admin.inc',
   );
   // Extensions default settings page
   $items['admin/voip/extensions-defaults'] = array(
@@ -49,7 +49,7 @@ function voip_extension_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('voip_extension_admin_defaults'), 
     'access arguments' => array('administer voip extensions'),
-    'file' => 'voip_extension.admin_defaults.inc',
+    'file' => 'includes/voip_extension.admin_defaults.inc',
   );
 
   return $items;
@@ -303,8 +303,12 @@ function voip_extension_nodeapi(&$node, $op, $teaser, $page) {
     case 'search result': 
       // todo Include extensions in search results.
       break;
+ 
+    case 'update':
+      // TODO Review D4 code for 'update'. Do we need all this stuff here? 
+      break;
 
-    // Theme extension info and attach it to to node view of voip-enabled nodes.
+    // Theme extension info and attach it to the node view of voip-enabled nodes.
     // Info was already added to node object on 'load', so just theme it here.
     case 'view': 
       // TODO
