@@ -51,9 +51,9 @@ function voipext_get_ext($nid, $type = 'node'){
     return $rc;
   }
 
-  $extension_node = node_load($db_entry['nid_extension']); 
+  $extension_node = node_load($db_entry['nid']); 
   $rc['error_code'] = VOIPEXT_SUCCESS;
-  $rc['extension_info'] = $extension_node->voipext_info;	
+  $rc['extension_node'] = $extension_node;	
   
   return $rc;
 }

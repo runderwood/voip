@@ -280,8 +280,7 @@ function voipext_nodeapi(&$node, $op, $teaser, $page) {
     // Add extension info to voip-enabled nodes on load. 
     // This will let other modules do things with extension info before 'view'.
     case 'load': 
-      $node['voipext'] = voipext_get_ext($node->nid);
-      dsm($node);
+//      $node['voipext'] = voipext_get_ext($node->nid);
       break;
 
     // The node is about to be shown on the add/edit form.
@@ -327,10 +326,14 @@ function voipext_nodeapi(&$node, $op, $teaser, $page) {
  * Implementation of hook_load().
  */
 function voipext_load($node) {
+  $additions = new stdClass();
+  // retreive info from voip_extension table
   $result = db_query('SELECT ext, r_nid, r_uid, r_type, is_active, r_script '
                     .'FROM {voip_extension} '
                     .'WHERE vid = %d ', $node->vid);
-  return db_fetch_object($result);
+  $additions->voip_extension = db_fetch_array($result);
+
+  return $additions;
 }
 
 /**
@@ -340,12 +343,12 @@ function voipext_view($node, $teaser = FALSE, $page = FALSE) {
   // Prepare node
   $node = node_prepare($node, $teaser); 
   // Prepare extension fields
-  $node->ext = check_plain($node->ext); // maybe unnecessary, but might as well
-  $node->r_nid = check_plain($node->r_nid);
-  $node->r_uid = check_plain($node->r_uid);
-  $node->r_type = check_plain($node->r_type);
-  $node->is_active = check_plain($node->is_active);
-  $node->r_script = check_plain($node->r_script);
+  $node->voip_extension['ext'] = check_plain($node->voip_extension['ext']); // maybe unnecessary, but might as well
+  $node->voip_extension['r_nid'] = check_plain($node->voip_extension['r_nid']);
+  $node->voip_extension['r_uid'] = check_plain($node->voip_extension['r_uid']);
+  $node->voip_extension['r_type'] = check_plain($node->voip_extension['r_type']);
+  $node->voip_extension['is_active'] = check_plain($node->voip_extension['is_active']);
+  $node->voip_extension['r_script'] = check_plain($node->voip_extension['r_script']);
   // Theme extension fields
   $node->content['voipext'] = array(
     '#value' => theme('voipext', $node, $teaser, $page),
