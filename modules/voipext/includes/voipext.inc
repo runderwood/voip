@@ -29,7 +29,6 @@ TODO Handle user extensions here too. Make param $id, not $nid. $uid should be a
  *
  * @return
  *   array with
- *     ['error_code'] :: VOIP_SUCCESS, VOIP_EXTENSION_DOES_NOT_EXIST, VOIP_PROCESSING_FAILURE
  *     ['error_msg'] :: string with eventual error message
  *     ['extension_info''] :: array with extension info
  */

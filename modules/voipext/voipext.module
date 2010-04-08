@@ -112,7 +112,6 @@ return array(
  * Implementation of hook_form().
  */
 function voipext_form(&$node, $form_state) {
-dsm($node);
   $type = node_get_types('type', $node);
   
  $ext = $node->voipext_info['ext'];
