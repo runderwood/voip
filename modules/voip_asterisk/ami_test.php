@@ -36,7 +36,7 @@ echo("-------\n");
 echo("about to call _voip_asterisk_ping($server_config)\n");
 $result = _voip_asterisk_ping($server_config);
 echo('voip_error: ' . voip_error_message() . "\n");
-echo('result: ' . print_r($result) . "\n\n");
+echo('result: ' . print_r($result, TRUE) . "\n\n");
 
 $destination = '16172130536'; // Leo's Google Voice number
 //$origin = '6177920995'; // Leo's cell phone
@@ -47,7 +47,7 @@ $origin = '6174525510'; // media lab office
 echo("about to call _voip_asterisk_dial_out($server_config, $origin, $destination)\n");
 $result = _voip_asterisk_dial_out($server_config, $origin, $destination);
 echo('voip_error: ' . voip_error_message() . "\n");
-echo('result: ' . print_r($result) . "\n\n");
+echo('result: ' . print_r($result, TRUE) . "\n\n");
 
 echo("\n");
 echo("-------\n");

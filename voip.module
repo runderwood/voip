@@ -231,6 +231,40 @@ function voip_send_log($request, $options) {
   return array('status' => TRUE);
 }
 
+<<<<<<< HEAD:voip.module
+
+/**
+ * Retrieves the specified dialplan script 
+ */
+function xmls_voip_get_script($script_name, $options=array())
+{
+  $response = array();
+  voip_error_reset();
+  // process request
+  foreach (module_implements('voip_get_script') as $module) {
+    $function = $module .'_'. 'voip_get_script';
+    $result = call_user_func($function, $script_name, $options);
+    // stop at the first execution error
+    if(voip_error()) {
+      // report processing errors with code -32500 ('application error')
+      $error_message = voip_error_message(); // voip_error()->message;
+      $response = xmlrpc_error(-32500, $error_message);
+      break;
+    }
+    if (isset($result)) {
+      $response = array_merge_recursive($response, $result);
+    }
+  }
+  if (!$response) {
+    $error_message = "(voip.module) Script $script_name could not be found.";
+    $response = xmlrpc_error(-32500, $error_message);
+  }
+  return $response;
+}
+
+
+=======
+>>>>>>> 8ec0082c2d1c7e70762a48bb96d48c34ee18d5d1:voip.module
 /**
  * Process requests received from VoIP servers.
  */
