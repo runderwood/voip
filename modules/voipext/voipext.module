@@ -7,7 +7,6 @@
  *   voipext's own functions (not part of Drupal API).
  */ 
 
-require_once('includes/voipext.constants.inc'); 
 require_once('includes/voipext.inc'); 
 
 /**
