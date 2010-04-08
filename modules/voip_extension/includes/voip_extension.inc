@@ -1,17 +1,17 @@
 <?php 
 /**
- * @file voip_extension.inc
+ * @file voipextension.inc
  *   Functions provided by Voip Extension module, not part of Drupal API functions.
  */
 
  //     ['error_code'] :: VOIP_SUCCESS, VOIP_EXTENSION_DOES_NOT_EXIST, VOIP_PROCESSING_FAILURE
 
 /**
- * Callback for voip_extension/autocomplete.
+ * Callback for voipextension/autocomplete.
  * 
- * Populate autocomplete field in node/%/edit form for voip_extension nodes.
+ * Populate autocomplete field in node/%/edit form for voipextension nodes.
  */
-function voip_extension_autocomplete() {
+function voipextension_autocomplete() {
   $items = array();  
   $result = db_query("SELECT nid, title FROM {node} WHERE status = 1 AND type = 'voip_script' AND title LIKE '%s%%' ", $string);
   
@@ -34,7 +34,7 @@ function voip_extension_autocomplete() {
  *     ['error_msg'] :: string with eventual error message
  *     ['extension_info''] :: array with extension info
  */
-function voip_extension_get_info_from_nid($nid){
+function voipextension_get_info_from_nid($nid){
   $rc = array();
 
   $query = "SELECT r_nid FROM {voip_extension} WHERE r_nid = %d";
@@ -54,7 +54,7 @@ function voip_extension_get_info_from_nid($nid){
 
   $extension_node = node_load($db_entry['nid_extension']); 
   $rc['error_code'] = VOIP_SUCCESS;
-  $rc['extension_info'] = $extension_node->voip_extension_info;	
+  $rc['extension_info'] = $extension_node->voipextension_info;	
   
   return $rc;
 }
