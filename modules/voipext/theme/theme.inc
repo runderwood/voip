@@ -42,7 +42,7 @@ function _voipext_details($variables) {
   $variables['nid'] = $node->nid;
  
   // extension number
-  $ext = $node->voip_extension['ext'];
+  $ext = $node->voipext_info['ext'];
   if ($variables['page']) {
     $ext = "Extension Number $ext";
   } else { // page view
@@ -51,7 +51,7 @@ function _voipext_details($variables) {
   $variables['ext'] = $ext; 
 
   // related node
-  $r_nid = $node->voip_extension['r_nid'];
+  $r_nid = $node->voipext_info['r_nid'];
   if ($r_nid) {
     $r_node = node_load($r_nid);
     $r_nid = l($r_node->title, "node/$r_nid"); 
@@ -59,20 +59,20 @@ function _voipext_details($variables) {
   }
 
   // related user
-  $r_uid = $node->voip_extension['r_uid'];
+  $r_uid = $node->voipext_info['r_uid'];
   if ($r_uid) {
     $r_user = user_load($r_uid);
     $r_uid = l($r_user->name, "user/$r_uid");
     $variables['related_user'] = $r_uid;
   }
   
-  $r_type = $node->voip_extension['r_type'];
+  $r_type = $node->voipext_info['r_type'];
   $variables['r_type'] = $r_type; 
 
-  $is_active = ($node->voip_extension['is_active']) ? "Active" : "Not Active";
+  $is_active = ($node->voipext_info['is_active']) ? "Active" : "Not Active";
   $variables['is_active'] = $is_active;
 
-  $script_nid = $node->voip_extension['r_script'];
+  $script_nid = $node->voipext_info['r_script'];
   $r_script = l("$script_nid", "node/$script_nid");
   $variables['r_script'] = $r_script;
 

@@ -277,10 +277,12 @@ function voipext_nodeapi(&$node, $op, $teaser, $page) {
      
       break;
 
-    // Add extension info to voip-enabled nodes on load. 
+    // Add extension node (with extension info) to voip-enabled nodes on load. 
     // This will let other modules do things with extension info before 'view'.
     case 'load': 
-//      $node['voipext'] = voipext_get_ext($node->nid);
+      $nid = $node->nid;
+      $node->voipext = voipext_get_ext($nid);
+dsm($node);
       break;
 
     // The node is about to be shown on the add/edit form.
@@ -314,8 +316,38 @@ function voipext_nodeapi(&$node, $op, $teaser, $page) {
     // Theme extension info and attach it to the node view of voip-enabled nodes.
     // Info was already added to node object on 'load', so just theme it here.
     case 'view': 
-      // TODO
-
+      $extension_info = $node->voip_extension['ext_node']->voipext_info; 
+      $extension_info['nid'] = $node->voip_extension['ext_node']->nid; 
+      //$node->content['voip_extension'] = ;
+dsm($node);
+dsm($extension_info);
+/*
+        $access = user_access('access voip extension information');
+        global $user;
+        if ($access) {
+          // retrieve generic extension info form items
+          $items = _voip_get_view_items($extension_info, $teaser);
+          // add them to the telephony group
+          $fields = array(t('Phone settings') => $items);
+          // now retrieve form items from the other voip modules by invoking their hook_voip_node_extension_view()
+          $other_fields = array();
+          foreach (module_implements('voip_get_view_fields') as $module) {
+            $data = module_invoke($module, 'voip_get_view_fields', $extension_info, $user, $teaser, $page);
+            if ($data) {
+              $other_fields[] = $data;
+            }
+          }
+          foreach($other_fields as $other_module_fields) {
+            foreach($other_module_fields as $category => $items) {
+              $fields[$category] = $items;
+            }
+          }
+          // render the view
+          $node->voip_profile = theme('voip_profile', $fields);
+          $node->body = $node->voip_profile . $node->body;
+          $node->teaser = $node->voip_profile . $node->teaser;
+        }
+// */
       break;
 
     }
@@ -331,7 +363,7 @@ function voipext_load($node) {
   $result = db_query('SELECT ext, r_nid, r_uid, r_type, is_active, r_script '
                     .'FROM {voip_extension} '
                     .'WHERE vid = %d ', $node->vid);
-  $additions->voip_extension = db_fetch_array($result);
+  $additions->voipext_info = db_fetch_array($result);
 
   return $additions;
 }
@@ -342,13 +374,13 @@ function voipext_load($node) {
 function voipext_view($node, $teaser = FALSE, $page = FALSE) {
   // Prepare node
   $node = node_prepare($node, $teaser); 
-  // Prepare extension fields
-  $node->voip_extension['ext'] = check_plain($node->voip_extension['ext']); // maybe unnecessary, but might as well
-  $node->voip_extension['r_nid'] = check_plain($node->voip_extension['r_nid']);
-  $node->voip_extension['r_uid'] = check_plain($node->voip_extension['r_uid']);
-  $node->voip_extension['r_type'] = check_plain($node->voip_extension['r_type']);
-  $node->voip_extension['is_active'] = check_plain($node->voip_extension['is_active']);
-  $node->voip_extension['r_script'] = check_plain($node->voip_extension['r_script']);
+  // Prepare extension fields. Check plain for good measure (shouldn't be necessary though).
+  $node->voipext_info['ext'] = check_plain($node->voipext_info['ext']); 
+  $node->voipext_info['r_nid'] = check_plain($node->voipext_info['r_nid']);
+  $node->voipext_info['r_uid'] = check_plain($node->voipext_info['r_uid']);
+  $node->voipext_info['r_type'] = check_plain($node->voipext_info['r_type']);
+  $node->voipext_info['is_active'] = check_plain($node->voipext_info['is_active']);
+  $node->voipext_info['r_script'] = check_plain($node->voipext_info['r_script']);
   // Theme extension fields
   $node->content['voipext'] = array(
     '#value' => theme('voipext', $node, $teaser, $page),
