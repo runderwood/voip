@@ -115,15 +115,17 @@ function voipext_form(&$node, $form_state) {
 dsm($node);
   $type = node_get_types('type', $node);
   
+ $ext = $node->voipext_info['ext'];
  $form['ext'] = array(
     '#type' => 'item',
     '#title' => t('Extension Number'),
-    '#value' => isset($node->ext) ? $node->ext : t('(auto number)'),
+    '#value' => isset($ext) ? $ext : t('(auto number)'),
   );
 
   // get related node info
-  if ($node->r_nid) {
-    $r_node = node_load($node->r_nid);
+  $r_nid = $node->voipext_info['r_nid'];
+  if ($r_nid) {
+    $r_node = node_load($r_nid);
     $form['r_nid'] = array(
       '#type' => 'item',
       '#title' => t('Related Node'),
@@ -132,31 +134,35 @@ dsm($node);
   }
 
   // get related user info
-  if ($node->r_uid) {
-    $r_user = user_load($node->r_uid);
+  $r_uid = $node->voipext_info['r_uid'];
+  if ($r_uid) {
+    $r_user = user_load($r_uid);
     $form['r_uid'] = array(
       '#type' => 'item',
       '#title' => t('Related User'),
-      '#value' => ($r_user) ? l($r_user->name, "user/$r_user->uid") : '',
+      '#value' => ($r_user) ? l($r_user->name, "user/$r_uid") : '',
     );
   }
 
+  $r_type = $node->voipext_info['r_type'];
   $form['r_type'] = array(
     '#type' => 'item',
     '#title' => t('Related Node Type (or "user" if not a node)'),
-    '#value' => isset($node->r_type) ? $node->r_type : '',
+    '#value' => isset($r_type) ? $r_type : '',
   );
+  $r_script = $node->voipext_info['r_script'];
   $form['r_script'] = array(
     '#type' => 'textfield',
     '#title' => t('Script Node ID'),
     '#size' => 30,
-    '#default_value' => isset($node->r_script) ? $node->r_script : '',
+    '#default_value' => isset($r_script) ? $r_script : '',
     '#autocomplete_path' => 'voipext/autocomplete'
   );
+  $is_active = $node->voipext_info['is_active'];
   $form['is_active'] = array(
     '#type' => 'checkbox',
     '#title' => t('Is Active'),
-    '#default_value' => $node->is_active,
+    '#default_value' => $is_active,
   );
 
   return $form;
