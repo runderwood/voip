@@ -231,8 +231,6 @@ function voip_send_log($request, $options) {
   return array('status' => TRUE);
 }
 
-<<<<<<< HEAD:voip.module
-
 /**
  * Retrieves the specified dialplan script 
  */
@@ -262,9 +260,6 @@ function xmls_voip_get_script($script_name, $options=array())
   return $response;
 }
 
-
-=======
->>>>>>> 8ec0082c2d1c7e70762a48bb96d48c34ee18d5d1:voip.module
 /**
  * Process requests received from VoIP servers.
  */
