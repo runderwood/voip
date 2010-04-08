@@ -40,21 +40,17 @@ function voipext_get_ext($r_nid, $type = 'node'){
   $query = "SELECT nid FROM {voip_extension} WHERE r_nid = %d";
   $db_result = db_query($query, $r_nid);
   if (!$db_result) {
-    $ext['error_code'] = VOIPEXT_PROCESSING_FAILURE;
     $ext['error_msg'] = t('Processing error: could not query voip extension: %e', array('%e' => db_error()));
     return $ext;
   }
 
   $db_entry = db_fetch_array($db_result);
   if (!$db_entry) {
-    $ext['error_code'] = VOIPEXT_EXTENSION_DOES_NOT_EXIST;
-    $ext['error_msg'] = t('Extension for node %n does not exist: %e', array('%n' => $nid_contents, '%e' => db_error()));
+    $ext['error_msg'] = t('Extension for node %n does not exist: %e', array('%n' => $r_nid, '%e' => db_error()));
     return $ext;
   }
 
   $ext_node = node_load($db_entry['nid']); 
-  $ext['error_code'] = VOIPEXT_SUCCESS;
-  $ext['voipext_node'] = $ext_node;	
   
-  return $ext;
+  return $ext_node;
 }

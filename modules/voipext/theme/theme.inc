@@ -6,16 +6,22 @@
 
 /**
  * Implemenation of template_preprocess().
+ * 
+ * Preprocess voipext node. 
  */
 function template_preprocess_voipext(&$variables) {
-  $variables = _voipext_details($variables);
+  $variables = _voipext_details($variables['node']);
 }
 
 /** 
  * Implementation of template_preprocess().
+ * 
+ * Preprocess elements of message displayed to user where an extension is created. 
  */
 function template_preprocess_voipext_created(&$variables) {
-  $variables = _voipext_details($variables);
+  // get general extension details
+  $node = node_load($variables['nid']);
+  $variables = _voipext_details($node);
 
   // edit link
   $txt = t('edit');
@@ -27,17 +33,23 @@ function template_preprocess_voipext_created(&$variables) {
   $variables['msg'] = t('A new extension has been created:'); 
 }
 
-/**
- * Provide variables for voipext .tpl.php files, including 
- * details about each of the fields in the voipext node.
+/** 
+ * Implementation of template_preprocess().
+ *  
+ * Preprocess extension to display along with related node or user. 
  */
-function _voipext_details($variables) {
-  if ($variables['node']) {
-    $node = $variables['node'];
-  } else if ($variables['nid']) {
-    $node = node_load($variables['nid']);
-  }
-   
+function template_preprocess_voipext_ext(&$variables) {
+  $variables = _voipext_details($variables['voipext_node']);
+}
+
+/**
+ * @param $node
+ *  voipext node
+ * 
+ * Pre-process variables for voipext .tpl.php files, including 
+ * general details about extensions in the voipext node.
+ */
+function _voipext_details($node) {
   // extension node nid
   $variables['nid'] = $node->nid;
  

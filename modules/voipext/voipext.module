@@ -21,6 +21,13 @@ function voipext_help($path, $arg) {
   }
 }
 
+/**
+ * Implementation of hook_init().
+ */
+function voipext_init() {
+  drupal_add_css(drupal_get_path('module', 'voipext') .'theme/voipext.css');
+}
+
 /** 
  * Implementation of hook_menu().
  */
@@ -282,7 +289,6 @@ function voipext_nodeapi(&$node, $op, $teaser, $page) {
     case 'load': 
       $nid = $node->nid;
       $node->voipext = voipext_get_ext($nid);
-dsm($node);
       break;
 
     // The node is about to be shown on the add/edit form.
@@ -316,40 +322,18 @@ dsm($node);
     // Theme extension info and attach it to the node view of voip-enabled nodes.
     // Info was already added to node object on 'load', so just theme it here.
     case 'view': 
-      $extension_info = $node->voip_extension['ext_node']->voipext_info; 
-      $extension_info['nid'] = $node->voip_extension['ext_node']->nid; 
-      //$node->content['voip_extension'] = ;
-dsm($node);
-dsm($extension_info);
-/*
-        $access = user_access('access voip extension information');
-        global $user;
-        if ($access) {
-          // retrieve generic extension info form items
-          $items = _voip_get_view_items($extension_info, $teaser);
-          // add them to the telephony group
-          $fields = array(t('Phone settings') => $items);
-          // now retrieve form items from the other voip modules by invoking their hook_voip_node_extension_view()
-          $other_fields = array();
-          foreach (module_implements('voip_get_view_fields') as $module) {
-            $data = module_invoke($module, 'voip_get_view_fields', $extension_info, $user, $teaser, $page);
-            if ($data) {
-              $other_fields[] = $data;
-            }
-          }
-          foreach($other_fields as $other_module_fields) {
-            foreach($other_module_fields as $category => $items) {
-              $fields[$category] = $items;
-            }
-          }
-          // render the view
-          $node->voip_profile = theme('voip_profile', $fields);
-          $node->body = $node->voip_profile . $node->body;
-          $node->teaser = $node->voip_profile . $node->teaser;
-        }
-// */
+      global $user;
+      $access = user_access('view extension');
+      if ($access) {
+        $voipext_node = $node->voipext;
+//        $x = theme('voipext_ext', $voipext_node); 
+        $node->content['voipext'] = array(
+          '#value' => theme('voipext_ext', $voipext_node), 
+          '#weight' => 1,
+        ); 
+dsm($node->content);
+      }
       break;
-
     }
   }
 }
@@ -410,7 +394,13 @@ function voipext_theme(){
       'file' => 'theme.inc',
       'arguments' => array('nid' => NULL),
       'path' => $path,
-    )
+    ),
+    'voipext_ext' => array(
+      'template' => 'voipext-ext',
+      'file' => 'theme.inc',
+      'arguments' => array('voipext_node' => NULL),
+      'path' => $path,
+    ),
   );
 }
 
