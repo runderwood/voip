@@ -49,16 +49,22 @@ function voipext_admin_enable() {
     '#title' => 'Voip-enable selected user roles',
     '#collapsible' => TRUE,
     '#collapsed' => FALSE, 
-    '#description' => t('Note: Set on permissions page.'),
+    '#description' => t("Note: Extensions are assigned to users "
+                       ."with 'user extension' permissions. " 
+                       ."Add 'user extension' permissions to user roles on the " 
+                       ."!perm-page.", 
+                        array('!perm-page' => l(t('permissions page'), 'admin/user/permissions'))),
   );
-  $result = db_query("SELECT rid, name FROM {role} "); 
-  while ($row = db_fetch_object($result)) {
-    $var = ('voip_enable_role_'. $row->rid);
-    $form['voip_users'][$var] = array(
-      '#type' => 'checkbox',
-      '#title' => t($row->name),
-      '#default_value' => variable_get($var, FALSE),
-      '#disabled' => TRUE,
+  // Show all roles, indicating which have users with extensions
+  // and which do not. 
+  $all_roles = user_roles();
+  $ue_roles = user_roles(FALSE, 'user extension');
+  foreach ($all_roles as $key => $role) {
+    $status = (in_array($role, $ue_roles)) ? t('Users have extensions') : t('No extensions');
+    $form['voip_users'][$key] = array(
+      '#type' => 'item',
+      '#title' => t($role),
+      '#value' => $status,
     );
   }
 
