@@ -10,9 +10,8 @@
  * Give users ability to voip-enable specific node-types
  * and selected users. 
  * 
- * todo Let users include/exclude individual.
- * todo Let users include/exclude roles.  
- *
+ * TODO enable users to enable/disable voip for user roles for voip here.
+ * 
  * @ingroup forms
  * @see system_settings_form().
  */
