@@ -25,17 +25,22 @@ function voipext_admin_defaults() {
       $script = 'voip_default_script_'. $node_type;
       $active = 'voip_default_is_active_'. $node_type;
 
-      $form[$script] = array(
+      $form[$node_type] = array(
+        '#type' => 'fieldset',
+        '#title' => t($node_name),
+      );
+      $form[$node_type][$script] = array(
         '#type' => 'textfield',
         '#title' => t("Default script for $node_name"),
         '#default_value' => variable_get($script, FALSE),
         '#size' => 30,
         '#autocomplete_path' => 'voipext/autocomplete'
       );
-      $form[$active] = array(
+      $form[$node_type][$active] = array(
         '#type' => 'checkbox',
-        '#title' => t('Activate extensions by default (extensions '
-                     .'default to inactive if box is left unchecked)'),
+        '#title' => t('Activate !type extensions by default (extensions '
+                     .'default to inactive if box is left unchecked)',
+                      array('!type' => t($node_name))),
         '#default_value' => variable_get($active, FALSE),
       );
     }
