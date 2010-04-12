@@ -67,10 +67,11 @@ function voipext_menu() {
  */
 function voipext_perm() {
   return array(
-    'create extension',
+    'administer extensions',
     'delete extension',
     'edit extension',
     'view extension', 
+    'user extension',
   ); 
 }
 

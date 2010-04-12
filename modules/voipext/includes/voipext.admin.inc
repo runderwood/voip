@@ -46,17 +46,19 @@ function voipext_admin_enable() {
   // Voip-enable selected users 
   $form['voip_users'] = array(
     '#type' => 'fieldset',
-    '#title' => 'Voip-enable selected node types',
+    '#title' => 'Voip-enable selected user roles',
     '#collapsible' => TRUE,
     '#collapsed' => FALSE, 
+    '#description' => t('Note: Set on permissions page.'),
   );
-  $result = db_query("SELECT uid, name FROM {users} "); 
+  $result = db_query("SELECT rid, name FROM {role} "); 
   while ($row = db_fetch_object($result)) {
-    $var = ('voip_enable_uid_'. $uid);
+    $var = ('voip_enable_role_'. $row->rid);
     $form['voip_users'][$var] = array(
       '#type' => 'checkbox',
-      '#title' => $row->name,
+      '#title' => t($row->name),
       '#default_value' => variable_get($var, FALSE),
+      '#disabled' => TRUE,
     );
   }
 
