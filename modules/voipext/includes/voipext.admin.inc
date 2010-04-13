@@ -111,6 +111,9 @@ function voipext_voipenable_form_submit($form, &$form_state) {
       // TODO change form alter in voipext.module. node_type_form should have an item noting voip status
       // with a link to here. Don't let user directly voip-enable a module on the node_type form
       // otherwise they can skip this function and end up with voip-enabled nodes without extensions.  
+
+      // TODO when you disable a voip-enabled node type, related extensions should be deleted
+      // (if you don't want to delete the extensions, de-activeate them)
     }
   }
 }
