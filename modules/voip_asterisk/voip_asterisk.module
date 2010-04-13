@@ -62,14 +62,6 @@ function voip_asterisk_admin_form($configuration) {
     '#maxlength' => 64,
     '#default_value' => $configuration['voip_asterisk_password'],
   );
-  $form['voip_asterisk_pstn_channel'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Outbound PSTN channel'),
-    '#description' => t('The channel to be used for outbound PSTN calls. The %number string will be replaced during execution by the actual number being dialed.'),
-    '#size' => 40,
-    '#maxlength' => 255,
-    '#default_value' => $configuration['voip_asterisk_pstn_channel'],
-  );
   $form['voip_asterisk_caller_id'] = array(
     '#type' => 'textfield',
     '#title' => t('Caller id'),

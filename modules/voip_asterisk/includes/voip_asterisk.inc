@@ -74,10 +74,10 @@ function _voip_asterisk_ping($server_config) {
 }
 
 /**
- * Establish a new call connecting origin and destination numbers
+ * Establish a new call by dialing the given number and connecting it to the given script
  *
  */
-function _voip_asterisk_dial_out($server_config, $origin, $destination) {
+function _voip_asterisk_dial_out($server_config, $number, $script_name, $options) {
 
   $ami_host = $server_config['ami_host'];
   $ami_host = ($ami_port)? $ami_host.':'.$ami_port : $ami_host;
@@ -93,17 +93,17 @@ function _voip_asterisk_dial_out($server_config, $origin, $destination) {
     return FALSE;
   }
 
-  $channel_string = $server_config['pstn_channel_string'];
-  $channel = str_replace("%number", $origin, $channel_string); // Channel from which to originate the call
-/*********************
-*****************/
-$exten = $destination; // Extension to use on connect (must use Context & Priority with it) 
-$context = 'voip_drupal_bridge'; // Context to use on connect (must use Exten & Priority with it) 
-$priority = 1; // Priority to use on connect (must use Context & Exten with it) 
+  $channel_string = 'Local/%number@vd-dial_out/n';
+  $channel = str_replace("%number", $number, $channel_string); // Channel from which to originate the call
+  $exten = 's'; // Extension to use on connect (must use Context & Priority with it) 
+  $context = 'vd-bridge'; // Context to use on connect (must use Exten & Priority with it) 
+//  $context = 'vd-script_handler'; // Context to use on connect (must use Exten & Priority with it) 
+  $priority = 1; // Priority to use on connect (must use Context & Exten with it) 
   $application = NULL; // Application to use on connect (use Data for parameters) 
   $application_data = NULL; // Data if Application parameter is used 
   $timeout = 30000; // Timeout (in milliseconds) for the originating connection to happen
                     // (defaults to 30000 milliseconds) 
+
   $cid = $server_config['system_caller_id']?$server_config['system_caller_id']:NULL;
   $caller_id = $cid;  // CallerID to be used for both ends of the call.  Note that some
                       // voicemail systems might be automatically activated if the
@@ -111,15 +111,31 @@ $priority = 1; // Priority to use on connect (must use Context & Exten with it)
                       // TODO: Come up with a mechanism to set appropriate caller ids
                       // for each end of the call.  This might require the usage of special
                       // channel variables to be passed to the "voip drupal bridge" context
+
   $variable = NULL; // Channel variables to set (max 32). Variables will be set for both
                     // channels (local and connected). Note that the syntax for Asterisk 1.4+
                     // and 1.6+ are different from the previous versions 
+  $variables = $options['variables']?$options['variables']:array();
+  $variables['VD_SCRIPT_NAME'] = $script_name;
+  $numOfItems = count($variables);
+  $counter = 0;
+  foreach($variables as $name => $value){
+    $counter += 1;
+    if ($counter <> $numOfItems){
+      $variable .= $name . '=' . $value . "\r\nVariable: ";
+    } else {
+      $variable .= $name . '=' . $value;
+    }
+  } 
+
   $account = NULL; // Account code for the call 
+
   $async = 0; // Use 1 for the origination to be asynchronous (allows multiple calls to be
               // generated without waiting for a response). Using Async leads to an
               // OriginateResponse event which contains the failure reason if any. Reason
               // may be one of the following: 0 = no such extension or number; 1 = no answer;
               // 4 = answered; and 8 = congested or not available 
+
   $action_id = NULL; // The request identifier. It allows you to identify the response to
                      // this request. You may use a number or a string. Useful when you make
                      // several simultaneous requests. 
@@ -132,6 +148,7 @@ echo("about to call Originate(
      $channel, $exten, $context, $priority, $application, $application_data,
      $timeout, $caller_id, $variable, $account, $async, $action_id);
 echo('result: ' . print_r($result) . "\n");
+// TODO: process response according to http://www.asterisk.org/docs/asterisk/trunk/applications/originate
   if($result['Response'] != 'Success'){
     voip_error("AMI command Originate failed: " . print_r($result, TRUE));
     return FALSE;
