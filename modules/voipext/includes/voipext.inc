@@ -112,4 +112,10 @@ function voipext_create_ext($node, $msg = array('display message' => TRUE, 'mess
      
   // TODO handle $msg
   // TODO add watchdog log
+  // Log call blast with watchdog
+  $type = 'voipext';
+  $message = t("Voip Extension (voipext) node created. This extension, "
+              ."node $ext_nid, is related to node $node->nid.");
+  $severity = WATCHDOG_NOTICE;
+  watchdog($type, $message);
 }
