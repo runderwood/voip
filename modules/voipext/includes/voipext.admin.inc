@@ -20,28 +20,17 @@ function voipext_admin_enable() {
   // Get an array of node types with internal names as keys
   // and "friendly" names as values. 
   $options = node_get_types('names');
-  // Note: Do not use #type => 'checkboxes'. 
-  // We want users to be able to voip enable/disable node types
-  // here and on the node_type_form page. This makes it so that the 
-  // two forms are both updating the same variables.
-  $form['voip_nodes'] = array(
-    '#type' => 'fieldset',
-    '#title' => 'Voip-enable selected node types',
-    '#collapsible' => TRUE,
-    '#collapsed' => FALSE, 
+  // Remove Voip Extensions from the list, 
+  // otherwise we'll end up with extensions with extensions.
+  unset($options['voipext']);
+  $form['voipext_enable'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Enable phone extensions for selected node types'),
+    '#options' => $options,
+    '#default_value' => variable_get('voipext_enable', FALSE),
   );
-  foreach ($options as $node_type => $node_name) {
-    // All node types except voipext should be voip enable-able.
-    if ($node_type != 'voipext') {
-      $var = 'voip_enable_'. $node_type;
-      $form['voip_nodes'][$var] = array(
-        '#type' => 'checkbox',
-        '#title' => t($node_name),
-        '#default_value' => variable_get($var, FALSE),
-      );
-    }
-  }
-  
+// TODO also change voip_enable_role_X to something like voipext_enable_role_X
+
   // Voip-enable selected users 
   $form['voip_users'] = array(
     '#type' => 'fieldset',
@@ -71,17 +60,19 @@ function voipext_admin_enable() {
   // exist and do not have extensions yet.
   // TODO Generate extensions for users that exist and do 
   // not have them yet.
-  $form['buttons']['voipext'] = array(
+  $form['buttons'] = array(
     '#type' => 'submit',
-    '#value' => t('Save and create extensions'),
+    '#value' => t('Save'),
     '#weight' => 41,
-    '#submit' => array('system_settings_form_submit', 'voipext_voipenable_form_submit'),
+    '#submit' => array('voipext_admin_enable_form_submit'),
   );
 
-  return system_settings_form($form);
+  return $form;
 }
 
 /**
+ * Call back for submit button.
+ * 
  * This function is called when user submits the form 
  * on admin/voip/extensions-enable. It generates extensions
  * for voip-enabled nodes without extensions. 
@@ -92,10 +83,22 @@ function voipext_admin_enable() {
  * nodes before "page" is voip-enabled, those 200 nodes can be 
  * assigned extensions here.
  */ 
-function voipext_voipenable_form_submit($form, &$form_state) {
+function voipext_admin_enable_form_submit($form, &$form_state) {
+dsm($form);
+dsm($form_state);
+  // get values submitted with form
+  $values = $form_state['values'];
+
+  // store voip-enable settings
+  $voipext_enable = $values['voipext_enable'];
+  variable_set('voipext_enable', $voipext_enable);
+
+// TODO Edit handling of variable_get('voip_enable_*') elsewhere. 
+
   $values = $form_state['values'];
   foreach($values as $type => $enabled) {
     $prefix = substr($type, 0, 11);
+// TODO update this
     if ($prefix == 'voip_enable' && $enabled) {
       $type = substr($type, 12); // type of node that is voip-enabled
       // get voip-enabled nodes without extensions, if there are any
