@@ -98,12 +98,38 @@ function voipext_voipenable_form_submit($form, &$form_state) {
     $prefix = substr($type, 0, 11);
     if ($prefix == 'voip_enable' && $enabled) {
       $type = substr($type, 12); // type of node that is voip-enabled
-      // find voip-enabled nodes without extensions 
+      // get voip-enabled nodes without extensions, if there are any
       $result = db_query('SELECT n.nid '
                         .'FROM {node} n '
                         .'LEFT JOIN {voip_extension} ve ON n.nid = ve.r_nid '
                         ."WHERE ISNULL (ve.r_nid) AND n.type = '%s' ", $type);
-      // TODO use voipext_create_ext() here
+      // create extensions for each of these nodes
+      // todo Consider use batch API here for processing hundreds or thousands of nodes. 
+      $count = 0;
+      while ($row = db_fetch_object($result)) {
+        $count++;
+        $nid = $row->nid;
+        $node = node_load($nid);
+        $msg['display message'] = FALSE;
+        voipext_create_ext($node, $msg);
+      }
+
+      // If any extensions were created...
+      if ($count > 0) {
+        // Notify user that extensions were created.
+        $txt = t("!count phone extensions were created for !type nodes without extensions.",
+                array(
+                  '!count' => $count, 
+                  '!type' => t($node->type),
+                ));
+        drupal_set_message($txt);
+       
+        // Log notice of extensions being created with watchdog.
+        $type = 'voipext';
+        $message = t("!count Voip Extension (voipext) nodes created.", array('!count' => $count));
+        $severity = WATCHDOG_NOTICE;
+        watchdog($type, $message);
+      }
 
       // TODO change this to a custom form (rather than a system settings form) 
       // so that all submitted forms call this function 
