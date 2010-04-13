@@ -67,5 +67,20 @@ function voipext_admin_enable() {
     );
   }
 
+  // Generate extensions for voip-enabled nodes that aleady 
+  // exist and do not have extensions yet.
+  // TODO Generate extensions for users that exist and do 
+  // not have them yet.
+  $form['buttons']['voipext'] = array(
+    '#type' => 'submit',
+    '#value' => t('Save and create extensions'),
+    '#weight' => 41,
+    '#submit' => array('system_settings_form_submit', 'voipext_voipenable_form_submit'),
+  );
+
   return system_settings_form($form);
+}
+
+function voipext_voipenable_form_submit($form, &$form_state) {
+dsm('generate extensions here');
 }

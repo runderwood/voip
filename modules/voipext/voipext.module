@@ -443,7 +443,10 @@ function voipext_form_alter(&$form, $form_state, $form_id) {
     $form['voip']['voip_enable'] = array(
       '#type' => 'checkbox',
       '#title' => 'Enable Voip',
-      '#description' => t('Voip-enable this node type.'),
+      '#description' => t('Voip-enable this node type. To create phone '
+                         .'extensions for nodes that already exist '
+                         .'visit !admin.', 
+                         array('!admin' => l('admin/voip/extensions-enable', 'admin/voip/extensions-enable'))),
       '#default_value' => variable_get('voip_enable_'. $form['#node_type']->type, FALSE),
     );
   }
