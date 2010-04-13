@@ -39,8 +39,9 @@ echo('voip_error: ' . voip_error_message() . "\n");
 echo('result: ' . print_r($result, TRUE) . "\n\n");
 
 
-$number = '16172130536'; // Leo's Google Voice number
-//$number = '6177920995'; // Leo's cell phone
+//$number = '16172130536'; // Leo's Google Voice number
+//$number = '16174890192';
+$number = '6177920995'; // Leo's cell phone
 //$number = '6176888319'; // Danielle's cell phone
 //$number = '6174525510'; // media lab office
 //$number = 'gizmo17476461031'; // leo's gizmo account
@@ -52,6 +53,7 @@ $options['variables'] = $variables;
 echo("about to call _voip_asterisk_dial_out($server_config, $number, $script_name, $options)\n");
 $result = _voip_asterisk_dial_out($server_config, $number, $script_name, $options);
 echo('voip_error: ' . voip_error_message() . "\n");
+// TODO: process return value from originate()
 echo('result: ' . print_r($result, TRUE) . "\n\n");
 
 echo("\n");

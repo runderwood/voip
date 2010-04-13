@@ -21,7 +21,9 @@ foreach (array('phpagi-asmanager.php') as $file) {
  */
 
 /**
- * Return current instance of the Asterisk Manager.  Function written to prevent the creation of a voip_asterisk_manager global variable
+ * Return current instance of the Asterisk Manager. 
+ * Note: This function was written to prevent the creation of a
+ *       $voip_asterisk_manager global variable
  * TODO: Is this the best way to handle variables such as this one?
  */
 function _voip_asterisk_manager()
@@ -93,14 +95,20 @@ function _voip_asterisk_dial_out($server_config, $number, $script_name, $options
     return FALSE;
   }
 
-  $channel_string = 'Local/%number@vd-dial_out/n';
+  // The following channel string should match the one in voip_drupal.conf
+//  $channel_string = 'Local/%number@vd-dial_out/n'; // This is the goal.  But it's not working...
+//$channel_string = 'SIP/%number@outbound'; // This works!!
+//$channel_string = 'Local/%number@vd-pstn/n'; // This does not work (no audio) even without the vd-dial macro
+//$channel_string = 'Local/%number@vd-pstn'; // This seems to work (without the n at the end)
+$channel_string = 'Local/%number@vd-dial_out'; // This seems to be working...
   $channel = str_replace("%number", $number, $channel_string); // Channel from which to originate the call
+
   $exten = 's'; // Extension to use on connect (must use Context & Priority with it) 
   $context = 'vd-bridge'; // Context to use on connect (must use Exten & Priority with it) 
-//  $context = 'vd-script_handler'; // Context to use on connect (must use Exten & Priority with it) 
   $priority = 1; // Priority to use on connect (must use Context & Exten with it) 
   $application = NULL; // Application to use on connect (use Data for parameters) 
   $application_data = NULL; // Data if Application parameter is used 
+
   $timeout = 30000; // Timeout (in milliseconds) for the originating connection to happen
                     // (defaults to 30000 milliseconds) 
 
@@ -108,9 +116,6 @@ function _voip_asterisk_dial_out($server_config, $number, $script_name, $options
   $caller_id = $cid;  // CallerID to be used for both ends of the call.  Note that some
                       // voicemail systems might be automatically activated if the
                       // caller id is the same as the number being dialed.
-                      // TODO: Come up with a mechanism to set appropriate caller ids
-                      // for each end of the call.  This might require the usage of special
-                      // channel variables to be passed to the "voip drupal bridge" context
 
   $variable = NULL; // Channel variables to set (max 32). Variables will be set for both
                     // channels (local and connected). Note that the syntax for Asterisk 1.4+
