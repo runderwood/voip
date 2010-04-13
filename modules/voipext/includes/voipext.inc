@@ -67,52 +67,58 @@ function voipext_get_ext($r_nid, $type = 'node'){
  * If you are creating a large number on extensions at once, 
  */
 function voipext_create_ext($node, $msg = array('display message' => TRUE, 'message' => '')) {
-      // Create corresponding extension node.
-      $ext = new stdClass();
-      global $user;
-      $ext->type = 'voipext';
-      $ext->uid = $user->uid; // author of extension
-      $ext->r_nid = $node->nid; // related nid (from newly saved node)
-      $ext->r_type = $node->type;
-      // User-defined default is_active setting
-      $var = 'voip_default_is_active_'. $node->type;
-      $is_active = variable_get($var, FALSE);
-      $ext->is_active = ($is_active) ? TRUE : FALSE; 
-      // default script
-      $var = 'voip_default_script_'. $node->type;
-      $script = variable_get($var, FALSE);
-      // TODO validate script. Make sure (1) it exists, (2) it works.
-      if ($script) {
-        $ext->r_script = $script; 
-      } else {
-        $ext->is_active = FALSE; // Set to inactive if there isn't a valid script. 
-        $txt = t('This new extension does not have a valid default '
-                .'script. Without a valid script, the extension will '
-                .'not work. To activate this extension, click "Edit" below '
-                .'and add a script. To prevent this error in the future, set a '
-                .'default script !here.', 
-                array('!here' => l('here', url('admin/voip/extensions-defaults', array('absolute' => TRUE)))));
-        drupal_set_message($txt, 'warning');
-      }
-      // set node options from voipext node_type_form
-      $node_options = variable_get('node_options_voipext', FALSE);
-      if ($node_options) {
-        $ext->status = (in_array('status', $node_options)) ? 1 : 0; 
-        $ext->promote = (in_array('promote', $node_options)) ? 1 : 0; 
-        $ext->sticky = (in_array('sticky', $node_options)) ? 1 : 0; 
-        $ext->revision = (in_array('revision', $node_options)) ? 1 : 0; 
-      }
-      // save it!
-      node_save($ext);
+  // Create corresponding extension node.
+  $ext = new stdClass();
+  global $user;
+  $ext->type = 'voipext';
+  $ext->uid = $user->uid; // author of extension
+  $ext->r_nid = $node->nid; // related nid (from newly saved node)
+  $ext->r_type = $node->type;
+  // User-defined default is_active setting
+  $var = 'voip_default_is_active_'. $node->type;
+  $is_active = variable_get($var, FALSE);
+  $ext->is_active = ($is_active) ? TRUE : FALSE; 
+  // default script
+  $var = 'voip_default_script_'. $node->type;
+  $script = variable_get($var, FALSE);
+  // TODO validate script. Make sure (1) it exists, (2) it works.
+  if ($script) {
+    $ext->r_script = $script; 
+  } else {
+    $ext->is_active = FALSE; // Set to inactive if there isn't a valid script. 
+    if ($msg['display message']) {
+      // set warning message
+      $txt = t('This new extension does not have a valid default '
+              .'script. Without a valid script, the extension will '
+              .'not work. To activate this extension, click "Edit" below, '
+              .'add a script, and activate the extension. '
+              .'To prevent this error in the future, set a '
+              .'default script !here.', 
+              array('!here' => l('here', url('admin/voip/extensions-defaults', array('absolute' => TRUE)))));
+      
+      drupal_set_message($txt, 'warning');
+    }
+  }
+  // set node options from voipext node_type_form
+  $node_options = variable_get('node_options_voipext', FALSE);
+  if ($node_options) {
+    $ext->status = (in_array('status', $node_options)) ? 1 : 0; 
+    $ext->promote = (in_array('promote', $node_options)) ? 1 : 0; 
+    $ext->sticky = (in_array('sticky', $node_options)) ? 1 : 0; 
+    $ext->revision = (in_array('revision', $node_options)) ? 1 : 0; 
+  }
+  // save it!
+  node_save($ext);
 
-      // Notify user about new extension node and relevant extension info.
-      $ext_nid = $node->nid + 1;
-      $output = theme('voipext_created', $ext_nid); 
-      drupal_set_message($output);
+  // Notify user about new extension node and relevant extension info.
+  if ($msg['display message']) {
+    $ext_nid = $node->nid + 1;
+    // use custom message if one has been provided
+    $output = ($msg['message']) ? $msg['message'] : theme('voipext_created', $ext_nid); 
+    drupal_set_message($output);
+  }
      
-  // TODO handle $msg
-  // TODO add watchdog log
-  // Log call blast with watchdog
+  // Log notice of extension being created with watchdog.
   $type = 'voipext';
   $message = t("Voip Extension (voipext) node created. This extension, "
               ."node $ext_nid, is related to node $node->nid.");
