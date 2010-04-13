@@ -82,7 +82,15 @@ function voipext_admin_enable() {
 }
 
 /**
- * TODO explain this
+ * This function is called when user submits the form 
+ * on admin/voip/extensions-enable. It generates extensions
+ * for voip-enabled nodes without extensions. 
+ * 
+ * When a node-type is voip-enabled, phone extensions are created 
+ * automatically for each new node created. 
+ * But if there are already 200 existing "page" 
+ * nodes before "page" is voip-enabled, those 200 nodes can be 
+ * assigned extensions here.
  */ 
 function voipext_voipenable_form_submit($form, &$form_state) {
   $values = $form_state['values'];
@@ -96,6 +104,13 @@ function voipext_voipenable_form_submit($form, &$form_state) {
                         .'LEFT JOIN {voip_extension} ve ON n.nid = ve.r_nid '
                         ."WHERE ISNULL (ve.r_nid) AND n.type = '%s' ", $type);
       // TODO use voipext_create_ext() here
+
+      // TODO change this to a custom form (rather than a system settings form) 
+      // so that all submitted forms call this function 
+
+      // TODO change form alter in voipext.module. node_type_form should have an item noting voip status
+      // with a link to here. Don't let user directly voip-enable a module on the node_type form
+      // otherwise they can skip this function and end up with voip-enabled nodes without extensions.  
     }
   }
 }
