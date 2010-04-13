@@ -81,6 +81,21 @@ function voipext_admin_enable() {
   return system_settings_form($form);
 }
 
+/**
+ * TODO explain this
+ */ 
 function voipext_voipenable_form_submit($form, &$form_state) {
-dsm('generate extensions here');
+  $values = $form_state['values'];
+  foreach($values as $type => $enabled) {
+    $prefix = substr($type, 0, 11);
+    if ($prefix == 'voip_enable' && $enabled) {
+      $type = substr($type, 12); // type of node that is voip-enabled
+      // find voip-enabled nodes without extensions 
+      $result = db_query('SELECT n.nid '
+                        .'FROM {node} n '
+                        .'LEFT JOIN {voip_extension} ve ON n.nid = ve.r_nid '
+                        ."WHERE ISNULL (ve.r_nid) AND n.type = '%s' ", $type);
+      // TODO use voipext_create_ext() here
+    }
+  }
 }
