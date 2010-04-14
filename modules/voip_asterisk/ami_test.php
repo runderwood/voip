@@ -55,8 +55,14 @@ $options['unique_id'] = uniqid();
 echo("about to call _voip_asterisk_dial_out($server_config, $number, $script_name, $options)\n");
 $result = _voip_asterisk_dial_out($server_config, $number, $script_name, $options);
 echo('voip_error: ' . voip_error_message() . "\n");
-// TODO: process return value from originate()
 echo('result: ' . print_r($result, TRUE) . "\n\n");
+
+// process return value from AMI Originate
+// TODO: status reporting is dependent on active connection to AMI server... how to do that?
+$q = voip_asterisk_dial_manager('dump');
+echo("queue: " . print_r($q,TRUE) . "\n");
+
+
 
 echo("\n");
 echo("-------\n");

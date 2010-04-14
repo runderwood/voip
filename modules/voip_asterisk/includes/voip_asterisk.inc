@@ -127,8 +127,6 @@ reason can be any of:
 8 = congested or not available 
  */
 function _voip_asterisk_event_originate($ecode, $data, $server, $port) {
-echo("_voip_asterisk_event_originate($ecode, ". print_r($data,TRUE). ", $server, $port)\n");
-  // TODO: do something here
   $rc = TRUE;
   $reason = $data['Reason'];
   $id = $data['ActionID'];
@@ -151,9 +149,6 @@ echo("_voip_asterisk_event_originate($ecode, ". print_r($data,TRUE). ", $server,
       break;
   }
   voip_asterisk_dial_manager('set', $id, $status);
-
-$q = voip_asterisk_dial_manager('dump');
-echo("queue: " . print_r($q,TRUE) . "\n");
 
   return $rc;
 }
@@ -232,19 +227,11 @@ function _voip_asterisk_dial_out($server_config, $number, $script_name, $options
                      // several simultaneous requests. 
   $action_id = $options['unique_id']?$options['unique_id']:NULL;
 
-/********
-echo("about to call Originate(
-       channel: $channel, exten: $exten, context: $context,
-       priority: $priority, application: $application, data: $application_data,
-       timeout: $timeout, callerid: $caller_id, variable: $variable, account: $account, async: $async, action_id: $action_id)\n");
-*********/
   $result = _voip_asterisk_manager()->Originate(
      $channel, $exten, $context, $priority, $application, $application_data,
      $timeout, $caller_id, $variable, $account, $async, $action_id);
-echo('result: ' . print_r($result,TRUE) . "\n");
-  // TODO: How to find out if the line was busy, invalid, etc? 
-  //       For dialplan (non-AMI) Originate, check http://www.asterisk.org/docs/asterisk/trunk/applications/originate
 
+  // keep track of the dial attempt
   if($action_id){
     voip_asterisk_dial_manager('set', $action_id, 'processing');
   }
@@ -254,12 +241,10 @@ echo('result: ' . print_r($result,TRUE) . "\n");
     return FALSE;
   }
 
+// wait a little bit for the events to arrive before disconnecting
 for($i=0;$i<30;$i++){
-  sleep(1);
+    sleep(1);
 }
-$q = voip_asterisk_dial_manager('dump');
-echo("queue: " . print_r($q,TRUE) . "\n");
-
 
   _voip_asterisk_manager()->disconnect();
   return TRUE;
