@@ -42,6 +42,7 @@ echo('result: ' . print_r($result, TRUE) . "\n\n");
 //$number = '16172130536'; // Leo's Google Voice number
 //$number = '16174890192';
 $number = '6177920995'; // Leo's cell phone
+//$number = '6171231234'; // invalid number
 //$number = '6176888319'; // Danielle's cell phone
 //$number = '6174525510'; // media lab office
 //$number = 'gizmo17476461031'; // leo's gizmo account
@@ -49,6 +50,7 @@ $script_name = 'hello_world';
 $variables['VD_XMLRPC_URL'] = 'http://localhost/drupal6/xmlrpc.php';
 $variables['VD_USER_NAME'] = 'test_user';
 $options['variables'] = $variables;
+$options['unique_id'] = uniqid();
 
 echo("about to call _voip_asterisk_dial_out($server_config, $number, $script_name, $options)\n");
 $result = _voip_asterisk_dial_out($server_config, $number, $script_name, $options);

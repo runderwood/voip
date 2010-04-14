@@ -75,9 +75,93 @@ function _voip_asterisk_ping($server_config) {
   return TRUE;
 }
 
+/*
+ * Keeps track of the "dial out' requests
+ */
+function voip_asterisk_dial_manager($action='reset', $id=NULL, $status=NULL) {
+  static $_queue = array();
+
+  switch($action){
+    default:
+      return NULL;
+    case 'reset':
+      $_queue = array();
+      break;
+    case 'set':
+      $_queue[$id] = $status;
+      break;
+    case 'delete':
+      unset($_queue[$id]);
+      break;
+    case 'get':
+      $status = isset($_queue[$id])?$_queue['id']:NULL;
+      return $status;
+      break;
+    case 'dump':
+      return $_queue;
+      break;
+  }
+}
+
+
+/**
+ * Callback function that handles OriginateResponse events
+_voip_asterisk_event_originate(originateresponse, Array
+(
+    [Event] => OriginateResponse
+    [Privilege] => call,all
+    [ActionID] => 4bc53a5dd850c
+    [Response] => Failure
+    [Channel] => Local/6177920995@vd-dial_out
+    [Context] => vd-bridge
+    [Exten] => s
+    [Reason] => 1
+    [Uniqueid] => <null>
+    [CallerIDNum] => 123456789
+    [CallerIDName] => Voip Drupal
+)
+reason can be any of:
+0 = no such extension or number
+1 = no answer
+4 = answered
+8 = congested or not available 
+ */
+function _voip_asterisk_event_originate($ecode, $data, $server, $port) {
+echo("_voip_asterisk_event_originate($ecode, ". print_r($data,TRUE). ", $server, $port)\n");
+  // TODO: do something here
+  $rc = TRUE;
+  $reason = $data['Reason'];
+  $id = $data['ActionID'];
+  switch($reason){
+    default:
+      $status = 'unknown';
+      $rc = FALSE;
+      break;
+    case 0:
+      $status = 'invalid number';
+      break;
+    case 1:
+      $status = 'no answer';
+      break;
+    case 4:
+      $status = 'answered';
+      break;
+    case 8:
+      $status = 'busy';
+      break;
+  }
+  voip_asterisk_dial_manager('set', $id, $status);
+
+$q = voip_asterisk_dial_manager('dump');
+echo("queue: " . print_r($q,TRUE) . "\n");
+
+  return $rc;
+}
+
 /**
  * Establish a new call by dialing the given number and connecting it to the given script
  *
+ *  @param array $options is an array containing, among other things, 'variables' to be set in the new channels and a 'unique_id' to be associated with call being made.
  */
 function _voip_asterisk_dial_out($server_config, $number, $script_name, $options) {
 
@@ -95,12 +179,13 @@ function _voip_asterisk_dial_out($server_config, $number, $script_name, $options
     return FALSE;
   }
 
+  // add event handler to handle AMI Originate responses
+  // (http://www.voip-info.org/wiki/view/Asterisk+Manager+API+Action+Originate)
+  _voip_asterisk_manager()->add_event_handler('OriginateResponse','_voip_asterisk_event_originate');
+
   // The following channel string should match the one in voip_drupal.conf
 //  $channel_string = 'Local/%number@vd-dial_out/n'; // This is the goal.  But it's not working...
-//$channel_string = 'SIP/%number@outbound'; // This works!!
-//$channel_string = 'Local/%number@vd-pstn/n'; // This does not work (no audio) even without the vd-dial macro
-//$channel_string = 'Local/%number@vd-pstn'; // This seems to work (without the n at the end)
-$channel_string = 'Local/%number@vd-dial_out'; // This seems to be working...
+  $channel_string = 'Local/%number@vd-dial_out'; // This seems to be working... (note the lack of /n at the end
   $channel = str_replace("%number", $number, $channel_string); // Channel from which to originate the call
 
   $exten = 's'; // Extension to use on connect (must use Context & Priority with it) 
@@ -135,7 +220,8 @@ $channel_string = 'Local/%number@vd-dial_out'; // This seems to be working...
 
   $account = NULL; // Account code for the call 
 
-  $async = 0; // Use 1 for the origination to be asynchronous (allows multiple calls to be
+  $async = 1; 
+//  $async = 0; // Use 1 for the origination to be asynchronous (allows multiple calls to be
               // generated without waiting for a response). Using Async leads to an
               // OriginateResponse event which contains the failure reason if any. Reason
               // may be one of the following: 0 = no such extension or number; 1 = no answer;
@@ -144,20 +230,36 @@ $channel_string = 'Local/%number@vd-dial_out'; // This seems to be working...
   $action_id = NULL; // The request identifier. It allows you to identify the response to
                      // this request. You may use a number or a string. Useful when you make
                      // several simultaneous requests. 
+  $action_id = $options['unique_id']?$options['unique_id']:NULL;
 
+/********
 echo("about to call Originate(
        channel: $channel, exten: $exten, context: $context,
        priority: $priority, application: $application, data: $application_data,
        timeout: $timeout, callerid: $caller_id, variable: $variable, account: $account, async: $async, action_id: $action_id)\n");
+*********/
   $result = _voip_asterisk_manager()->Originate(
      $channel, $exten, $context, $priority, $application, $application_data,
      $timeout, $caller_id, $variable, $account, $async, $action_id);
-echo('result: ' . print_r($result) . "\n");
-// TODO: process response according to http://www.asterisk.org/docs/asterisk/trunk/applications/originate
+echo('result: ' . print_r($result,TRUE) . "\n");
+  // TODO: How to find out if the line was busy, invalid, etc? 
+  //       For dialplan (non-AMI) Originate, check http://www.asterisk.org/docs/asterisk/trunk/applications/originate
+
+  if($action_id){
+    voip_asterisk_dial_manager('set', $action_id, 'processing');
+  }
+
   if($result['Response'] != 'Success'){
     voip_error("AMI command Originate failed: " . print_r($result, TRUE));
     return FALSE;
   }
+
+for($i=0;$i<30;$i++){
+  sleep(1);
+}
+$q = voip_asterisk_dial_manager('dump');
+echo("queue: " . print_r($q,TRUE) . "\n");
+
 
   _voip_asterisk_manager()->disconnect();
   return TRUE;
