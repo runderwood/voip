@@ -63,32 +63,6 @@ function voip_api_error_reset() {
 
 
 /*
- * Retrieves the specified dialplan script from the Drupal server
- *
- * @param $drupal_server
- *   string with the URL of the xmlrpc.php file of the Drupal site where voip.module is located.
- * 
- * @param $script_name
- *   name of the script
- *
- * @param $options
- *   array with the options associated with the request
- *
- * @return
- *   array with
- */
-function voip_get_script($drupal_server, $script_name, $options=array()) {
-  voip_api_error_reset();
-  $result = @xmlrpc($drupal_server, 'voip.getScript', $script_name, $options);
-  if ($error = xmlrpc_error()) {
-    $result = FALSE;
-    voip_api_error("XMLRPC error: " . $error->message . ' ('. $error->code . ').');
-  }
-  return $result;
-}
-
-
-/*
  * Sends request to be processed by Voip Drupal site.
  *
  * @param $drupal_server
