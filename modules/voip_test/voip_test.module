@@ -11,12 +11,29 @@ function voip_test_voip_process_request($request_id, $options) {
 
   switch($request_id) {
     case 'voip_get_script':
-      if ($options['script_name']  == 'hello_world') {
-      $response['$request_id'] = $request_id . "\n";
-      $response['$options'] = $options;
-      $response['result'] = "<voip_script name='hello_world'><action name='say><text>Hello, world!</text></action></voip_script>";
-      break;
+      switch ($options['script_name']){
+        case 'hello_world':
+          $response['$request_id'] = $request_id;
+          $response['$options'] = $options;
+          $response['script_contents'] =
+            '<?xml version="1.0"?>' . 
+            "<voip_script name='hello_world'>
+              <say><text>Hello, world!</text></say>
+              <goto>bye_bye</goto>
+            </voip_script>";
+          break;
+        case 'bye_bye':
+          $response['$request_id'] = $request_id;
+          $response['$options'] = $options;
+          $response['script_contents'] =
+            '<?xml version="1.0"?>' . 
+            "<voip_script name='bye_bye'>
+              <say><text>Nice meeting you.  Goodbye!</text></say>
+              <hangup></hangup>
+            </voip_script>";
+          break;
       }
+      break;
   }
 
   return $response;

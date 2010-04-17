@@ -49,7 +49,7 @@ $request_id = 'voip_dial_out';
 echo("about to call voip_process_request($request_id)\n");
 $options['number'] = '6177920995'; // leo's cell number
 $options['script_name'] = 'hello_world';
-$variables['VD_XMLRPC_URL'] = 'http://localhost/drupal6/xmlrpc.php';
+$variables['VD_XMLRPC_URL'] = $voip_server;
 $variables['VD_USER_NAME'] = 'test_user';
 $options['variables'] = $variables;
 $options['unique_id'] = uniqid();
