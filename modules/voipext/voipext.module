@@ -1,0 +1,449 @@
+<?php
+/**
+ * @file voipext.module
+ *   Create extension nodes for voip-enabled nodes and users. Implementation of Drupal API hooks.
+ * 
+ * @see voipext.inc
+ *   voipext's own functions (not part of Drupal API).
+ */ 
+
+require_once('includes/voipext.inc'); 
+
+/**
+ * Implementation of hook_help(). 
+ */
+function voipext_help($path, $arg) {
+  if ($path == 'admin/help#voipext') {
+    $txt = t('This module creates voip extensions '
+            .'for voip-enabled users and nodes. ');
+    return $txt;
+  }
+}
+
+/**
+ * Implementation of hook_init().
+ */
+function voipext_init() {
+  drupal_add_css(drupal_get_path('module', 'voipext') .'theme/voipext.css');
+}
+
+/** 
+ * Implementation of hook_menu().
+ */
+function voipext_menu() {
+  $items = array();
+
+  // Call back for auto-complete on node/add and node/edit form
+  $items['voipext/autocomplete'] = array(
+    'title' => 'Voip Extension Autocomplete',
+    'page callback' => 'voipext_autocomplete',
+    'access arguments' => array('edit extension'),
+    'type' => MENU_CALLBACK,
+  );
+  // Voip-enable page
+  $items['admin/voip/extensions-enable'] = array(
+    'title' => t('Voip-enable users and node types'),
+    'description' => t('Enable Voip and set up extensions for nodes and users.'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('voipext_admin_enable'), 
+    'access arguments' => array('administer voip extensions'),
+    'file' => 'includes/voipext.admin.inc',
+  );
+  // Extensions default settings page
+  $items['admin/voip/extensions-defaults'] = array(
+    'title' => t('Set Voip extension defaults'),
+    'description' => t('Set up default settings for Voip extensions.'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('voipext_admin_defaults'), 
+    'access arguments' => array('administer voip extensions'),
+    'file' => 'includes/voipext.admin_defaults.inc',
+  );
+
+  return $items;
+}
+
+/**
+ * Implementation of hook_perm().
+ */
+function voipext_perm() {
+  return array(
+    'create extension',
+    'delete extension',
+    'edit extension',
+    'view extension', 
+  ); 
+}
+
+/**
+ * Implementation of hook_access().
+ */
+function voipext_access($op, $node, $account) {
+  switch ($op) {
+    case 'create':
+      return user_access('create extension', $account);
+    case 'delete': 
+      return user_access('delete extension', $account);
+    case 'update': 
+      return user_access('edit extension', $account);
+    case 'view': 
+      return user_access('view extension', $account);
+  }
+}
+
+/**
+ * Implementation hook_node_info().
+ */
+function voipext_node_info() {
+return array(
+  'voipext' => array(
+    'name' => t('Voip Extension'),
+    'module' => 'voipext',
+    'description' => t("Phone extension for voip-enabled nodes and users.'"),
+    'help' => t(''), // TODO add instructions for manual extension management? 
+    'has_title' => FALSE,
+    'has_body' => FALSE,
+    'locked' => TRUE,
+  ),
+);
+}
+
+/**
+ * Implementation of hook_form().
+ */
+function voipext_form(&$node, $form_state) {
+  $type = node_get_types('type', $node);
+  
+ $ext = $node->voipext_info['ext'];
+ $form['ext_item'] = array(
+    '#type' => 'item',
+    '#title' => t('Extension Number'),
+    '#value' => isset($ext) ? $ext : t('(auto number)'),
+  );
+
+  // get related node info
+  $r_nid = $node->voipext_info['r_nid'];
+  if ($r_nid) {
+    $r_node = node_load($r_nid);
+    $form['r_nid_item'] = array(
+      '#type' => 'item',
+      '#title' => t('Related Node'),
+      '#value' => ($r_node) ? l($r_node->title, "node/$r_node->nid") : '',
+    );
+    // store value in hidden element otherwise value is erased by voipext_update()
+    $form['r_nid'] = array(
+      '#type' => 'hidden',
+      '#value' => $r_nid,
+    );
+  }
+
+  // get related user info
+  $r_uid = $node->voipext_info['r_uid'];
+  if ($r_uid) {
+    $r_user = user_load($r_uid);
+    $form['r_uid_item'] = array(
+      '#type' => 'item',
+      '#title' => t('Related User'),
+      '#value' => ($r_user) ? l($r_user->name, "user/$r_uid") : '',
+    );
+    // store value in hidden element otherwise value is erased by voipext_update()
+    $form['r_uid'] = array(
+      '#type' => 'hidden',
+      '#value' => $r_uid,
+    );
+  }
+
+  $r_type = $node->voipext_info['r_type'];
+  $form['r_type_item'] = array(
+    '#type' => 'item',
+    '#title' => t('Related Node Type (or "user" if not a node)'),
+    '#value' => isset($r_type) ? $r_type : '',
+  );
+  // store value in hidden element otherwise value is erased by voipext_update()
+  $form['r_type'] = array(
+    '#type' => 'hidden',
+    '#value' => $r_type,
+  );
+
+  $r_script = $node->voipext_info['r_script'];
+  $form['r_script'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Script Node ID'),
+    '#size' => 30,
+    '#default_value' => isset($r_script) ? $r_script : '',
+    '#autocomplete_path' => 'voipext/autocomplete'
+  );
+  $is_active = $node->voipext_info['is_active'];
+  $form['is_active'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Is Active'),
+    '#default_value' => $is_active,
+  );
+
+  return $form;
+}
+
+/**
+ * Implementation of hook_insert().
+ */
+function voipext_insert($node) {
+  if (!isset($node->r_nid)) {
+    $node->r_nid = 0;
+  } 
+  if (!isset($node->r_uid)) {
+    $node->r_uid = 0;
+  } 
+  if (!isset($node->r_type)) {
+    $node->r_type = '';
+  } 
+  if (!isset($node->is_active)) {
+    $node->is_active = 1;
+  } 
+  if (!isset($node->r_script)) {
+    $node->r_script = 0;
+  } 
+
+  db_query('INSERT INTO {voip_extension} '
+          .'(nid, vid, '
+          .'r_nid, r_uid, r_type, is_active, r_script) ' 
+          ."VALUES (%d, %d, %d, %d, '%s', %d, %d)",
+          $node->nid,
+          $node->vid,
+          $node->r_nid, 
+          $node->r_uid,
+          $node->r_type,
+          $node->is_active,
+          $node->r_script);
+}
+
+/**
+ * Implementation of hook_update().
+ */
+function voipext_update(&$node){
+  if ($node->revision) {
+    voipext_insert($node);
+  } else {
+    db_query("UPDATE {voip_extension} "
+            ."SET r_nid = %d, r_uid = %d, r_type = '%s', "
+            ."is_active = %d, r_script = %d "
+            ."WHERE vid = %d ", 
+            $node->r_nid, 
+            $node->r_uid,
+            $node->r_type,
+            $node->is_active,
+            $node->r_script,
+            $node->vid);
+  }
+}
+
+/**
+ * Implementation of hook_delete().
+ */
+function voipext_delete(&$node) {
+  db_query('DELETE FROM {voip_extension} WHERE nid = %d', 
+            $node->nid);
+}
+
+/**
+ * Implementation of hook_nodeapi().
+ */
+function voipext_nodeapi(&$node, $op, $teaser, $page) {
+  // Handle voipext nodes here
+  if ($node->type == 'voipext') {
+    if ($op == 'delete revision') {
+      // Delete specific revisions of a voipext node.
+        db_query('DELETE FROM {voipext} WHERE vid = %d', $node->vid);
+    }
+
+  // Handle all other node types (i.e. voip-enabled node types) here.
+  } else if ($node->type != 'voipext' && variable_get('voip_enable_'. $node->type, FALSE)) {
+    switch($op) {
+  
+    // When a voip-enabled node is created, automatically create a corresponding extension.
+    case 'insert': 
+      // Create corresponding extension node.
+      $ext = new stdClass();
+      global $user;
+      $ext->type = 'voipext';
+      $ext->uid = $user->uid; // author of extension
+      $ext->r_nid = $node->nid; // related nid (from newly saved node)
+      $ext->r_type = $node->type;
+      // User-defined default is_active setting
+      $var = 'voip_default_is_active_'. $node->type;
+      $is_active = variable_get($var, FALSE);
+      $ext->is_active = ($is_active) ? TRUE : FALSE; 
+      // default script
+      $var = 'voip_default_script_'. $node->type;
+      $script = variable_get($var, FALSE);
+      // TODO validate script. Make sure (1) it exists, (2) it works.
+      if ($script) {
+        $ext->r_script = $script; 
+      } else {
+        $ext->is_active = FALSE; // Set to inactive if there isn't a valid script. 
+        $txt = t('This new extension does not have a valid default '
+                .'script. Without a valid script, the extension will '
+                .'not work. To activate this extension, click "Edit" below '
+                .'and add a script. To prevent this error in the future, set a '
+                .'default script !here.', 
+                array('!here' => l('here', url('admin/voip/extensions-defaults', array('absolute' => TRUE)))));
+        drupal_set_message($txt, 'warning');
+      }
+      // set node options from voipext node_type_form
+      $node_options = variable_get('node_options_voipext', FALSE);
+      if ($node_options) {
+        $ext->status = (in_array('status', $node_options)) ? 1 : 0; 
+        $ext->promote = (in_array('promote', $node_options)) ? 1 : 0; 
+        $ext->sticky = (in_array('sticky', $node_options)) ? 1 : 0; 
+        $ext->revision = (in_array('revision', $node_options)) ? 1 : 0; 
+      }
+      // save it!
+      node_save($ext);
+
+      // Notify user about new extension node and relevant extension info.
+      $ext_nid = $node->nid + 1;
+      $output = theme('voipext_created', $ext_nid); 
+      drupal_set_message($output);
+     
+      break;
+
+    // Add extension node (with extension info) to voip-enabled nodes on load. 
+    // This will let other modules do things with extension info before 'view'.
+    case 'load': 
+      $nid = $node->nid;
+      $node->voipext = voipext_get_ext($nid);
+      break;
+
+    // The node is about to be shown on the add/edit form.
+    // Display extension info as form items. Provide user a link to edit
+    // the corresponding phone extension. Specifically, the user may want to 
+    // activate/de-activate the extension when editing a node, or change the script.
+    case 'prepare': 
+      // TODO
+      break;
+
+    case 'prepare translation': 
+      // todo Prepare translated nodes with to show voip extensions.
+      break;
+
+    case 'print': 
+      // todo Prepare print view of book pages to display extensions. 
+      break;
+
+    case 'rss item': 
+      // todo Include extensions in rss items.
+      break;
+
+    case 'search result': 
+      // todo Include extensions in search results.
+      break;
+ 
+    case 'update':
+      // TODO Review D4 code for 'update'. Do we need all this stuff here? 
+      break;
+
+    // Theme extension info and attach it to the node view of voip-enabled nodes.
+    // Info was already added to node object on 'load', so just theme it here.
+    case 'view': 
+      global $user;
+      $access = user_access('view extension');
+      if ($access) {
+        $voipext_node = $node->voipext;
+        $node->content['voipext'] = array(
+          '#value' => theme('voipext_ext', $voipext_node), 
+          '#weight' => 1,
+        ); 
+      }
+      break;
+    }
+  }
+}
+
+/**
+ * Implementation of hook_load().
+ */
+function voipext_load($node) {
+  $additions = new stdClass();
+  // retreive info from voip_extension table
+  $result = db_query('SELECT ext, r_nid, r_uid, r_type, is_active, r_script '
+                    .'FROM {voip_extension} '
+                    .'WHERE vid = %d ', $node->vid);
+  $additions->voipext_info = db_fetch_array($result);
+
+  return $additions;
+}
+
+/**
+ * Implementation of hook_view().
+ */
+function voipext_view($node, $teaser = FALSE, $page = FALSE) {
+  // Prepare node
+  $node = node_prepare($node, $teaser); 
+  // Prepare extension fields. Check plain for good measure (shouldn't be necessary though).
+  $node->voipext_info['ext'] = check_plain($node->voipext_info['ext']); 
+  $node->voipext_info['r_nid'] = check_plain($node->voipext_info['r_nid']);
+  $node->voipext_info['r_uid'] = check_plain($node->voipext_info['r_uid']);
+  $node->voipext_info['r_type'] = check_plain($node->voipext_info['r_type']);
+  $node->voipext_info['is_active'] = check_plain($node->voipext_info['is_active']);
+  $node->voipext_info['r_script'] = check_plain($node->voipext_info['r_script']);
+  // Theme extension fields
+  $node->content['voipext'] = array(
+    '#value' => theme('voipext', $node, $teaser, $page),
+    '#weight' => 1,
+  );
+
+  return $node;
+}
+
+/**
+ * Implementation of hook_theme().
+ */
+function voipext_theme(){
+  $path = drupal_get_path('module', 'voipext') .'/theme';
+  drupal_add_css("$path/voipext.css");
+  require_once "./$path/theme.inc";
+
+  return array(
+    'voipext' => array(
+      'template' => 'voipext',
+      'file' => 'theme.inc',
+      'arguments' => array('node' => NULL, 'teaser' => NULL, 'page' => NULL),
+      'path' => $path,
+    ),
+    'voipext_created' => array(
+      'template' => 'voipext-created',
+      'file' => 'theme.inc',
+      'arguments' => array('nid' => NULL),
+      'path' => $path,
+    ),
+    'voipext_ext' => array(
+      'template' => 'voipext-ext',
+      'file' => 'theme.inc',
+      'arguments' => array('voipext_node' => NULL),
+      'path' => $path,
+    ),
+  );
+}
+
+/**
+ * Implementation of hook_form_alter
+ * 
+ * Enable users to voip enable node types on node type page
+ * (when creating or editing a node type).
+ */
+function voipext_form_alter(&$form, $form_state, $form_id) {
+  // Add voip settings to node type forms (except voipext).
+  if ($form_id == 'node_type_form' && $form['#node_type']->type != 'voipext') {
+    $form['voip'] = array(
+      '#type' => 'fieldset',
+      '#title' => 'Voip (voice over Internet) settings',
+      '#name' => 'Voip',
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+    );
+    $form['voip']['voip_enable'] = array(
+      '#type' => 'checkbox',
+      '#title' => 'Enable Voip',
+      '#description' => t('Voip-enable this node type.'),
+      '#default_value' => variable_get('voip_enable_'. $form['#node_type']->type, FALSE),
+    );
+  }
+}

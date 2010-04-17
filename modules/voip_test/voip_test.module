@@ -39,3 +39,23 @@ function voip_test_voip_process_request($request_id, $options) {
   return $response;
 }
 
+/*
+function voip_test_nodeapi(&$node, $op, $teaser, $page) {
+  if ($op == 'view') {
+    dsm($node);
+  }
+}
+// */
+
+/* 
+function voip_test_form_alter(&$form, &$form_state, $form_id) {
+// dsm($form_id);
+
+  if ($form_id == 'node_type_form') {
+    dsm($form);
+   
+    $ops = variable_get('node_options_voip_extension', false);
+    dsm($ops);
+  }
+}
+// */

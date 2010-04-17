@@ -7,21 +7,21 @@
 /**
  * Implementation of hook_install().
  */
-function voip_extension_install() {
-  drupal_install_schema('voip_extension');
+function voipext_install() {
+  drupal_install_schema('voipext');
 }
 
 /**
  * Implementation of hook_uninstall().
  */
-function voip_extension_uninstall() {
-  drupal_uninstall_schema('voip_extension');
+function voipext_uninstall() {
+  drupal_uninstall_schema('voipext');
 }
 
 /**
  * Implementation of hook_schema().
  */
-function voip_extension_schema() {
+function voipext_schema() {
   // voip_extensions table
   $schema['voip_extension'] = array(
     'fields' => array(

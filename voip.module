@@ -231,7 +231,6 @@ function voip_send_log($request, $options) {
   return array('status' => TRUE);
 }
 
-
 /**
  * Process requests received from VoIP servers.
  */
