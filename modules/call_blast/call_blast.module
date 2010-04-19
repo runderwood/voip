@@ -8,6 +8,9 @@
  * Implementation of hook_voip_get_script().
  */
 function call_blast_voip_get_script() {
+  // TODO: this function should return callblast-specific scripts.  The "hello_world" script has already been defined by voip_tester.module
+  // NOTE: How to name scripts? <module_prefix>_name.xml? Do we need the .xml?
+  // NOTE: the following require once should assign the script to a variable and return that variable
   require_once('hello_world.xml');
 }
 
@@ -45,7 +48,8 @@ function call_blast_cron() {
 
     // server sending request
     global $base_url;
-    $variables['VD_XMLRPC_URL'] = $base_url;
+    // TODO: once we switch to services.module, the extension '/xmlrpc.php' will have to change
+    $variables['VD_XMLRPC_URL'] = $base_url . '/xmlrpc.php';
     // user sending request
     global $user;
     $variables['VD_USER_NAME'] = $user->name;
@@ -59,7 +63,7 @@ function call_blast_cron() {
       $options['unique_id'] = uniqid();
 
       // TODO User (creator of blast) needs a way to determine script called here.
-      $options['script_name'] = 'hello.xml';
+      $options['script_name'] = 'hello_world';
 
       // $request_id, Type of call being requested, 'call list'.
       $request_id = 'voip_dial_out';
