@@ -103,6 +103,9 @@ function voip_asterisk_admin_form_validate($form, &$form_state) {
 function voip_asterisk_send($request_id, $options) {
   $server = voip_servers('server', 'asterisk');
   $config = $server['configuration'];
+$msg = 'Dial-out Asterisk configuration: %c';
+$vars = array('%c' => print_r($server,TRUE));
+watchdog('voip_asterisk', $msg, $vars, WATCHDOG_ERROR);
   $result =  voip_asterisk_send_request($config, $request_id, $options);
   return $result;
 }
@@ -128,13 +131,6 @@ function voip_asterisk_send_request($server_config, $request_id, $options) {
       watchdog('voip_asterisk', $error_message, $variables, WATCHDOG_ERROR);
       voip_error("(asterisk server) Invalid request id received: " . $request_id);
       break;
-    case 'voip_failure':  // included here for test purposes
-      $response = FALSE;
-      voip_error('(voip_asterisk) voip failure, as expected');
-      break;
-    case 'voip_echo':  // included here for test purposes
-      $response['echo'] = $options;
-      break;
     case 'voip_dial_out': // dial the given number and then execute the script provided
       $invalid_args = FALSE;
       if(!$options['number']) {
@@ -150,7 +146,8 @@ function voip_asterisk_send_request($server_config, $request_id, $options) {
         $error_message = "Invalid options: missing %arg.";
         $variables = array('%arg' => $arg_name);
         watchdog('voip_asterisk', $error_message, $variables, WATCHDOG_ERROR);
-        voip_error("(asterisk server) Invalid request id received: " . $request_id);
+// TODO: replace this by the appropriate error message
+        voip_error("(asterisk server) Invalid dial-out request received: " . $request_id);
         break;
       }
       // number to be called

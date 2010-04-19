@@ -160,11 +160,11 @@ function _voip_asterisk_event_originate($ecode, $data, $server, $port) {
  */
 function _voip_asterisk_dial_out($server_config, $number, $script_name, $options) {
 
-  $ami_host = $server_config['ami_host'];
-  $ami_host = ($ami_port)? $ami_host.':'.$ami_port : $ami_host;
-  $ami_port = $server_config['ami_port'];
-  $ami_user = $server_config['ami_user'];
-  $ami_pass = $server_config['ami_password'];
+  $ami_port = $server_config['voip_asterisk_port'];
+  $ami_host = $server_config['voip_asterisk_host'];
+  $ami_host = ($ami_port)? ($ami_host.':'.$ami_port) : $ami_host;
+  $ami_user = $server_config['voip_asterisk_user'];
+  $ami_pass = $server_config['voip_asterisk_password'];
 
   voip_error_reset();
 
