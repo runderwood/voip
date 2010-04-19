@@ -42,8 +42,21 @@ function call_blast_cron() {
     // Add each number from the blast call list to $options, to be sent to voip.
     // Clear out $options, in case there is an old list stored here.
     $options = array();
+
+    // server sending request
+    global $base_url;
+    $variables['VD_XMLRPC_URL'] = $base_url;
+    // user sending request
+    global $user;
+    $variables['VD_USER_NAME'] = $user->name;
+    $options['variables'] = $variables;
+
     while ($num = db_result($result2)) {
       $options['number'] = $num;
+      
+      // Set unique call id
+      // TODO Use this for keeping track of call status?
+      $options['unique_id'] = uniqid();
 
       // TODO User (creator of blast) needs a way to determine script called here.
       $options['script_name'] = 'hello.xml';
