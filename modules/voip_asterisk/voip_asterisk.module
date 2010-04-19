@@ -103,9 +103,6 @@ function voip_asterisk_admin_form_validate($form, &$form_state) {
 function voip_asterisk_send($request_id, $options) {
   $server = voip_servers('server', 'asterisk');
   $config = $server['configuration'];
-$msg = 'Dial-out Asterisk configuration: %c';
-$vars = array('%c' => print_r($server,TRUE));
-watchdog('voip_asterisk', $msg, $vars, WATCHDOG_ERROR);
   $result =  voip_asterisk_send_request($config, $request_id, $options);
   return $result;
 }
