@@ -29,7 +29,6 @@ function voipext_admin_enable() {
     '#options' => $options,
     '#default_value' => variable_get('voipext_enable', FALSE),
   );
-// TODO also change voip_enable_role_X to something like voipext_enable_role_X
 
   // Voip-enable selected users 
   $form['voip_users'] = array(
@@ -45,6 +44,7 @@ function voipext_admin_enable() {
   );
   // Show all roles, indicating which have users with extensions
   // and which do not. 
+// TODO also change voip_enable_role_X to something like voipext_enable_role_X
   $all_roles = user_roles();
   $ue_roles = user_roles(FALSE, 'user extension');
   foreach ($all_roles as $key => $role) {
@@ -96,6 +96,7 @@ dsm($form_state);
 // TODO Edit handling of variable_get('voip_enable_*') elsewhere. 
 
   $values = $form_state['values'];
+  foreach ($voip_enable as $type => enabled) {} // CONTINUE HERE replace function below
   foreach($values as $type => $enabled) {
     $prefix = substr($type, 0, 11);
 // TODO update this

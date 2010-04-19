@@ -64,7 +64,6 @@ function voipext_get_ext($r_nid, $type = 'node'){
  *  to be displayed instead of the default notification message.
  * 
  * Create a phone extension (related voipext node) for this voip-enabled node.
- * If you are creating a large number on extensions at once, 
  */
 function voipext_create_ext($node, $msg = array('display message' => TRUE, 'message' => '')) {
   // Create corresponding extension node.
