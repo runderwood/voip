@@ -43,14 +43,14 @@ function call_blast_cron() {
     // Clear out $options, in case there is an old list stored here.
     $options = array();
     while ($num = db_result($result2)) {
-      $options['phone_list'][] = $num;
+      $options['number'] = $num;
     }
 
     // TODO User (creator of blast) needs a way to determine script called here.
     $options['script_name'] = 'hello.xml';
 
     // $request_id, Type of call being requested, 'call list'.
-    $request_id = 'call list';
+    $request_id = 'voip_dial_out';
 
     // place outgoing call
     voip_send_request($request_id, $options);
