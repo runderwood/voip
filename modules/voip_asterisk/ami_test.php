@@ -38,16 +38,32 @@ $result = _voip_asterisk_ping($server_config);
 echo('voip_error: ' . voip_error_message() . "\n");
 echo('result: ' . print_r($result, TRUE) . "\n\n");
 
-$destination = '16172130536'; // Leo's Google Voice number
-//$origin = '6177920995'; // Leo's cell phone
-//$destination = '6176888319'; // Danielle's cell phone
-//$origin = '16177920995';
-$origin = '6174525510'; // media lab office
 
-echo("about to call _voip_asterisk_dial_out($server_config, $origin, $destination)\n");
-$result = _voip_asterisk_dial_out($server_config, $origin, $destination);
+//$number = '16172130536'; // Leo's Google Voice number
+//$number = '16174890192';
+//$number = '6177920995'; // Leo's cell phone
+$number = '2674962399'; // Leo's cell phone
+//$number = '6171231234'; // invalid number
+//$number = '6176888319'; // Danielle's cell phone
+//$number = '6174525510'; // media lab office
+//$number = 'gizmo17476461031'; // leo's gizmo account
+$script_name = 'hello_world';
+$variables['VD_XMLRPC_URL'] = 'http://localhost/drupal6/xmlrpc.php';
+$variables['VD_USER_NAME'] = 'test_user';
+$options['variables'] = $variables;
+$options['unique_id'] = uniqid();
+
+echo("about to call _voip_asterisk_dial_out($server_config, $number, $script_name, $options)\n");
+$result = _voip_asterisk_dial_out($server_config, $number, $script_name, $options);
 echo('voip_error: ' . voip_error_message() . "\n");
 echo('result: ' . print_r($result, TRUE) . "\n\n");
+
+// process return value from AMI Originate
+// TODO: status reporting is dependent on active connection to AMI server... how to do that?
+$q = voip_asterisk_dial_manager('dump');
+echo("queue: " . print_r($q,TRUE) . "\n");
+
+
 
 echo("\n");
 echo("-------\n");
