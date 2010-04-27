@@ -49,7 +49,7 @@ function call_blast_cron() {
     // server sending request
     global $base_url;
     // TODO: once we switch to services.module, the extension '/xmlrpc.php' will have to change
-    $variables['VD_XMLRPC_URL'] = $base_url . '/xmlrpc.php';
+    $variables['VD_XMLRPC_URL'] = 'http://localhost/d6/xmlrpc.php'; // TODO uncomment $base_url . '/xmlrpc.php';
     // user sending request
     global $user;
     $variables['VD_USER_NAME'] = $user->name;
