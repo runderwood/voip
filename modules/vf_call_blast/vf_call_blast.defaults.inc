@@ -256,10 +256,56 @@ function _vf_call_blast_content_default_fields() {
     ),
   );
 
+  // Exported field: field_callblast_message
+  $fields[] = array(
+    'field_name' => 'field_callblast_message',
+    'type_name' => 'call_blast_message',
+    'display_settings' => array(
+      'label' => array(
+        'format' => 'above',
+        'exclude' => 0,
+      ),
+      'teaser' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      'full' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      '4' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+    ),
+    'widget_active' => '1',
+    'type' => 'filefield',
+    'required' => '0',
+    'multiple' => '0',
+    'module' => 'filefield',
+    'active' => '1',
+    'list_field' => '0',
+    'list_default' => 1,
+    'description_field' => '0',
+    'widget' => array(
+      'file_extensions' => 'wav mp3',
+      'file_path' => 'callblast',
+      'progress_indicator' => 'bar',
+      'max_filesize_per_file' => '',
+      'max_filesize_per_node' => '',
+      'label' => 'Call Blast Message',
+      'weight' => '31',
+      'description' => '',
+      'type' => 'filefield_widget',
+      'module' => 'filefield',
+    ),
+  );
+
   // Translatables
   array(
     t('Blast Phone Numbers'),
     t('Blast sent'),
+    t('Call Blast Message'),
     t('Require Test Call'),
     t('Test Phone Number'),
     t('Test approved'),
