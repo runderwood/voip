@@ -261,16 +261,17 @@ function _vf_call_blast_content_default_fields() {
     'field_name' => 'field_callblast_message',
     'type_name' => 'call_blast_message',
     'display_settings' => array(
+      'weight' => '31',
+      'parent' => '',
       'label' => array(
         'format' => 'above',
-        'exclude' => 0,
       ),
       'teaser' => array(
         'format' => 'default',
         'exclude' => 0,
       ),
       'full' => array(
-        'format' => 'default',
+        'format' => 'swftools_no_file',
         'exclude' => 0,
       ),
       '4' => array(
