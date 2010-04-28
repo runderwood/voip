@@ -1,3 +1,99 @@
 <?php
 
 include_once('callblast.features.inc');
+
+/**
+ * @file
+ *   Implement VOIP call blast to a list of user-defined phone numbers.
+ */ 
+
+/**
+ * Implementation of hook_voip_get_script().
+ */
+function callblast_voip_get_script() {
+  // TODO: this function should return callblast-specific scripts.  The "hello_world" script has already been defined by voip_tester.module
+  // NOTE: How to name scripts? <module_prefix>_name.xml? Do we need the .xml?
+  // NOTE: the following require once should assign the script to a variable and return that variable
+  require_once('hello_world.xml');
+}
+
+/**
+ * On cron, run call blasts.
+ * 
+ * TODO Add test call before running call blast.
+ * TODO Enable user to schedule date/time for test call and blast.
+ * 
+ * Implementation of hook_cron().
+ */
+function callblast_cron() {
+  // check for call blasts that have been scheduled but not sent
+  $sql = "SELECT n.nid, n.vid " 
+        ."FROM {node} n " 
+        ."JOIN {content_type_callblast} cb ON n.nid = cb.nid "
+        ."WHERE field_blast_sent_value = 0";
+  $result = db_query($sql);
+
+  // loop through unblasted blast lists and blast them
+  while ($row = db_fetch_object($result)) {
+    $nid = $row->nid;
+    $vid = $row->vid;
+
+    // get list of phone numbers for the current call blast list
+    $sql = "SELECT field_blast_phone_num_value "
+          ."FROM content_field_blast_phone_num "
+          ."WHERE nid = %d "
+          ."AND vid = %d " ;
+    $result2 = db_query($sql, $nid, $vid);
+
+    // Add each number from the blast call list to $options, to be sent to voip.
+    // Clear out $options, in case there is an old list stored here.
+    $options = array();
+
+    // server sending request
+    global $base_url;
+    // TODO: once we switch to services.module, the extension '/xmlrpc.php' will have to change
+    $variables['VD_XMLRPC_URL'] = 'http://localhost/d6/xmlrpc.php'; // TODO uncomment $base_url . '/xmlrpc.php';
+    // user sending request
+    global $user;
+    $variables['VD_USER_NAME'] = $user->name;
+    $options['variables'] = $variables;
+
+    while ($num = db_result($result2)) {
+      $options['number'] = $num;
+      
+      // Set unique call id
+      // TODO Use this for keeping track of call status?
+      $options['unique_id'] = uniqid();
+
+      // TODO User (creator of blast) needs a way to determine script called here.
+      $options['script_name'] = 'hello_world';
+
+      // $request_id, Type of call being requested, 'call list'.
+      $request_id = 'voip_dial_out';
+
+      // place outgoing call
+      voip_send_request($request_id, $options);
+    }
+    /**
+     * TODO Revisit whether this is still a good way to keep track of "sent".
+     * Now that individual calls are sent one-at-a-time, and looking ahead to
+     * keeping track of call status number-by-number, we need something 
+     * more granular here. Maybe each call becomes a node. And the call blast
+     * node gets marked "sent" after all calls go through.
+     */
+    // Update node to indicate that blast has been sent.
+    db_query("UPDATE {content_type_callblast} "
+            ."SET field_blast_sent_value = 1 " 
+            ."WHERE nid = %d " 
+            ."AND vid = %d ",
+             $nid, $vid);
+    // Clear cache to reflect update.
+    cache_clear_all('content:'. $nid .':'. $vid, content_cache_tablename()); 
+ 
+    // Log call blast with watchdog
+    $type = 'call blast';
+    $message = t("Call blast nid-$nid sent.");
+    $severity = WATCHDOG_NOTICE;
+    watchdog($type, $message);
+  }
+}
