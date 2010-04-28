@@ -1,9 +1,0 @@
-; $Id$
-name = Call Blast 
-description = Blast a phone message out to a list of user-defined numbers.
-package = Voip Drupal
-core = 6.x
-dependencies[] = voip
-dependencies[] = features
-dependencies[] = vf_call_blast
-
