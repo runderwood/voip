@@ -3,7 +3,7 @@
 /**
  * Helper to implementation of hook_node_info().
  */
-function _vf_call_blast_node_info() {
+function _callblast_node_info() {
   $items = array(
     'call_blast' => array(
       'name' => t('Call Blast'),

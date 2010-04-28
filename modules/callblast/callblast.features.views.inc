@@ -3,7 +3,7 @@
 /**
  * Helper to implementation of hook_views_default_views().
  */
-function _vf_call_blast_views_default_views() {
+function _callblast_views_default_views() {
   $views = array();
 
   // Exported view: call_blast_list

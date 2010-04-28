@@ -3,7 +3,7 @@
 /**
  * Helper to implementation of hook_content_default_fields().
  */
-function _vf_call_blast_content_default_fields() {
+function _callblast_content_default_fields() {
   $fields = array();
 
   // Exported field: field_blast_phone_num
