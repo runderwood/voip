@@ -6,56 +6,6 @@
 function _callblast_content_default_fields() {
   $fields = array();
 
-  // Exported field: field_blast_phone_num
-  $fields[] = array(
-    'field_name' => 'field_blast_phone_num',
-    'type_name' => 'callblast',
-    'display_settings' => array(
-      'label' => array(
-        'format' => 'above',
-        'exclude' => 0,
-      ),
-      'teaser' => array(
-        'format' => 'default',
-        'exclude' => 0,
-      ),
-      'full' => array(
-        'format' => 'default',
-        'exclude' => 0,
-      ),
-      '4' => array(
-        'format' => 'default',
-        'exclude' => 0,
-      ),
-    ),
-    'widget_active' => '1',
-    'type' => 'text',
-    'required' => '0',
-    'multiple' => '1',
-    'module' => 'text',
-    'active' => '1',
-    'text_processing' => '0',
-    'max_length' => '20',
-    'allowed_values' => '',
-    'allowed_values_php' => '',
-    'widget' => array(
-      'rows' => 5,
-      'size' => '20',
-      'default_value' => array(
-        '0' => array(
-          'value' => '',
-          '_error_element' => 'default_value_widget][field_blast_phone_num][0][value',
-        ),
-      ),
-      'default_value_php' => NULL,
-      'label' => 'Blast Phone Numbers',
-      'weight' => '6',
-      'description' => '',
-      'type' => 'text_textfield',
-      'module' => 'text',
-    ),
-  );
-
   // Exported field: field_blast_sent
   $fields[] = array(
     'field_name' => 'field_blast_sent',
@@ -304,7 +254,6 @@ function _callblast_content_default_fields() {
 
   // Translatables
   array(
-    t('Blast Phone Numbers'),
     t('Blast sent'),
     t('Call Blast Message'),
     t('Require Test Call'),
