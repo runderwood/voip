@@ -5,7 +5,7 @@
  */
 function _callblast_node_info() {
   $items = array(
-    'call_blast' => array(
+    'callblast' => array(
       'name' => t('Call Blast'),
       'module' => 'features',
       'description' => t('Schedule a call blast. Each call blast node includes a list of numbers to receive calls. '),
@@ -16,7 +16,7 @@ function _callblast_node_info() {
       'min_word_count' => '0',
       'help' => '',
     ),
-    'call_blast_message' => array(
+    'callblast_message' => array(
       'name' => t('Call Blast Message'),
       'module' => 'features',
       'description' => t('Voice message to blast out with call blasts'),

@@ -6,9 +6,9 @@
 function _callblast_views_default_views() {
   $views = array();
 
-  // Exported view: call_blast_list
+  // Exported view: callblast_list
   $view = new view;
-  $view->name = 'call_blast_list';
+  $view->name = 'callblast_list';
   $view->description = 'List of scheduled call blasts and related status';
   $view->tag = 'call blast';
   $view->view_php = '';
@@ -277,7 +277,7 @@ function _callblast_views_default_views() {
     'type' => array(
       'operator' => 'in',
       'value' => array(
-        'call_blast' => 'call_blast',
+        'callblast' => 'callblast',
       ),
       'group' => '0',
       'exposed' => FALSE,

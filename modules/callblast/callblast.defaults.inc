@@ -9,7 +9,7 @@ function _callblast_content_default_fields() {
   // Exported field: field_blast_phone_num
   $fields[] = array(
     'field_name' => 'field_blast_phone_num',
-    'type_name' => 'call_blast',
+    'type_name' => 'callblast',
     'display_settings' => array(
       'label' => array(
         'format' => 'above',
@@ -59,7 +59,7 @@ function _callblast_content_default_fields() {
   // Exported field: field_blast_sent
   $fields[] = array(
     'field_name' => 'field_blast_sent',
-    'type_name' => 'call_blast',
+    'type_name' => 'callblast',
     'display_settings' => array(
       'label' => array(
         'format' => 'above',
@@ -109,7 +109,7 @@ function _callblast_content_default_fields() {
   // Exported field: field_test_approved
   $fields[] = array(
     'field_name' => 'field_test_approved',
-    'type_name' => 'call_blast',
+    'type_name' => 'callblast',
     'display_settings' => array(
       'label' => array(
         'format' => 'above',
@@ -159,7 +159,7 @@ function _callblast_content_default_fields() {
   // Exported field: field_test_phone_num
   $fields[] = array(
     'field_name' => 'field_test_phone_num',
-    'type_name' => 'call_blast',
+    'type_name' => 'callblast',
     'display_settings' => array(
       'label' => array(
         'format' => 'above',
@@ -209,7 +209,7 @@ function _callblast_content_default_fields() {
   // Exported field: field_test_required
   $fields[] = array(
     'field_name' => 'field_test_required',
-    'type_name' => 'call_blast',
+    'type_name' => 'callblast',
     'display_settings' => array(
       'label' => array(
         'format' => 'above',
@@ -259,7 +259,7 @@ function _callblast_content_default_fields() {
   // Exported field: field_callblast_message
   $fields[] = array(
     'field_name' => 'field_callblast_message',
-    'type_name' => 'call_blast_message',
+    'type_name' => 'callblast_message',
     'display_settings' => array(
       'weight' => '31',
       'parent' => '',
