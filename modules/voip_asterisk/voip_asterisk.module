@@ -112,13 +112,6 @@ function voip_asterisk_send($request_id, $options) {
  */
 function voip_asterisk_send_request($server_config, $request_id, $options) {
 
-  if ($server_config['voip_asterisk_ssl']) {
-    $scheme = 'https';
-  }
-  else {
-    $scheme = 'http';
-  }
-
   switch($request_id) {
     default:
       // Invalid request id
@@ -128,6 +121,7 @@ function voip_asterisk_send_request($server_config, $request_id, $options) {
       watchdog('voip_asterisk', $error_message, $variables, WATCHDOG_ERROR);
       voip_error("(asterisk server) Invalid request id received: " . $request_id);
       break;
+
     case 'voip_dial_out': // dial the given number and then execute the script provided
       $invalid_args = FALSE;
       if(!$options['number']) {

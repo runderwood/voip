@@ -160,17 +160,18 @@ function _voip_asterisk_event_originate($ecode, $data, $server, $port) {
  */
 function _voip_asterisk_dial_out($server_config, $number, $script_name, $options) {
 
-  $ami_port = $server_config['voip_asterisk_port'];
-  $ami_host = $server_config['voip_asterisk_host'];
+  $ami_port = $server_config['ami_port'];
+  $ami_host = $server_config['ami_host'];
   $ami_host = ($ami_port)? ($ami_host.':'.$ami_port) : $ami_host;
-  $ami_user = $server_config['voip_asterisk_user'];
-  $ami_pass = $server_config['voip_asterisk_password'];
+  $ami_user = $server_config['ami_user'];
+  $ami_pass = $server_config['ami_password'];
 
   voip_error_reset();
 
   $result = _voip_asterisk_manager()->connect($ami_host, $ami_user, $ami_pass);
   if(voip_error()) {
-    voip_error("Connection to Asterisk manager failed: " . voip_error_message());
+//    voip_error("Connection to Asterisk manager failed: " . voip_error_message());
+    voip_error("Connection to Asterisk manager failed: " . voip_error_message() . "with server_config: ".print_r($server_config, TRUE). "and with the following params: connect($ami_host, $ami_user, $ami_pass)");
     return FALSE;
   }
 
