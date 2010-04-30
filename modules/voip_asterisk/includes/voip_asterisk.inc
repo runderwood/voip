@@ -170,8 +170,7 @@ function _voip_asterisk_dial_out($server_config, $number, $script_name, $options
 
   $result = _voip_asterisk_manager()->connect($ami_host, $ami_user, $ami_pass);
   if(voip_error()) {
-//    voip_error("Connection to Asterisk manager failed: " . voip_error_message());
-    voip_error("Connection to Asterisk manager failed: " . voip_error_message() . "with server_config: ".print_r($server_config, TRUE). "and with the following params: connect($ami_host, $ami_user, $ami_pass)");
+    voip_error("Connection to Asterisk manager failed: " . voip_error_message());
     return FALSE;
   }
 
