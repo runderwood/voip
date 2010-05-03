@@ -13,7 +13,8 @@ require_once('../../includes/voip_error.inc');
  * Global variables
  */
 
-$ami_host = 'localhost';
+//$ami_host = 'localhost';
+$ami_host = 'whatsupserver.media.mit.edu';
 $ami_port = '5038';
 $ami_user = 'voip_drupal_ami';
 $ami_pass = 'vd123';

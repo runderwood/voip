@@ -1,0 +1,53 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ * Keeps track of the calls made and received by the Voip Drupal system
+ */
+
+/**
+ * Stores information about a given call
+ *
+ * @param $call_id Unique identifier associated with the call
+ *
+ * @param $call_status One of the following: 'uncalled', 'dialing', 'invalid number', 'no answer', 'busy', 'answered', 'hang up'
+ *
+ */
+function voip_tracker_set_call_info($call_id, $call_status='', $caller_number='', $callee_number='', $module='', $uid=0, $script_name='', $vars=array()){
+  watchdog('voip', 'Call info for call id %call_id:: status: @call_status, caller: @caller, callee: @callee, module: @module, script: @script_name, vars: @vars',
+    array('%call_id' => $call_id, '@call_status' => $call_status, '@caller' => $caller_number, '@callee' => $callee_number, '@module' => $module, '@uid' => $uid, '@script_name' => $script_name, '@vars' => print_r($vars, TRUE)), WATCHDOG_INFO);
+
+  $dispatch_time = time();
+  $serialized_vars = serialize($vars);
+  $args = array(
+    'call_id' => $call_id,
+    'caller_number' => $caller_number,
+    'callee_number' => $callee_number,
+    'module' => $module,
+    'uid' => $uid,
+    'script_name' => $script_name,
+    'vars' => $serialized_vars,
+    'call_status' => $call_status,
+    'dispatch_time' => $dispatch_time,
+  );
+  $query = "INSERT INTO {voip_tracker_call_list}
+              (call_id, caller_number, callee_number, module, uid, script_name, vars, call_status, dispatch_time)
+            VALUES
+              ('%s', '%s', '%s', '%s', %d, '%s', '%s', '%s', %d)
+           ";
+  db_query($query, $args);
+
+  return;
+}
+
+/**
+ * Get status information about a given call
+ */
+function voip_tracker_get_call_status($call_id){
+  $query = "SELECT c.call_status FROM {voip_tracker_call_list} c WHERE c.call_id = %d ORDER BY c.dispatch_time DESC";
+  $db_entry = db_fetch_array(db_query($query, $call_id));
+  $call_status = $db_entry['call_status'];
+
+  return $call_status;
+}

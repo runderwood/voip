@@ -6,7 +6,7 @@
  * Enables communication between Drupal and VoIP servers.
  */
 
-foreach (array('voip_error.inc') as $file) {
+foreach (array('voip_error.inc', 'voip_log_server.inc') as $file) {
   require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'includes' . DIRECTORY_SEPARATOR . $file);
 }
 
@@ -211,24 +211,6 @@ function voip_servers($op = 'servers', $server = NULL) {
     case 'name':
       return $_names[$server];
   }
-}
-
-
-/**
- * Implementation of hook_voip_server_info().
- */
-function voip_voip_server_info() {
-  return array(
-    'log' => array(
-      'name' => t('Log only'),
-      'send' => 'voip_send_log',
-    ),
-  );
-}
-
-function voip_send_log($request, $options) {
-  watchdog('voip', 'Voip request %request sent with the following options: @options', array('%request' => $request, '@options' => print_r($options, TRUE)), WATCHDOG_INFO);
-  return array('status' => TRUE);
 }
 
 /**

@@ -7,6 +7,7 @@ foreach (array('voip_api.inc') as $file) {
 
 $voip_server = 'http://localhost/d6/xmlrpc.php';
 #$voip_server = 'http://localhost/voipdev/xmlrpc.php';
+#$voip_server = 'http://whatsupserver.media.mit.edu/d6/xmlrpc.php';
 
 echo("\n");
 echo("-------\n");
