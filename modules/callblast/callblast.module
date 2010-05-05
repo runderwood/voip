@@ -1,10 +1,14 @@
 <?php
 
+// Provided by Features module.
 include_once('callblast.features.inc');
 
+// Custom code and logic.
+include_once('callblast.inc');
+
 /**
- * @file
- *   Implement VOIP call blast to a list of user-defined phone numbers.
+ * @file callblast.module
+ *   Drupal hooks implemented for VOIP call blasts.
  */ 
 /**
  * Implementation of hook_help(). 
@@ -29,45 +33,46 @@ function callblast_menu() {
     'page callback' => 'callblast_list_autocomplete',
     'access arguments' => array('edit extension'),
     'type' => MENU_CALLBACK,
+    'file' => 'callblast.inc',
   );
   
   return $items;
 }
 
-// CONTINUE HERE
+/**
+ * Implementation of hook_nodeapi().
+ */
+function callblast_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
+  // create call nodes from call blast's call list
+  if ($node->type == 'callblast' && $op == 'insert') {
+
+    // Get selected call list
+    $list_name = check_plain($node->field_callblast_calllist[0]['value']);
+    $list = module_invoke_all('callblast_get_list', $list_name);
+
+    // Set up batch 
+// CONTINUE HERE 
+
+    // Save voipcall nodes
+
+    // Set message, success
+  }
+  // ADD HANDLING FOR AN UPDATED CALLBLAST NODE
+ 
+  // TESTING
+  if ($node->type == 'voipcall' || 'calllist' && $op == 'view') {
+    dsm($node);
+  }
+}
+
 // HOOK_NODEAPI -> CREATE CALL NODES ON SAVE
-/*
-   CALL NODE FILEDS: 
-     nid
-     r_nid (created by)
-     r_uid (created by)
-     status
-*/
 // CALL RELATED CALL NODES ON CRON
-// LEAVE HOOKS HERE. MOVE BUSINESS LOGIC TO .INC
+// USE CALL BLAST'S MESSAGE
+// README.txt, explain hooks implemented in calllist module
+// FORM ALTER TO PREVENT MANUAL CREATION OF CALLS (LIKE EXTENSIONS)?
+// PROVIDE ADMIN SETTINGS FORM TOE ENABLE MANUAL CREATION OF CALLS? 
 // BUILD CIVICRM MODULE
 
-/**
- * Callback for callblast/list/autocomplete
- * to autocomplete call list field on 
- * node/add/callblast and node/edit/% forms.
- */
-function callblast_list_autocomplete() {
-  $items = array();
-  $items = module_invoke_all('callblast_list');
-  print drupal_to_js($items);
-  exit();
-}
-
-/**
- * Implementation of hook_voip_get_script().
- */
-function callblast_voip_get_script() {
-  // TODO: this function should return callblast-specific scripts.  The "hello_world" script has already been defined by voip_tester.module
-  // NOTE: How to name scripts? <module_prefix>_name.xml? Do we need the .xml?
-  // NOTE: the following require once should assign the script to a variable and return that variable
-  require_once('hello_world.xml');
-}
 
 /**
  * On cron, run call blasts.
@@ -243,34 +248,4 @@ function callblast_widget(&$form, &$form_state, $field, $items, $delta = 0) {
   return $element;
 }
 
-/**
- * Convert a list name to a machine-readable
- * text id, consisting only of numbers, lowercase  
- * letters and underscores.
- */
-function callblast_id($module, $name) {
-  $id = $module .'_'. $name;  
 
-  // make lowercase
-  $id = strtolower($id);
-
-  // Replace space with _
-  $pattern = '/ /';
-  $replacement = '_';
-  $id = preg_replace($pattern, $replacement, $id);
-
-  // Replace - with _
-  $pattern = '/-/';
-  $replacement = '_';
-  $id = preg_replace($pattern, $replacement, $id);
-
-  // Replace !#$%&'*+/=?^`{|}~@.[] 
-  $pattern = '([!#$%&\'*+/=?^`{|}~@.\[\]\:<>;])';
-  $replacement = '';
-  $id = preg_replace($pattern, $replacement, $id);
-
-  // incase we missed anything weird
-  $id = filter_var($id, FILTER_SANITIZE_STRING);
-
-  return $id;
-}
