@@ -1,0 +1,36 @@
+<?php
+
+include_once('calllist.features.inc');
+
+/**
+ * Implementation of hook_callblast_list().
+ * 
+ * Provide the names of call blast lists provided 
+ * by the Call List module.  
+ * 
+ * @return 
+ *  $lists, array('unique identifier' => 'call list name')
+ * 
+ *  Keys and values in the returned array should both be 
+ *  strings (to support exportables). Keys (unique identifiers) 
+ *  should follow the convention modulename_id. For example:
+ *  return array('calllist_janes_list' => "Jane's List", 'calllist_joes_list' => "Joe's List");
+ *   
+ *  If the list is being pulled from a third-party CRM with 
+ *  integer IDs, this should be okay. Keys should look like this:
+ *  return array('mymodule_001' => "List X", 'mymodule_002' => "List Y");
+ * 
+ *  Call Blast provides a function, callblast_id($module, $list_name), 
+ *  which you can use to easily generate string IDs for call lists.
+ */
+function calllist_callblast_list() {
+  $lists = array();
+  $result = db_query("SELECT title FROM node WHERE type = 'calllist'");
+  while ($list = db_fetch_object($result)) {
+    $id = callblast_id('calllist', $list->title);
+    $name = t($list->title);
+    $lists[$id] = $name; 
+  }
+  
+  return $lists;
+}

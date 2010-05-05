@@ -6,6 +6,58 @@ include_once('callblast.features.inc');
  * @file
  *   Implement VOIP call blast to a list of user-defined phone numbers.
  */ 
+/**
+ * Implementation of hook_help(). 
+ */
+function callblast_help($path, $arg) {
+  if ($path == 'admin/help#callblast') {
+    $txt = t('This module creates provides voip '
+            .'call blast functionality. ');
+    return $txt;
+  }
+}
+
+/**
+ * Implementation of hook_menu().
+ */
+function callblast_menu() {
+  $items = array();
+
+ // Call back for auto-complete on node/add and node/edit form
+  $items['callblast/list/autocomplete'] = array(
+    'title' => 'Call Blast Autocomplete List',
+    'page callback' => 'callblast_list_autocomplete',
+    'access arguments' => array('edit extension'),
+    'type' => MENU_CALLBACK,
+  );
+  
+  return $items;
+}
+
+// CONTINUE HERE
+// HOOK_NODEAPI -> CREATE CALL NODES ON SAVE
+/*
+   CALL NODE FILEDS: 
+     nid
+     r_nid (created by)
+     r_uid (created by)
+     status
+*/
+// CALL RELATED CALL NODES ON CRON
+// LEAVE HOOKS HERE. MOVE BUSINESS LOGIC TO .INC
+// BUILD CIVICRM MODULE
+
+/**
+ * Callback for callblast/list/autocomplete
+ * to autocomplete call list field on 
+ * node/add/callblast and node/edit/% forms.
+ */
+function callblast_list_autocomplete() {
+  $items = array();
+  $items = module_invoke_all('callblast_list');
+  print drupal_to_js($items);
+  exit();
+}
 
 /**
  * Implementation of hook_voip_get_script().
@@ -169,14 +221,12 @@ function callblast_widget_info() {
 *   the form item for a single element for this field
 */
 function callblast_widget(&$form, &$form_state, $field, $items, $delta = 0) {
-  
   $element['value'] = array(
+    '#title' => t('Call List'), 
     '#type' => 'textfield',
     '#default_value' => isset($items[$delta]['value']) ? $items[$delta]['value'] : NULL,
-//CONTINUE HERE
-// THIS IS WORKING, REPLACE WITH CALLBACK OF CALLLIST NAMES
-    '#autocomplete_path' => 'voipext/autocomplete', // TODO replace with callblast autocomplete path
-    '#size' => !empty($field['widget']['size']) ? $field['widget']['size'] : 60,
+    '#autocomplete_path' => 'callblast/list/autocomplete',
+    '#size' =>  60,
     '#attributes' => array('class' => 'callblast_calllist'),
     '#maxlength' => !empty($field['max_length']) ? $field['max_length'] : NULL,
   );
@@ -191,4 +241,36 @@ function callblast_widget(&$form, &$form_state, $field, $items, $delta = 0) {
     '#value' => implode('][', array_merge($form['#parents'], array('value'))),
   );
   return $element;
+}
+
+/**
+ * Convert a list name to a machine-readable
+ * text id, consisting only of numbers, lowercase  
+ * letters and underscores.
+ */
+function callblast_id($module, $name) {
+  $id = $module .'_'. $name;  
+
+  // make lowercase
+  $id = strtolower($id);
+
+  // Replace space with _
+  $pattern = '/ /';
+  $replacement = '_';
+  $id = preg_replace($pattern, $replacement, $id);
+
+  // Replace - with _
+  $pattern = '/-/';
+  $replacement = '_';
+  $id = preg_replace($pattern, $replacement, $id);
+
+  // Replace !#$%&'*+/=?^`{|}~@.[] 
+  $pattern = '([!#$%&\'*+/=?^`{|}~@.\[\]\:<>;])';
+  $replacement = '';
+  $id = preg_replace($pattern, $replacement, $id);
+
+  // incase we missed anything weird
+  $id = filter_var($id, FILTER_SANITIZE_STRING);
+
+  return $id;
 }
