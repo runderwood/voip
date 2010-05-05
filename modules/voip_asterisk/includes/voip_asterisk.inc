@@ -75,83 +75,6 @@ function _voip_asterisk_ping($server_config) {
   return TRUE;
 }
 
-/*
- * Keeps track of the "dial out' requests
- */
-function voip_asterisk_dial_manager($action='reset', $id=NULL, $status=NULL) {
-  static $_queue = array();
-
-  switch($action){
-    default:
-      return NULL;
-    case 'reset':
-      $_queue = array();
-      break;
-    case 'set':
-      $_queue[$id] = $status;
-      break;
-    case 'delete':
-      unset($_queue[$id]);
-      break;
-    case 'get':
-      $status = isset($_queue[$id])?$_queue['id']:NULL;
-      return $status;
-      break;
-    case 'dump':
-      return $_queue;
-      break;
-  }
-}
-
-
-/**
- * Callback function that handles OriginateResponse events
-_voip_asterisk_event_originate(originateresponse, Array
-(
-    [Event] => OriginateResponse
-    [Privilege] => call,all
-    [ActionID] => 4bc53a5dd850c
-    [Response] => Failure
-    [Channel] => Local/6177920995@vd-dial_out
-    [Context] => vd-bridge
-    [Exten] => s
-    [Reason] => 1
-    [Uniqueid] => <null>
-    [CallerIDNum] => 123456789
-    [CallerIDName] => Voip Drupal
-)
-reason can be any of:
-0 = no such extension or number
-1 = no answer
-4 = answered
-8 = congested or not available 
- */
-function _voip_asterisk_event_originate($ecode, $data, $server, $port) {
-  $rc = TRUE;
-  $reason = $data['Reason'];
-  $id = $data['ActionID'];
-  switch($reason){
-    default:
-      $status = 'unknown';
-      $rc = FALSE;
-      break;
-    case 0:
-      $status = 'invalid number';
-      break;
-    case 1:
-      $status = 'no answer';
-      break;
-    case 4:
-      $status = 'answered';
-      break;
-    case 8:
-      $status = 'busy';
-      break;
-  }
-  voip_asterisk_dial_manager('set', $id, $status);
-
-  return $rc;
-}
 
 /**
  * Establish a new call by dialing the given number and connecting it to the given script
@@ -184,10 +107,11 @@ function _voip_asterisk_dial_out($server_config, $number, $script_name, $options
     return FALSE;
   }
 
-  // add event handler to handle AMI Originate responses
-  // (http://www.voip-info.org/wiki/view/Asterisk+Manager+API+Action+Originate)
-  _voip_asterisk_manager()->add_event_handler('OriginateResponse','_voip_asterisk_event_originate');
-  // TODO: replace above handler by a generic one that updates voip_set_call_info()
+  // keep track of the dial attempt
+  $call_status = 'dialing';
+  $module = $options['module']?$options['module']:''; // Name of the module originating the call
+  $uid = $options['uid']?$options['uid']:0; // Id of the user placing the call
+  voip_tracker_set_call_info($call_id, $call_status, $cid_number, $number, $module, $uid, $script_name, $variables);
 
   // The following channel string should match the one in voip_drupal.conf
 //  $channel_string = 'Local/%number@vd-dial_out/n'; // This is the goal.  But it's not working...
@@ -245,25 +169,117 @@ function _voip_asterisk_dial_out($server_config, $number, $script_name, $options
      $channel, $exten, $context, $priority, $application, $application_data,
      $timeout, $caller_id, $var_string, $account, $async, $action_id);
 
-  // keep track of the dial attempt
-  $call_status = 'dialing';
-  $module = $options['module']?$options['module']:''; // Name of the module originating the call
-  $uid = $options['uid']?$options['uid']:0; // Id of the user placing the call
-  voip_tracker_set_call_info($call_id, $call_status, $cid_number, $number, $module, $uid, $script_name, $variables);
-//$vars = print_r($variables,true);
-//echo "About to call voip_tracker_set_call_info($call_id, $call_status, $cid_number, $number, $module, $uid, $script_name, $vars);\n\n";
 
   if($result['Response'] != 'Success'){
     voip_error("AMI command Originate failed: " . print_r($result, TRUE));
     return FALSE;
   }
 
-// XXXXXXX wait a little bit for the events to arrive before disconnecting
-for($i=0;$i<30;$i++){
-//    sleep(1);
-}
-
   _voip_asterisk_manager()->disconnect();
   return $call_id;
+}
+
+
+/**
+ * Check if the event handler is running
+ */
+function _voip_asterisk_event_handler_running() {
+  $is_running = variable_get('voip_asterisk_event_handler_on', FALSE);
+  return $is_running;
+}
+
+
+/**
+ * Process AMI events
+ *
+ * @param array $server_config with the URL, username and password of the AMI server
+ *
+ * @param string $event_handler with the name of the function that will handle events
+ *   It should be in the format foo($ecode, $data, $server, $port)
+ *
+ * @param boolean $allow_timeout to stop processing if the socket times out
+ *
+ * @return TRUE in case of success. Check voip_error() for processing errors.
+ *
+ */
+function _voip_asterisk_process_events($server_config, $event_handler, $allow_timeout=false)
+{
+// TODO: Ideally, event handler should use its own socket to the server...
+// TODO: how long is the timeout? This function seems to stop by itself after a while...
+
+  $ami_port = $server_config['ami_port'];
+  $ami_host = $server_config['ami_host'];
+  $ami_host = ($ami_port)? ($ami_host.':'.$ami_port) : $ami_host;
+  $ami_user = $server_config['ami_user'];
+  $ami_pass = $server_config['ami_password'];
+
+  voip_error_reset();
+
+  $ami = _voip_asterisk_manager();
+  $result = $ami->connect($ami_host, $ami_user, $ami_pass);
+  if(voip_error()) {
+    voip_error("Connection to Asterisk manager failed: " . voip_error_message());
+    return FALSE;
+  }
+
+  // add event handler to take care of all events received from AMI
+//  $ami->add_event_handler('*','_voip_asterisk_event_handler');
+  $ami->add_event_handler('*',$event_handler);
+
+  // start processing events from the server
+  // Note: the following functionality was based on phpagi_asmanager.php->wait_response()
+  $timeout = false;
+  do
+  {
+    $type = NULL;
+    $parameters = array();
+
+    $buffer = trim(fgets($ami->socket, 4096));
+    while($buffer != '')
+    {
+      $a = strpos($buffer, ':');
+      if($a) {
+        if(!count($parameters)) // first line in a response?
+        {
+          $type = strtolower(substr($buffer, 0, $a));
+          if(substr($buffer, $a + 2) == 'Follows')
+          {
+            // A follows response means there is a multiline field that follows.
+            $parameters['data'] = '';
+            $buff = fgets($ami->socket, 4096);
+            while(substr($buff, 0, 6) != '--END ')
+            {
+              $parameters['data'] .= $buff;
+              $buff = fgets($ami->socket, 4096);
+            }
+          }
+        }
+
+        // store parameter in $parameters
+        $parameters[substr($buffer, 0, $a)] = substr($buffer, $a + 2);
+      }
+        $buffer = trim(fgets($ami->socket, 4096));
+    }
+
+    // process response
+    switch($type)
+    {
+      case '': // timeout occured
+        $timeout = $allow_timeout;
+        break;
+      case 'event':
+            $ami->process_event($parameters);
+            break;
+      case 'response':
+            break;
+      default:
+        $ami->log('Unhandled response packet from Manager: ' . print_r($parameters, true));
+        break;
+    }
+  } while(!$timeout && _voip_asterisk_event_handler_running());
+
+  // disconnect from the server
+  $ami->disconnect();
+  return TRUE;
 }
 

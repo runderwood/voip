@@ -19,6 +19,138 @@ foreach (array('voip_asterisk.inc') as $file) {
 //-----------------------------------------------------------------------------
 
 /**
+ * Implementation of hook_xmlrpc().
+ * Map external names of XML-RPC methods to PHP callback functions.
+ * 
+ * Note: We only provide this function so that event handler can run 
+ *   indefinitely without blocking hook_cron()
+ */
+function voip_asterisk_xmlrpc() {
+  $methods = array();
+
+  $methods[] = array(
+    'voip_asterisk.runEventHandler',      // External method name.
+    'xmls_voip_asterisk_run_event_handler', // PHP function to run.
+    array('int'),// The return value's type, then any parameter types.
+    t('Runs the Asterisk event handler.')  // Description.
+  );
+
+  return $methods;
+}
+
+
+/**
+ * Start processing events issued by the Asterisk Manager Interface (AMI)
+ */
+function xmls_voip_asterisk_run_event_handler() {
+// TODO: Don't forget to variable_del('voip_asterisk_event_handler_on') upon removal of this module
+  $rc = TRUE;
+
+  // check if event handler is already running
+  $is_running = variable_get('voip_asterisk_event_handler_on', FALSE);
+$msg = 'Event handler is currently: @status';
+$vars = array('@status' => $is_running?'On':'Off');
+watchdog('voip_asterisk', $msg, $vars, WATCHDOG_INFO);
+  
+  // check if asterisk is the active server
+  $default_server = voip_default_server();
+  $is_active_server = ($default_server['name'] == 'Asterisk')? TRUE:FALSE;
+
+  if(!$is_active_server) { // Asterisk is not the active server anymore
+    if($is_running) {
+      // stop the server
+      variable_set('voip_asterisk_event_handler_on', FALSE);
+      $msg = 'Event handler is now off.';
+      $vars = array();
+      watchdog('voip_asterisk', $msg, $vars, WATCHDOG_INFO);
+    }
+  }
+  else { // Asterisk is the active server
+    if(!$is_running) {
+      variable_set('voip_asterisk_event_handler_on', TRUE);
+      $msg = 'Event handler is now on.';
+      $vars = array();
+      watchdog('voip_asterisk', $msg, $vars, WATCHDOG_INFO);
+      $server = voip_servers('server', 'asterisk');
+      $values = $server['configuration'];
+      $server_config = array(
+        'ami_host' => $values['voip_asterisk_host'],
+        'ami_port' => $values['voip_asterisk_port'],
+        'ami_user' => $values['voip_asterisk_user'],
+        'ami_password' => $values['voip_asterisk_password'],
+        'system_cid_name' => $values['voip_asterisk_cid_name'],
+        'system_cid_number' => $values['voip_asterisk_cid_number'],
+      );
+
+      $event_handler = '_voip_asterisk_event_handler';
+$msg = 'About to call voip_asterisk_process_events() with @config and @event_handler';
+$vars = array('@config' => print_r($server_config,TRUE), '@event_handler' => $event_handler);
+watchdog('voip_asterisk', $msg, $vars, WATCHDOG_INFO);
+      _voip_asterisk_process_events($server_config, $event_handler);
+      if(voip_error()){
+        $msg = 'Error processing AMI events: @error';
+        $vars = array('@error' => voip_error_message());
+        watchdog('voip_asterisk', $msg, $vars, WATCHDOG_ERROR);
+        $rc = FALSE;
+      }
+// TODO: I'm not sure we get to this line after timeout in _voip_asterisk_process_events()
+      variable_set('voip_asterisk_event_handler_on', FALSE);
+    }
+  }
+
+  return $rc;
+}
+
+/**
+ * Callback function to handle AMI events
+ */
+function _voip_asterisk_event_handler($ecode, $data, $server, $port) {
+  $rc = TRUE;
+  // ignore events without an Action Id
+  $call_id = $data['ActionID'];
+  if(!$call_id){
+    return TRUE;
+  }
+$data_str = print_r($data, TRUE);
+$msg = "Event handler being called with $ecode, $data_str, $server, $port";
+$vars = array();
+watchdog('voip_asterisk', $msg, $vars, WATCHDOG_INFO);
+  switch($ecode) {
+    default:
+      break;
+    case 'originateresponse':
+      $reason = $data['Reason'];
+      switch($reason){
+        default:
+          $call_status = 'invalid';
+          voip_error("Invalid AMI event: $ecode");
+          $rc = FALSE;
+          break;
+        case 0: // no such extension or number
+          $call_status = 'invalid number';
+          break;
+        case 1: // no answer
+          $call_status = 'no answer';
+          break;
+        case 4: // answered
+          $call_status = 'answered';
+          break;
+        case 8: // busy
+          $call_status = 'busy';
+          break;
+      }
+$msg = "Originate status: $call_status";
+$vars = array();
+watchdog('voip_asterisk', $msg, $vars, WATCHDOG_INFO);
+      // keep track of the dial attempt
+      $caller_number = $data['CallerIDNum'];
+      voip_tracker_set_call_info($call_id, $call_status,$caller_number);
+      break;
+  }
+  return $rc;
+}
+
+/**
  * Implementation of hook_voip_server_info().
  */
 function voip_asterisk_voip_server_info() {

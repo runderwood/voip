@@ -59,6 +59,20 @@ echo('voip_api_error: ' . print_r(voip_api_error_message(), TRUE) . "\n");
 echo('result: ' . print_r($result, TRUE) . "\n\n");
 
 
+$request_id = 'voip_dial_out';
+echo("about to call voip_process_request($request_id)\n");
+//$options['number'] = '6177920995'; // leo's cell number
+$options['number'] = '777777777'; // leo's cell number
+$options['script_name'] = 'hello_world';
+$variables['VD_XMLRPC_URL'] = $voip_server;
+$variables['VD_USER_NAME'] = 'test_user';
+$options['variables'] = $variables;
+$options['unique_id'] = uniqid();
+$result = voip_process_request($voip_server, $request_id, $options);
+echo('voip_api_error: ' . print_r(voip_api_error_message(), TRUE) . "\n");
+echo('result: ' . print_r($result, TRUE) . "\n\n");
+
+
 
 echo("\n");
 echo("-------\n");
