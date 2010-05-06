@@ -4,27 +4,6 @@ include_once('calllist.features.inc');
 
 /**
  * Implementation of hook_callblast_list().
- * 
- * Provide the names of call blast lists provided 
- * by the Call List module.  
- * 
- * @return 
- *  $lists, return names of call lists provided by this module, array('unique identifier' => 'call list name')
- * 
- *  Lists should follow the convention modulename_id. For example:
- *   return array('calllist_janes_list' => "Jane's List", 'calllist_joes_list' => "Joe's List");
- *     or  
- *   return array('mymodule_001' => "List X", 'mymodule_002' => "List Y");
- * 
- *  Note: It would be best for 
- *  Keys and values in the returned array to be 
- *  strings (so we can try and support exportables in the future). 
- * 
- *  Note also: 
- *  Call Blast provides a function, callblast_id($module, $list_name), 
- *  which can be used to easily generate string IDs for call lists 
- *  that only have human readable names. callblast_id will strip out 
- *  special characters, make spaces underscores etc.
  */
 function calllist_callblast_list() {
   $lists = array();
@@ -40,24 +19,6 @@ function calllist_callblast_list() {
 
 /**
  * Implementation of hook_callblast_get_list().
- * 
- * On the node/add form, callblast.module calls 
- * hook_callblast_list() to let the user select a 
- * call list to which the Call Blast module will 
- * blast calls. This step fires when the callblast
- * node is saved. A list has been selected. Now a 
- * voipcall node needs to be saved for each number
- * on the selected call list.
- * 
- * @param $list_name
- *  string, name of call list being requested
- * 
- * @return
- *  $list, array of numbers included in the requested call list.
- *  $list can also include any additional (optional) 
- *  info the module wishes to provide about the call
- *  being scheduled, to be stored in the voipcall node(s)
- *  being created.
  */
 function calllist_callblast_get_list($list_name) {
   // Get ID from list name.
