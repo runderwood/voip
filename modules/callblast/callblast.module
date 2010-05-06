@@ -49,13 +49,13 @@ function callblast_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
     // Get selected call list
     $list_name = check_plain($node->field_callblast_calllist[0]['value']);
     $list = module_invoke_all('callblast_get_list', $list_name);
-dsm($list);
+    $list = callblast_prep_list($list);
 
     // Set up batch 
     $size = 5; // save up 5 nodes at a time
     $batch = array(
        'operations' => array(
-         array('callblast_save_voipcall_nodes', array($size, $list),),
+         array('callblast_save_voipcall_nodes', array($size, $list, $node),),
          ),
        'finished' => 'callblast_save_voipcall_nodes_finished',
        'title' => t('Scheduling calls'),
@@ -264,8 +264,17 @@ function callblast_widget(&$form, &$form_state, $field, $items, $delta = 0) {
 
 /**
  * Batch call back operation: Save voipcall nodes.
+ * 
+ * @param
+ *  $size, number of phone numbers to save per pass 
+ * 
+ * @param
+ *  $list, full call list with phone numbers and any other 
+ *  details supplied by the module that created it.
+ * 
+ *  $node, callblast node, including default values to send to voipcall_save().
  */
-function callblast_save_voipcall_nodes($size, $list) {
+function callblast_save_voipcall_nodes($size, $list, $node) {
   // Initialize sandbox the first time through.
   if (!isset($context['sandbox']['progress'])) {
     $context['sandbox']['progress'] = 1;
@@ -280,9 +289,21 @@ function callblast_save_voipcall_nodes($size, $list) {
 
   // save up voipcall nodes from $list
   while ($i < $max && $j < $size) {
-    $node = voipcall_save($list[$i]);
-    // callblast_calls($node->nid); // TODO add nid to callblast_calls table
+    if ($list[$i]['destination']) {
+      $call = $list[$i];
+      // set voipcall details from callblast node where list provides no details
+//      $call['caller number'] = ($list[$i]['caller number']) ? $list[$i]['caller number'] : $node->;
+ //     $call['caller name'] = ;
+      // save voipcall node
+      $node = voipcall_save($call);
+      // callblast_calls($node->nid); // TODO add nid to callblast_calls table
 // $x = $list[$i]['destination']['value'];
+    } else {
+      // no destination number
+      // drupal_set_message(t(''), 'warning');
+      // TODO Add some error handling here for when there's no destination number.
+      // TODO $context['results'] doesn't seem to be passing $results to 'finished' function. Telling user how many numbers failed without also saying how many passed seems unhelpful.
+    }
     $i++;
   }
 

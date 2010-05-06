@@ -82,16 +82,10 @@ function calllist_callblast_list() {
  *  $list = array(                         // note: optional values fall back to defaults set for whole call blast
  *    1 => array(                          
  *      'destination' => '555 555 5555',   // destination number for phone call (required)
- *      'caller number' => '666 666 6666', // number to appear on recipient's phone as origin of call (optional)
- *      'caller name' => '555 555 5555',   // name to appear on recipient's caller ID (optional) 
  *    2 => array(                          
  *      'destination' => '555 555 5555',   // destination number for phone call (required)
- *      'caller number' => '666 666 6666', // number to appear on recipient's phone as origin of call (optional)
- *      'caller name' => '555 555 5555',   // name to appear on recipient's caller ID (optional) 
  *    3 => array(                          
  *      'destination' => '555 555 5555',   // destination number for phone call (required)
- *      'caller number' => '666 666 6666', // number to appear on recipient's phone as origin of call (optional)
- *      'caller name' => '555 555 5555',   // name to appear on recipient's caller ID (optional) 
  *    ),
  *  ); 
  *  
