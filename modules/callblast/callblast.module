@@ -49,20 +49,34 @@ function callblast_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
     // Get selected call list
     $list_name = check_plain($node->field_callblast_calllist[0]['value']);
     $list = module_invoke_all('callblast_get_list', $list_name);
+dsm($list);
 
     // Set up batch 
-// CONTINUE HERE 
-
+    $size = 5; // save up 5 nodes at a time
+    $batch = array(
+       'operations' => array(
+         array('callblast_save_voipcall_nodes', array($size, $list),),
+         ),
+       'finished' => 'callblast_save_voipcall_nodes_finished',
+       'title' => t('Scheduling calls'),
+       'init_message' => t('Creating records for each phone number on call list'),
+       'progress_message' => t('Scheduled @current of @total calls.'),
+       'error_message' => t('Processing error'),
+    );
+    $url = "node/$node->nid";
     // Save voipcall nodes
+    batch_set($batch);
+    batch_process($url);
 
     // Set message, success
   }
   // ADD HANDLING FOR AN UPDATED CALLBLAST NODE
  
   // TESTING
-  if ($node->type == 'voipcall' || 'calllist' && $op == 'view') {
-    dsm($node);
-  }
+if ($node->type == 'voipcall' && $op == 'view' || 'calllist' && $op == 'view') {
+dsm($node);
+}
+
 }
 
 // HOOK_NODEAPI -> CREATE CALL NODES ON SAVE
@@ -248,4 +262,59 @@ function callblast_widget(&$form, &$form_state, $field, $items, $delta = 0) {
   return $element;
 }
 
+/**
+ * Batch call back operation: Save voipcall nodes.
+ */
+function callblast_save_voipcall_nodes($size, $list) {
+  // Initialize sandbox the first time through.
+  if (!isset($context['sandbox']['progress'])) {
+    $context['sandbox']['progress'] = 1;
+    $context['sandbox']['i'] = 0;
+    $context['sandbox']['max'] = count($list);
+  }
+  
+  // set range of numbers to be processed
+  $i = $context['sandbox']['i'];
+  $j = 0;
+  $max = $context['sandbox']['max']; 
 
+  // save up voipcall nodes from $list
+  while ($i < $max && $j < $size) {
+    voipcall_save($list[$i]);
+// $x = $list[$i]['destination']['value'];
+    $i++;
+  }
+
+  // update progress information
+  $context['sandbox']['progress']++;
+  $context['sandbox']['i'] = $i;
+  $context['message'] = t('Scheduling %callnum', array('%callnum' => $list[$i]['destination']));
+
+  // Let the batch engine know how close we are to completion.
+  if ($context['sandbox']['progress'] == $context['sandbox']['max']) {
+    // Done!
+    $context['finished'] = 1;
+    // incase 'finished' function wants to use these
+  } else {
+    $context['finished'] = $context['sandbox']['progress'] / $context['sandbox']['max'];
+  }  
+}
+
+/**
+ * Batch finished. Called when batch operations are complete.
+ */
+function callblast_save_voipcall_nodes_finished($success, $results, $operations) {
+  if ($success) {
+    $num = count($results);
+    $txt = t('Call blast set up complete. %num calls scheduled.', array('%num' => $num) );
+    drupal_set_message($txt);
+  } else {
+    // a fatal error occurred during batch processing
+    $error_operation = reset($operations);
+    $operation = array_shift($error_operation);
+    $arguments = array_shift($error_operation);
+    $arguments_as_string = implode(', ', $arguments);
+    watchdog('callblast', "Error when calling operation '%s'('%s')", array($operation, $arguments_as_string));
+    drupal_set_message(t('An error occurred and has been recorded in the system log.'), 'error');
+  }
+}
