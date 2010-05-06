@@ -265,9 +265,9 @@ function _voipcall_content_default_fields() {
     ),
   );
 
-  // Exported field: field_voipcall_parent_node
+  // Exported field: field_voipcall_parent_nid
   $fields[] = array(
-    'field_name' => 'field_voipcall_parent_node',
+    'field_name' => 'field_voipcall_parent_nid',
     'type_name' => 'voipcall',
     'display_settings' => array(
       'label' => array(
@@ -288,30 +288,22 @@ function _voipcall_content_default_fields() {
       ),
     ),
     'widget_active' => '1',
-    'type' => 'number_integer',
+    'type' => 'nodereference',
     'required' => '0',
     'multiple' => '0',
-    'module' => 'number',
+    'module' => 'nodereference',
     'active' => '1',
-    'prefix' => '',
-    'suffix' => '',
-    'min' => '',
-    'max' => '',
-    'allowed_values' => '',
-    'allowed_values_php' => '',
+    'referenceable_types' => '',
+    'advanced_view' => '',
+    'advanced_view_args' => '',
     'widget' => array(
-      'default_value' => array(
-        '0' => array(
-          'value' => '',
-          '_error_element' => 'default_value_widget][field_voipcall_parent_node][0][value',
-        ),
-      ),
-      'default_value_php' => NULL,
+      'autocomplete_match' => NULL,
+      'size' => NULL,
       'label' => 'Parent Node',
-      'weight' => '4',
+      'weight' => '9',
       'description' => '',
-      'type' => 'number',
-      'module' => 'number',
+      'type' => 'nodereference_autocomplete',
+      'module' => 'nodereference',
     ),
   );
 

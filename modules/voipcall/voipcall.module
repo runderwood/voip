@@ -3,6 +3,8 @@
 include_once('voipcall.features.inc');
 
 /**
+ * Save voipcall nodes. 
+ * 
  * @param 
  *  $details, array
  *  $details = array (
@@ -11,6 +13,7 @@ include_once('voipcall.features.inc');
  *    'caller name' => '555 555 5555',   // name to appear on recipient's caller ID                 (optional) 
  *    'parent node' => $nid,             // node creating this node (e.g. a callblast node)         (optional)
  *    'scheduled start' => $datestamp,   // unix timestamp of scheduled call time                   (optional)
+ *    :
  *  );
  * 
  * @return
