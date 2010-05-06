@@ -1,3 +1,24 @@
 <?php
 
 include_once('voipcall.features.inc');
+
+/**
+ * @param 
+ *  $details, array
+ *  $details = array (
+ *    'destination' => '555 555 5555',   // destination number for phone call                       (required)
+ *    'caller number' => '666 666 6666', // number to appear on recipient's phone as origin of call (optional)
+ *    'caller name' => '555 555 5555',   // name to appear on recipient's caller ID                 (optional) 
+ *    'parent node' => $nid,             // node creating this node (e.g. a callblast node)         (optional)
+ *    'scheduled start' => $datestamp,   // unix timestamp of scheduled call time                   (optional)
+ *  );
+ * 
+ * @return
+ *  $nid, integer, node id of newly saved voipcall node.
+ */
+function voipcall_save($details) {
+
+  // set here
+    // call status
+    // call id
+}
