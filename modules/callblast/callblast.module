@@ -49,13 +49,19 @@ function callblast_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
     // Get selected call list
     $list_name = check_plain($node->field_callblast_calllist[0]['value']);
     $list = module_invoke_all('callblast_get_list', $list_name);
-    $list = callblast_prep_list($list);
 
     // Set up batch 
     $size = 5; // save up 5 nodes at a time
+    // generic call details from callblast node
+    $details['script'] = $node->field_callblast_script[0]['nid'];
+    $details['caller number'] = $node->field_callblast_caller_number[0]['value'];
+    $details['caller name'] = $node->field_callblast_caller_name[0]['value'];
+    $details['parent node'] = $node->nid;
+    $details['scheduled start'] = $node->field_callblast_scheduled_start[0]['value'];
+    // batch
     $batch = array(
        'operations' => array(
-         array('callblast_save_voipcall_nodes', array($size, $list, $node),),
+         array('callblast_save_voipcall_nodes', array($size, $list, $details),),
          ),
        'finished' => 'callblast_save_voipcall_nodes_finished',
        'title' => t('Scheduling calls'),
@@ -70,13 +76,7 @@ function callblast_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
 
     // Set message, success
   }
-  // ADD HANDLING FOR AN UPDATED CALLBLAST NODE
- 
-  // TESTING
-if ($node->type == 'voipcall' && $op == 'view' || 'calllist' && $op == 'view') {
-dsm($node);
-}
-
+  // CONTINUE HERE - ADD HANDLING FOR AN UPDATED CALLBLAST NODE
 }
 
 // HOOK_NODEAPI -> CREATE CALL NODES ON SAVE
@@ -274,7 +274,7 @@ function callblast_widget(&$form, &$form_state, $field, $items, $delta = 0) {
  * 
  *  $node, callblast node, including default values to send to voipcall_save().
  */
-function callblast_save_voipcall_nodes($size, $list, $node) {
+function callblast_save_voipcall_nodes($size, $list, $details) {
   // Initialize sandbox the first time through.
   if (!isset($context['sandbox']['progress'])) {
     $context['sandbox']['progress'] = 1;
@@ -290,14 +290,12 @@ function callblast_save_voipcall_nodes($size, $list, $node) {
   // save up voipcall nodes from $list
   while ($i < $max && $j < $size) {
     if ($list[$i]['destination']) {
-      $call = $list[$i];
-      // set voipcall details from callblast node where list provides no details
-//      $call['caller number'] = ($list[$i]['caller number']) ? $list[$i]['caller number'] : $node->;
- //     $call['caller name'] = ;
+      $details['destination'] = $list[$i]['destination']['value'];
       // save voipcall node
-      $node = voipcall_save($call);
-      // callblast_calls($node->nid); // TODO add nid to callblast_calls table
-// $x = $list[$i]['destination']['value'];
+      //$voipcall_node = voipcall_save($details);
+      voipcall_save($details);
+// CONTINUE HERE
+      // callblast_calls($voipcall_node->nid); // TODO add nid to callblast_calls table
     } else {
       // no destination number
       // drupal_set_message(t(''), 'warning');
