@@ -280,7 +280,8 @@ function callblast_save_voipcall_nodes($size, $list) {
 
   // save up voipcall nodes from $list
   while ($i < $max && $j < $size) {
-    voipcall_save($list[$i]);
+    $nid = voipcall_save($list[$i]);
+    // callblast_calls($nid); // TODO add nid to callblast_calls table
 // $x = $list[$i]['destination']['value'];
     $i++;
   }

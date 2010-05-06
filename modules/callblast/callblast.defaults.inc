@@ -49,10 +49,233 @@ function _callblast_content_default_fields() {
       ),
       'default_value_php' => NULL,
       'label' => 'Blast sent',
-      'weight' => 0,
+      'weight' => '2',
       'description' => '',
       'type' => 'optionwidgets_onoff',
       'module' => 'optionwidgets',
+    ),
+  );
+
+  // Exported field: field_callblast_calllist
+  $fields[] = array(
+    'field_name' => 'field_callblast_calllist',
+    'type_name' => 'callblast',
+    'display_settings' => array(
+      'label' => array(
+        'format' => 'above',
+        'exclude' => 0,
+      ),
+      'teaser' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      'full' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      '4' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+    ),
+    'widget_active' => '1',
+    'type' => 'text',
+    'required' => '0',
+    'multiple' => '0',
+    'module' => 'text',
+    'active' => '1',
+    'text_processing' => '0',
+    'max_length' => '',
+    'allowed_values' => '',
+    'allowed_values_php' => '',
+    'widget' => array(
+      'default_value' => array(
+        '0' => array(
+          '_error_element' => 'value',
+        ),
+      ),
+      'default_value_php' => NULL,
+      'label' => 'Call List',
+      'weight' => '-3',
+      'description' => '',
+      'type' => 'callblast_calllist',
+      'module' => 'callblast',
+    ),
+  );
+
+  // Exported field: field_callblast_message_noderef
+  $fields[] = array(
+    'field_name' => 'field_callblast_message_noderef',
+    'type_name' => 'callblast',
+    'display_settings' => array(
+      'label' => array(
+        'format' => 'above',
+        'exclude' => 0,
+      ),
+      'teaser' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      'full' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      '4' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+    ),
+    'widget_active' => '1',
+    'type' => 'nodereference',
+    'required' => '0',
+    'multiple' => '0',
+    'module' => 'nodereference',
+    'active' => '1',
+    'referenceable_types' => array(
+      'callblast_message' => 'callblast_message',
+      'callblast' => 0,
+      'calllist' => 0,
+      'page' => 0,
+      'story' => 0,
+      'voipcall' => 0,
+      'voipext' => 0,
+      'voip_script' => 0,
+    ),
+    'advanced_view' => '--',
+    'advanced_view_args' => '',
+    'widget' => array(
+      'autocomplete_match' => 'contains',
+      'size' => '60',
+      'default_value' => array(
+        '0' => array(
+          'nid' => NULL,
+          '_error_element' => 'default_value_widget][field_callblast_message_noderef][0][nid][nid',
+        ),
+      ),
+      'default_value_php' => NULL,
+      'label' => 'Recorded Message',
+      'weight' => '4',
+      'description' => '',
+      'type' => 'nodereference_autocomplete',
+      'module' => 'nodereference',
+    ),
+  );
+
+  // Exported field: field_callblast_scheduled_start
+  $fields[] = array(
+    'field_name' => 'field_callblast_scheduled_start',
+    'type_name' => 'callblast',
+    'display_settings' => array(
+      'label' => array(
+        'format' => 'above',
+        'exclude' => 0,
+      ),
+      'teaser' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      'full' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      '4' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+    ),
+    'widget_active' => '1',
+    'type' => 'datestamp',
+    'required' => '0',
+    'multiple' => '0',
+    'module' => 'date',
+    'active' => '1',
+    'granularity' => array(
+      'year' => 'year',
+      'month' => 'month',
+      'day' => 'day',
+      'hour' => 'hour',
+      'minute' => 'minute',
+    ),
+    'timezone_db' => 'UTC',
+    'tz_handling' => 'site',
+    'todate' => '',
+    'repeat' => 0,
+    'repeat_collapsed' => '',
+    'default_format' => 'medium',
+    'widget' => array(
+      'default_value' => 'blank',
+      'default_value_code' => '',
+      'default_value2' => 'same',
+      'default_value_code2' => '',
+      'input_format' => 'm/d/Y - H:i:s',
+      'input_format_custom' => '',
+      'increment' => '1',
+      'text_parts' => array(),
+      'year_range' => '0:+1',
+      'label_position' => 'above',
+      'label' => 'Scheduled Start Time',
+      'weight' => '-2',
+      'description' => '',
+      'type' => 'date_select',
+      'module' => 'date',
+    ),
+  );
+
+  // Exported field: field_callblast_script
+  $fields[] = array(
+    'field_name' => 'field_callblast_script',
+    'type_name' => 'callblast',
+    'display_settings' => array(
+      'label' => array(
+        'format' => 'above',
+        'exclude' => 0,
+      ),
+      'teaser' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      'full' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      '4' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+    ),
+    'widget_active' => '1',
+    'type' => 'nodereference',
+    'required' => '0',
+    'multiple' => '0',
+    'module' => 'nodereference',
+    'active' => '1',
+    'referenceable_types' => array(
+      'voip_script' => 'voip_script',
+      'callblast' => 0,
+      'callblast_message' => 0,
+      'calllist' => 0,
+      'page' => 0,
+      'story' => 0,
+      'voipcall' => 0,
+      'voipext' => 0,
+    ),
+    'advanced_view' => '--',
+    'advanced_view_args' => '',
+    'widget' => array(
+      'autocomplete_match' => 'contains',
+      'size' => '60',
+      'default_value' => array(
+        '0' => array(
+          'nid' => NULL,
+          '_error_element' => 'default_value_widget][field_callblast_script][0][nid][nid',
+        ),
+      ),
+      'default_value_php' => NULL,
+      'label' => 'Script',
+      'weight' => '3',
+      'description' => '',
+      'type' => 'nodereference_autocomplete',
+      'module' => 'nodereference',
     ),
   );
 
@@ -99,7 +322,7 @@ function _callblast_content_default_fields() {
       ),
       'default_value_php' => NULL,
       'label' => 'Test approved',
-      'weight' => '-1',
+      'weight' => '1',
       'description' => 'Approve the test. Once this box is checked, the blast is ready to go out.',
       'type' => 'optionwidgets_onoff',
       'module' => 'optionwidgets',
@@ -149,7 +372,7 @@ function _callblast_content_default_fields() {
       ),
       'default_value_php' => NULL,
       'label' => 'Test Phone Number',
-      'weight' => '5',
+      'weight' => '-1',
       'description' => '',
       'type' => 'text_textfield',
       'module' => 'text',
@@ -199,7 +422,7 @@ function _callblast_content_default_fields() {
       ),
       'default_value_php' => NULL,
       'label' => 'Require Test Call',
-      'weight' => '-2',
+      'weight' => 0,
       'description' => 'Require a \'test call\' before blasting the call to your list? If you chose this option, you will be prompted to pass/fail the test. Your blast will not be sent until the test passes. (Recommended)',
       'type' => 'optionwidgets_onoff',
       'module' => 'optionwidgets',
@@ -256,7 +479,11 @@ function _callblast_content_default_fields() {
   array(
     t('Blast sent'),
     t('Call Blast Message'),
+    t('Call List'),
+    t('Recorded Message'),
     t('Require Test Call'),
+    t('Scheduled Start Time'),
+    t('Script'),
     t('Test Phone Number'),
     t('Test approved'),
   );

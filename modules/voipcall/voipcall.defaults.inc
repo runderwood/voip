@@ -308,7 +308,7 @@ function _voipcall_content_default_fields() {
       ),
       'default_value_php' => NULL,
       'label' => 'Parent Node',
-      'weight' => '3',
+      'weight' => '4',
       'description' => '',
       'type' => 'number',
       'module' => 'number',
@@ -368,10 +368,68 @@ function _voipcall_content_default_fields() {
       'year_range' => '0:+1',
       'label_position' => 'above',
       'label' => 'Scheduled Start Time',
-      'weight' => '3',
+      'weight' => '5',
       'description' => '',
       'type' => 'date_select',
       'module' => 'date',
+    ),
+  );
+
+  // Exported field: field_voipcall_script
+  $fields[] = array(
+    'field_name' => 'field_voipcall_script',
+    'type_name' => 'voipcall',
+    'display_settings' => array(
+      'label' => array(
+        'format' => 'above',
+        'exclude' => 0,
+      ),
+      'teaser' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      'full' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      '4' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+    ),
+    'widget_active' => '1',
+    'type' => 'nodereference',
+    'required' => '0',
+    'multiple' => '0',
+    'module' => 'nodereference',
+    'active' => '1',
+    'referenceable_types' => array(
+      'voip_script' => 'voip_script',
+      'callblast' => 0,
+      'callblast_message' => 0,
+      'calllist' => 0,
+      'page' => 0,
+      'story' => 0,
+      'voipcall' => 0,
+      'voipext' => 0,
+    ),
+    'advanced_view' => '--',
+    'advanced_view_args' => '',
+    'widget' => array(
+      'autocomplete_match' => 'contains',
+      'size' => '60',
+      'default_value' => array(
+        '0' => array(
+          'nid' => NULL,
+          '_error_element' => 'default_value_widget][field_voipcall_script][0][nid][nid',
+        ),
+      ),
+      'default_value_php' => NULL,
+      'label' => 'Script',
+      'weight' => '6',
+      'description' => '',
+      'type' => 'nodereference_autocomplete',
+      'module' => 'nodereference',
     ),
   );
 
@@ -477,7 +535,7 @@ function _voipcall_content_default_fields() {
       ),
       'default_value_php' => NULL,
       'label' => 'Call Status',
-      'weight' => '2',
+      'weight' => '3',
       'description' => '',
       'type' => 'text_textfield',
       'module' => 'text',
@@ -494,6 +552,7 @@ function _voipcall_content_default_fields() {
     t('End time'),
     t('Parent Node'),
     t('Scheduled Start Time'),
+    t('Script'),
     t('Start time'),
   );
 
