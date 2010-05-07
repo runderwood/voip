@@ -9,13 +9,15 @@
 /**
  * Stores information about a given call
  *
+ * @param string $module Name of the module calling the function
+ *
  * @param $call_id Unique identifier associated with the call
  *
  * @param $call_status One of the following: 'uncalled', 'dialing', 'invalid number', 'no answer', 'busy', 'answered', 'hang up'
  *
  */
-function voip_tracker_set_call_info($call_id, $call_status='', $caller_number='', $callee_number='', $module='', $uid=0, $script_name='', $vars=array()){
-  watchdog('voip_tracker', 'Call info for call id %call_id:: status: @call_status, caller: @caller, callee: @callee, module: @module, script: @script_name, vars: @vars',
+function voip_tracker_set_call_info($module, $call_id, $call_status='', $caller_number='', $callee_number='', $uid=0, $script_name='', $vars=array()){
+  watchdog('voip_tracker', '[@module] Call info for call id %call_id:: status: @call_status, caller: @caller, callee: @callee, uid: @uid, script: @script_name, vars: @vars',
     array('%call_id' => $call_id, '@call_status' => $call_status, '@caller' => $caller_number, '@callee' => $callee_number, '@module' => $module, '@uid' => $uid, '@script_name' => $script_name, '@vars' => print_r($vars, TRUE)), WATCHDOG_INFO);
 
   $dispatch_time = time();

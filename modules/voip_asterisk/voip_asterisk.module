@@ -144,7 +144,7 @@ $vars = array();
 watchdog('voip_asterisk', $msg, $vars, WATCHDOG_INFO);
       // keep track of the dial attempt
       $caller_number = $data['CallerIDNum'];
-      voip_tracker_set_call_info($call_id, $call_status,$caller_number);
+      voip_tracker_set_call_info('voip_asterisk', $call_id, $call_status,$caller_number);
       break;
   }
   return $rc;

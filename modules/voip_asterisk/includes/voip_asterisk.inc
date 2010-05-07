@@ -111,7 +111,7 @@ function _voip_asterisk_dial_out($server_config, $number, $script_name, $options
   $call_status = 'dialing';
   $module = $options['module']?$options['module']:''; // Name of the module originating the call
   $uid = $options['uid']?$options['uid']:0; // Id of the user placing the call
-  voip_tracker_set_call_info($call_id, $call_status, $cid_number, $number, $module, $uid, $script_name, $variables);
+  voip_tracker_set_call_info('voip_asterisk', $call_id, $call_status, $cid_number, $number, $uid, $script_name, $variables);
 
   // The following channel string should match the one in voip_drupal.conf
 //  $channel_string = 'Local/%number@vd-dial_out/n'; // This is the goal.  But it's not working...
