@@ -47,8 +47,7 @@ echo('voip_api_error: ' . print_r(voip_api_error_message(), TRUE) . "\n");
 echo('result: ' . print_r($result, TRUE) . "\n\n");
 
 
-//$numbers = array('6174525549', '6177920995','7777777777', '123');
-$numbers = array('6177920995','7777777777', '123');
+$numbers = array('6174525549', '6177920995','7777777777', '123');
 $request_id = 'voip_dial_out';
 foreach($numbers as $number){
   echo("about to call voip_process_request($request_id) for $number\n");
