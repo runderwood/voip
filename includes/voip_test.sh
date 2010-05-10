@@ -19,6 +19,19 @@ $result = xmlrpc($voip_server, 'system.listMethods');
 echo('result: ' . print_r($result, TRUE) . "\n");
 
 
+echo("\n");
+echo("-------\n");
+echo("Testing services infrastructure\n");
+echo("-------\n");
+
+$services_server = 'http://localhost/d6/services/xmlrpc';
+
+echo("about to call voip.echo\n");
+$result = xmlrpc($voip_server, 'voip.echo', 'good times');
+echo('result: ' . print_r($result, TRUE) . "\n\n");
+
+exit;
+
 
 echo("\n");
 echo("-------\n");

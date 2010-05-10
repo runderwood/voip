@@ -242,3 +242,57 @@ function xmls_voip_process_request($request_id, $options=array())
   return $response;
 }
 
+
+
+/*
+ * Services integration
+ */
+
+/*
+* Implementation of hook_disable()
+*/
+function voip_disable() {
+  cache_clear_all('services:methods', 'cache');
+}
+
+/*
+* Implementation of hook_enable()
+*/
+function voip_enable() {
+  cache_clear_all('services:methods', 'cache');
+}
+
+/*
+* Implementation of hook_service()
+*/
+function voip_service() {
+
+  return array(
+    // voip.echo
+    array(
+      '#method'   => 'voip.echo',
+      '#callback' => 'voip_service_echo',
+      //'#auth'     => false,
+      '#return'   => 'struct',
+      '#args'     => array(
+        array(
+          '#name'         => 'message',
+          '#type'         => 'string',
+          '#description'  => t('The message to return.'),
+        )),
+      '#help'     => t('Returns an object containing a sessid and user.'))
+     
+  );
+}
+
+function voip_service_echo($message) {
+// Note: $session_id is automatically added by the system
+// Note: to report errors, use 
+//       return  services_error(t('Could not find the X.'), 404);
+ 
+  $return = new stdClass();
+  $return->sessid = session_id();
+  $return->message = $message;
+ 
+  return $return;
+}
