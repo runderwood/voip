@@ -101,7 +101,8 @@ function _voip_asterisk_dial_out($server_config, $number, $script_name, $options
 
   voip_error_reset();
 
-  $result = _voip_asterisk_manager()->connect($ami_host, $ami_user, $ami_pass);
+  $ami = _voip_asterisk_manager();
+  $result = $ami->connect($ami_host, $ami_user, $ami_pass);
   if(voip_error()) {
     voip_error("Connection to Asterisk manager failed: " . voip_error_message());
     return FALSE;
@@ -158,14 +159,16 @@ function _voip_asterisk_dial_out($server_config, $number, $script_name, $options
   // event which contains the failure reason if any. Reasons may be one of the
   // following: 0 = no such extension or number; 1 = no answer; 4 = answered;
   // and 8 = congested or not available 
-  $async = 1; 
+  $async = 1; // Note: the async parameter is likely to be removed in future 
+              //   versions of Asterisk.  By default Originate calls will be
+              //   all asynchronous.
 
   // The request identifier. It allows you to identify the response to this
   // request. You may use a number or a string. Useful when you make several
   // simultaneous requests. 
   $action_id = $call_id;
 
-  $result = _voip_asterisk_manager()->Originate(
+  $result = $ami->Originate(
      $channel, $exten, $context, $priority, $application, $application_data,
      $timeout, $caller_id, $var_string, $account, $async, $action_id);
 
@@ -175,65 +178,55 @@ function _voip_asterisk_dial_out($server_config, $number, $script_name, $options
     return FALSE;
   }
 
-  _voip_asterisk_manager()->disconnect();
+  // wait for event confirming result of the originate execution
+  $event_handler = '_voip_asterisk_event_handler';
+  $event_code = 'OriginateResponse';
+  $r =  _voip_asterisk_process_events($ami, $event_handler, $event_code, $action_id);
+
+  $ami->disconnect();
   return $call_id;
-}
-
-
-/**
- * Check if the event handler is running
- */
-function _voip_asterisk_event_handler_running() {
-  $is_running = variable_get('voip_asterisk_event_handler_on', FALSE);
-  return $is_running;
 }
 
 
 /**
  * Process AMI events
  *
- * @param array $server_config with the URL, username and password of the AMI server
+ * @param AMI @ami Instance of the AMI, already connected to the server
  *
  * @param string $event_handler with the name of the function that will handle events
- *   It should be in the format foo($ecode, $data, $server, $port)
- *
- * @param boolean $allow_timeout to stop processing if the socket times out
+ *   It should be in the format foo($event_code, $data, $server, $port)
+ * 
+ * @param string $event_code listing the code of the event that will trigger
+ * the event handler.  Use '*' for any event.
+ * 
+ * @param int $action_id with the Action Id of the event that should trigger
+ * the handler.  Use Null for any id.
  *
  * @return TRUE in case of success. Check voip_error() for processing errors.
  *
  */
-function _voip_asterisk_process_events($server_config, $event_handler, $allow_timeout=false)
+function _voip_asterisk_process_events($ami, $event_handler, $event_code='*', $action_id=NULL)
 {
-// TODO: Ideally, event handler should use its own socket to the server...
-// TODO: how long is the timeout? This function seems to stop by itself after a while...
+$ami_str = print_r($ami, TRUE);
+watchdog('voip_asterisk.inc',"Entering _voip_asterisk_process_events($ami_str, $event_handler, $event_code, $action_id)");
 
-  $ami_port = $server_config['ami_port'];
-  $ami_host = $server_config['ami_host'];
-  $ami_host = ($ami_port)? ($ami_host.':'.$ami_port) : $ami_host;
-  $ami_user = $server_config['ami_user'];
-  $ami_pass = $server_config['ami_password'];
+// TODO: Ideally, we should have event handler running in its own process and with its own socket to the server...
 
+/////// TODO: get rid of the infinite look!!
+
+  $rc = TRUE;
   voip_error_reset();
-
-  $ami = _voip_asterisk_manager();
-  $result = $ami->connect($ami_host, $ami_user, $ami_pass);
-  if(voip_error()) {
-    voip_error("Connection to Asterisk manager failed: " . voip_error_message());
-    return FALSE;
-  }
-
-  // add event handler to take care of all events received from AMI
-//  $ami->add_event_handler('*','_voip_asterisk_event_handler');
-  $ami->add_event_handler('*',$event_handler);
 
   // start processing events from the server
   // Note: the following functionality was based on phpagi_asmanager.php->wait_response()
   $timeout = false;
+  $done = FALSE;
   do
   {
     $type = NULL;
     $parameters = array();
 
+    // read input from the socket
     $buffer = trim(fgets($ami->socket, 4096));
     while($buffer != '')
     {
@@ -265,21 +258,98 @@ function _voip_asterisk_process_events($server_config, $event_handler, $allow_ti
     switch($type)
     {
       case '': // timeout occured
-        $timeout = $allow_timeout;
+//        $timeout = $allow_timeout;
+        $timeout = TRUE;
+        $ami->log('Time out processing events from the Asterisk Manager');
+        $rc = FALSE;
+        $done = TRUE;
         break;
       case 'event':
-            $ami->process_event($parameters);
-            break;
+        $e = $parameters['Event'];
+watchdog('voip_asterisk.inc',"Got event $e with params: " . print_r($parameters,TRUE));
+        $event_match = FALSE;
+        if ($event_code == '*') {
+          $event_match = TRUE;
+        }
+        else {
+          $event_match = (strcasecmp($e, $event_code) == 0); 
+        }
+        $id_match = FALSE;
+        if(is_null($action_id)) {
+          $id_match = TRUE;
+        }
+        else if($action_id == $parameters['ActionID']){
+            $id_match = TRUE;
+        }
+        $done = FALSE;
+        if($event_match && $id_match){
+          $done = $event_handler($e, $parameters, $ami->server, $ami->port);
+        }
+        break;
       case 'response':
-            break;
+        break;
       default:
         $ami->log('Unhandled response packet from Manager: ' . print_r($parameters, true));
+        $rc = FALSE;
+        $done = TRUE;
         break;
     }
-  } while(!$timeout && _voip_asterisk_event_handler_running());
+  } while(!$timeout && !$done);
 
-  // disconnect from the server
-  $ami->disconnect();
-  return TRUE;
+  return $rc;
 }
+
+/**
+ * Callback function to handle AMI events
+ */
+function _voip_asterisk_event_handler($ecode, $data, $server, $port) {
+  $rc = TRUE;
+/*******
+  // ignore events without an Action Id
+  $call_id = $data['ActionID'];
+  if(!$call_id){
+    return TRUE;
+  }
+*******/
+$data_str = print_r($data, TRUE);
+$msg = "Event handler being called with $ecode, $data_str, $server, $port";
+$vars = array();
+watchdog('voip_asterisk', $msg, $vars, WATCHDOG_INFO);
+
+  $ecode = strtolower($ecode);
+  switch($ecode) {
+    default:
+      break;
+    case 'originateresponse':
+      $reason = $data['Reason'];
+      switch($reason){
+        default:
+          $call_status = 'invalid';
+          voip_error("Invalid AMI event: $ecode");
+          $rc = FALSE;
+          break;
+        case 0: // no such extension or number
+          $call_status = 'invalid number';
+          break;
+        case 1: // no answer
+          $call_status = 'no answer';
+          break;
+        case 4: // answered
+          $call_status = 'answered';
+          break;
+        case 8: // busy
+          $call_status = 'busy';
+          break;
+      }
+$msg = "event handler:: Originate status: $call_status";
+$vars = array();
+watchdog('voip_asterisk', $msg, $vars, WATCHDOG_INFO);
+      // keep track of the dial attempt
+      $caller_number = $data['CallerIDNum'];
+      voip_tracker_set_call_info('voip_asterisk', $call_id, $call_status,$caller_number);
+      break;
+  }
+  return $rc;
+}
+
 
