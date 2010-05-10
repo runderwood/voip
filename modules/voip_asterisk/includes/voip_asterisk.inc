@@ -28,15 +28,25 @@ foreach (array('phpagi-asmanager.php') as $file) {
  */
 function _voip_asterisk_manager()
 {
-  // by default, initialize the manager with the voip_asterisk.module logger
   static $manager = NULL;
   if(is_null($manager)) {
     $manager = new AGI_AsteriskManager(NULL, array('log_method' => '_voip_asterisk_ami_log'));
+    // set a default "catch all" event handler
+    $event = '*';
+    $callback = '_voip_asterisk_generic_event_handler';
+    $manager->add_event_handler($event, $callback);
   }
 
   return $manager;
 }
 
+function _voip_asterisk_generic_event_handler($ecode, $data, $server, $port) {
+  // phpagi-asmanager.php always set the error log no matter what
+  voip_error_reset();
+
+  // by default, we do not do anything with unsolicited events coming from the server
+  return TRUE;
+}
 
 /**
  * Define how AMI errors should be reported
@@ -207,12 +217,7 @@ function _voip_asterisk_dial_out($server_config, $number, $script_name, $options
  */
 function _voip_asterisk_process_events($ami, $event_handler, $event_code='*', $action_id=NULL)
 {
-$ami_str = print_r($ami, TRUE);
-watchdog('voip_asterisk.inc',"Entering _voip_asterisk_process_events($ami_str, $event_handler, $event_code, $action_id)");
-
 // TODO: Ideally, we should have event handler running in its own process and with its own socket to the server...
-
-/////// TODO: get rid of the infinite look!!
 
   $rc = TRUE;
   voip_error_reset();
@@ -258,7 +263,6 @@ watchdog('voip_asterisk.inc',"Entering _voip_asterisk_process_events($ami_str, $
     switch($type)
     {
       case '': // timeout occured
-//        $timeout = $allow_timeout;
         $timeout = TRUE;
         $ami->log('Time out processing events from the Asterisk Manager');
         $rc = FALSE;
@@ -266,7 +270,6 @@ watchdog('voip_asterisk.inc',"Entering _voip_asterisk_process_events($ami_str, $
         break;
       case 'event':
         $e = $parameters['Event'];
-watchdog('voip_asterisk.inc',"Got event $e with params: " . print_r($parameters,TRUE));
         $event_match = FALSE;
         if ($event_code == '*') {
           $event_match = TRUE;
@@ -304,18 +307,8 @@ watchdog('voip_asterisk.inc',"Got event $e with params: " . print_r($parameters,
  */
 function _voip_asterisk_event_handler($ecode, $data, $server, $port) {
   $rc = TRUE;
-/*******
-  // ignore events without an Action Id
-  $call_id = $data['ActionID'];
-  if(!$call_id){
-    return TRUE;
-  }
-*******/
-$data_str = print_r($data, TRUE);
-$msg = "Event handler being called with $ecode, $data_str, $server, $port";
-$vars = array();
-watchdog('voip_asterisk', $msg, $vars, WATCHDOG_INFO);
 
+  $call_id = $data['ActionID'];
   $ecode = strtolower($ecode);
   switch($ecode) {
     default:
@@ -341,12 +334,9 @@ watchdog('voip_asterisk', $msg, $vars, WATCHDOG_INFO);
           $call_status = 'busy';
           break;
       }
-$msg = "event handler:: Originate status: $call_status";
-$vars = array();
-watchdog('voip_asterisk', $msg, $vars, WATCHDOG_INFO);
       // keep track of the dial attempt
       $caller_number = $data['CallerIDNum'];
-      voip_tracker_set_call_info('voip_asterisk', $call_id, $call_status,$caller_number);
+      voip_tracker_set_call_info('voip_asterisk',$call_id,$call_status,$caller_number);
       break;
   }
   return $rc;
