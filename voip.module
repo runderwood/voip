@@ -51,14 +51,13 @@ function voip_send_request($request, $options = array()) {
 
 /**
  * Implementation of hook_xmlrpc().
- * Map external names of XML-RPC methods to PHP callback functions.
  */
 function voip_xmlrpc() {
   $methods = array();
 
   $methods[] = array(
     'voip.processRequest',      // External method name.
-    'xmls_voip_process_request', // PHP function to run.
+    'voip_process_request',     // PHP function to run.
     array('array', 'string', 'array'),// The return value's type, then any parameter types.
     t('Processes incoming requests from VoIP servers.')  // Description.
   );
@@ -74,6 +73,85 @@ function voip_xmlrpc() {
   return $methods;
 }
 
+
+/*
+* Implementation of hook_disable()
+*/
+function voip_disable() {
+  cache_clear_all('services:methods', 'cache');
+}
+
+/*
+* Implementation of hook_enable()
+*/
+function voip_enable() {
+  cache_clear_all('services:methods', 'cache');
+}
+
+/*
+* Implementation of hook_service()
+*/
+function voip_service() {
+  $methods = array();
+
+  $methods[] = array(
+    '#method'   => 'voip.processRequest',
+    '#callback' => 'voip_process_request',
+    //'#key'     => FALSE,
+    //'#auth'     => FALSE,
+    '#args'     => array(
+      array(
+        '#name'         => 'request_id',
+        '#type'         => 'string',
+        '#description'  => t('Id of the request.'),
+      ),
+      array(
+        '#name'         => 'options',
+        '#type'         => 'array',
+        '#description'  => t('Options associated with the specified request.'),
+      ),
+    ),
+    '#return'   => 'array',
+    '#help'     => t('Processes incoming requests from VoIP servers.')
+  );
+
+  $methods[] = array(
+    '#method'   => 'voip.sendRequest',
+    '#callback' => 'voip_send_request',
+    //'#key'     => FALSE,
+    //'#auth'     => FALSE,
+    '#args'     => array(
+      array(
+        '#name'         => 'request_id',
+        '#type'         => 'string',
+        '#description'  => t('Id of the request.'),
+      ),
+      array(
+        '#name'         => 'options',
+        '#type'         => 'array',
+        '#description'  => t('Options associated with the specified request.'),
+      ),
+    ),
+    '#return'   => 'array',
+    '#help'     => t('Send request to current VoIP server.')
+  );
+
+  $methods[] = array(
+    '#method'   => 'voip.echo',
+    '#callback' => 'voip_service_echo',
+    //'#auth'     => false,
+    '#return'   => 'struct',
+    '#args'     => array(
+      array(
+        '#name'         => 'message',
+        '#type'         => 'string',
+        '#description'  => t('The message to return.'),
+      )),
+    '#help'     => t('Returns an object containing a sessid and user.')
+  );
+
+  return $methods;
+}
 
 /**
  * Implementation of hook_menu().
@@ -216,7 +294,7 @@ function voip_servers($op = 'servers', $server = NULL) {
 /**
  * Process requests received from VoIP servers.
  */
-function xmls_voip_process_request($request_id, $options=array())
+function voip_process_request($request_id, $options=array())
 {
   $response = array();
   voip_error_reset();
@@ -226,9 +304,9 @@ function xmls_voip_process_request($request_id, $options=array())
     $result = call_user_func($function, $request_id, $options);
     // stop at the first execution error
     if(voip_error()) {
-      // report processing errors with code -32500 ('application error')
       $error_message = voip_error_message(); // voip_error()->message;
-      $response = xmlrpc_error(-32500, $error_message);
+      // report processing errors with http code 500 ('internal server error')
+      $response = services_error($error_message, 500);
       break;
     }
     if (isset($result)) {
@@ -237,7 +315,8 @@ function xmls_voip_process_request($request_id, $options=array())
   }
   if (!$response) {
     $error_message = "(voip.module) Request $request_id not processed by any module.";
-    $response = xmlrpc_error(-32500, $error_message);
+    // report http code 501 ('not implemented')
+    $response = services_error($error_message, 501);
   }
   return $response;
 }
@@ -247,43 +326,6 @@ function xmls_voip_process_request($request_id, $options=array())
 /*
  * Services integration
  */
-
-/*
-* Implementation of hook_disable()
-*/
-function voip_disable() {
-  cache_clear_all('services:methods', 'cache');
-}
-
-/*
-* Implementation of hook_enable()
-*/
-function voip_enable() {
-  cache_clear_all('services:methods', 'cache');
-}
-
-/*
-* Implementation of hook_service()
-*/
-function voip_service() {
-
-  return array(
-    // voip.echo
-    array(
-      '#method'   => 'voip.echo',
-      '#callback' => 'voip_service_echo',
-      //'#auth'     => false,
-      '#return'   => 'struct',
-      '#args'     => array(
-        array(
-          '#name'         => 'message',
-          '#type'         => 'string',
-          '#description'  => t('The message to return.'),
-        )),
-      '#help'     => t('Returns an object containing a sessid and user.'))
-     
-  );
-}
 
 function voip_service_echo($message) {
 // Note: $session_id is automatically added by the system

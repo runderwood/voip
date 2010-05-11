@@ -26,8 +26,37 @@ echo("-------\n");
 
 $services_server = 'http://localhost/d6/services/xmlrpc';
 
-echo("about to call voip.echo\n");
-$result = xmlrpc($voip_server, 'voip.echo', 'good times');
+$request = 'system.getServices';
+echo("about to call $request\n");
+$result = xmlrpc($services_server, $request);
+echo('result: ' . print_r($result, TRUE) . "\n\n");
+
+$request = 'voip.echo';
+$param = 'good times';
+echo("about to call $request\n");
+$result = xmlrpc($services_server, $request, $param);
+$result = xmlrpc($services_server, 'voip.echo', 'good times');
+echo('result: ' . print_r($result, TRUE) . "\n\n");
+
+$request_id = 'invalid_request';
+echo("about to call voip_process_request($request_id)\n");
+$options = array('arg1' => '1', 'arg2' => 'blue');
+$result = voip_process_request($services_server, $request_id, $options);
+echo('voip_api_error: ' . print_r(voip_api_error_message(), TRUE) . "\n");
+echo('result: ' . print_r($result, TRUE) . "\n\n");
+
+$request_id = 'voip_get_script';
+echo("about to call voip_process_request($request_id)\n");
+$options['script_name'] = 'invalid script name';
+$result = voip_process_request($services_server, $request_id, $options);
+echo('voip_api_error: ' . print_r(voip_api_error_message(), TRUE) . "\n");
+echo('result: ' . print_r($result, TRUE) . "\n\n");
+
+$request_id = 'voip_get_script';
+echo("about to call voip_process_request($request_id)\n");
+$options['script_name'] = 'hello_world';
+$result = voip_process_request($services_server, $request_id, $options);
+echo('voip_api_error: ' . print_r(voip_api_error_message(), TRUE) . "\n");
 echo('result: ' . print_r($result, TRUE) . "\n\n");
 
 exit;
