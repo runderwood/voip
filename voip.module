@@ -49,31 +49,6 @@ function voip_send_request($request, $options = array()) {
 }
 
 
-/**
- * Implementation of hook_xmlrpc().
- */
-function voip_xmlrpc() {
-  $methods = array();
-
-  $methods[] = array(
-    'voip.processRequest',      // External method name.
-    'voip_process_request',     // PHP function to run.
-    array('array', 'string', 'array'),// The return value's type, then any parameter types.
-    t('Processes incoming requests from VoIP servers.')  // Description.
-  );
-
-  // NOTE: the following method is only here for test purposes. In the real system it should never be called via xmlrpc.
-  $methods[] = array(
-    'voip.sendRequest',
-    'voip_send_request', 
-    array('array', 'string', 'array'),
-    t('Send request to default VoIP server.')
-  );
-
-  return $methods;
-}
-
-
 /*
 * Implementation of hook_disable()
 */
@@ -134,20 +109,6 @@ function voip_service() {
     ),
     '#return'   => 'array',
     '#help'     => t('Send request to current VoIP server.')
-  );
-
-  $methods[] = array(
-    '#method'   => 'voip.echo',
-    '#callback' => 'voip_service_echo',
-    //'#auth'     => false,
-    '#return'   => 'struct',
-    '#args'     => array(
-      array(
-        '#name'         => 'message',
-        '#type'         => 'string',
-        '#description'  => t('The message to return.'),
-      )),
-    '#help'     => t('Returns an object containing a sessid and user.')
   );
 
   return $methods;
@@ -322,19 +283,3 @@ function voip_process_request($request_id, $options=array())
 }
 
 
-
-/*
- * Services integration
- */
-
-function voip_service_echo($message) {
-// Note: $session_id is automatically added by the system
-// Note: to report errors, use 
-//       return  services_error(t('Could not find the X.'), 404);
- 
-  $return = new stdClass();
-  $return->sessid = session_id();
-  $return->message = $message;
- 
-  return $return;
-}
