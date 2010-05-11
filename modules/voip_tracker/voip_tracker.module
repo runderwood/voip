@@ -20,25 +20,48 @@ function voip_tracker_set_call_info($module, $call_id, $call_status='', $caller_
   watchdog('voip_tracker', '[@module] Call info for call id %call_id:: status: @call_status, caller: @caller, callee: @callee, uid: @uid, script: @script_name, vars: @vars',
     array('%call_id' => $call_id, '@call_status' => $call_status, '@caller' => $caller_number, '@callee' => $callee_number, '@module' => $module, '@uid' => $uid, '@script_name' => $script_name, '@vars' => print_r($vars, TRUE)), WATCHDOG_INFO);
 
+  $table = 'voip_tracker_call_list';
+
   $dispatch_time = time();
   $serialized_vars = serialize($vars);
-  $args = array(
+  $data = array(
     'call_id' => $call_id,
     'caller_number' => $caller_number,
     'callee_number' => $callee_number,
     'module' => $module,
     'uid' => $uid,
     'script_name' => $script_name,
+// TODO: mark vars as 'serialized' in the db schema to avoid the need for serialization...    
     'vars' => $serialized_vars,
     'call_status' => $call_status,
     'dispatch_time' => $dispatch_time,
   );
+
+  $update = array();
+/*********
   $query = "INSERT INTO {voip_tracker_call_list}
               (call_id, caller_number, callee_number, module, uid, script_name, vars, call_status, dispatch_time)
             VALUES
               ('%s', '%s', '%s', '%s', %d, '%s', '%s', '%s', %d)
            ";
-  db_query($query, $args);
+  db_query($query, $data);
+*********/
+  // determine if a record for the call already exists in the database
+  $count = db_result(db_query("SELECT COUNT(*) FROM {$table} WHERE call_id = '%s'", $call_id));
+
+  if($count==0){
+    // create new record
+watchdog('voip_tracker', '[@module] Creating id %call_id with status: @call_status', array('%call_id' => $call_id, '@call_status' => $call_status), WATCHDOG_INFO);
+    $rc = drupal_write_record($table,$data,$update);
+watchdog('voip_tracker', 'write_record result: @rc', array('@rc' => print_r($rc,true)), WATCHDOG_INFO);
+  }
+  else {
+    // update existing record
+watchdog('voip_tracker', '[@module] Updating id %call_id with status: @call_status', array('%call_id' => $call_id, '@call_status' => $call_status), WATCHDOG_INFO);
+    $update = 'call_id'; // the database key to be used
+    $rc = drupal_write_record($table,$data,$update);
+watchdog('voip_tracker', 'write_record result: @rc', array('@rc' => print_r($rc,true)), WATCHDOG_INFO);
+  }
 
   return;
 }
