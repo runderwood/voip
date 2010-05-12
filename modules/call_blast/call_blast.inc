@@ -1,6 +1,6 @@
 <?php 
 /**
- * @file callblast.inc
+ * @file call_blast.inc
  *  Business logic of Call Blast module.
  * 
  *  This is custom code. The functions here
@@ -10,13 +10,13 @@
  */
 
 /**
- * Callback for callblast/list/autocomplete
+ * Callback for call_blast/list/autocomplete
  * to autocomplete call list field on 
  * node/add/callblast and node/edit/% forms.
  */
-function callblast_list_autocomplete() {
+function call_blast_list_autocomplete() {
   $items = array();
-  $items = module_invoke_all('callblast_list');
+  $items = module_invoke_all('call_blast_list');
   print drupal_to_js($items);
   exit();
 }
@@ -24,8 +24,8 @@ function callblast_list_autocomplete() {
 /**
  * Implementation of hook_voip_get_script().
  */
-function callblast_voip_get_script() {
-  // TODO: this function should return callblast-specific scripts.  The "hello_world" script has already been defined by voip_tester.module
+function call_blast_voip_get_script() {
+  // TODO: this function should return call_blast-specific scripts.  The "hello_world" script has already been defined by voip_tester.module
   // NOTE: How to name scripts? <module_prefix>_name.xml? Do we need the .xml?
   // NOTE: the following require once should assign the script to a variable and return that variable
   require_once('hello_world.xml');
@@ -36,7 +36,7 @@ function callblast_voip_get_script() {
  * text id, consisting only of numbers, lowercase  
  * letters and underscores.
  */
-function callblast_id($module, $name) {
+function call_blast_id($module, $name) {
   $id = $module .'_'. $name;  
 
   // make lowercase

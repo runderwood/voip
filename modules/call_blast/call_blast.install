@@ -7,29 +7,29 @@
 /**
  * Implementation of hook_install().
  */
-function callblast_install() {
-  drupal_install_schema('callblast');
+function call_blast_install() {
+  drupal_install_schema('call_blast');
 }
 
 /**
  * Implementation of hook_uninstall().
  */
-function callblast_uninstall() {
-  drupal_uninstall_schema('callblast');
+function call_blast_uninstall() {
+  drupal_uninstall_schema('call_blast');
 }
 
 /**
  * Implementation of hook_schema().
  */
-function callblast_schema() {
+function call_blast_schema() {
   /**
-   * callblast_call table
+   * callblast_voipcall table
    * 
    * This table keeps track of which voipcall nodes
    * belong to which callblast nodes. That is, 
    * which calls are part of which callblast. 
    */
-  $schema['callblast_call'] = array(
+  $schema['callblast_voipcall'] = array(
     'fields' => array(
       'callblast_nid' => array(
         'type' => 'int',
