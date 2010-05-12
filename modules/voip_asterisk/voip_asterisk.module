@@ -62,13 +62,21 @@ function voip_asterisk_admin_form($configuration) {
     '#maxlength' => 64,
     '#default_value' => $configuration['voip_asterisk_password'],
   );
-  $form['voip_asterisk_caller_id'] = array(
+  $form['voip_asterisk_cid_name'] = array(
     '#type' => 'textfield',
-    '#title' => t('Caller id'),
-    '#description' => t('Caller id to be used in Voip Drupal calls. Has to be written in the format "Name <Number>".'),
+    '#title' => t('Caller id name'),
+    '#description' => t('Caller id name to be used in Voip Drupal calls.'),
     '#size' => 40,
     '#maxlength' => 255,
-    '#default_value' => ($configuration['voip_asterisk_caller_id']?$configuration['voip_asterisk_caller_id']:'Voip Drupal <1234567890>'),
+    '#default_value' => ($configuration['voip_asterisk_cid_name']?$configuration['voip_asterisk_cid_name']:'Voip Drupal'),
+  );
+  $form['voip_asterisk_cid_number'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Caller id number'),
+    '#description' => t('Caller id number to be used in Voip Drupal calls.'),
+    '#size' => 40,
+    '#maxlength' => 255,
+    '#default_value' => ($configuration['voip_asterisk_cid_name']?$configuration['voip_asterisk_cid_number']:'1234567890'),
   );
 
   return $form;
@@ -88,7 +96,8 @@ function voip_asterisk_admin_form_validate($form, &$form_state) {
     'ami_port' => $values['voip_asterisk_port'],
     'ami_user' => $values['voip_asterisk_user'],
     'ami_password' => $values['voip_asterisk_password'],
-    'system_caller_id' => $values['voip_asterisk_caller_id'],
+    'system_cid_name' => $values['voip_asterisk_cid_name'],
+    'system_cid_number' => $values['voip_asterisk_cid_number'],
   );
   $result = _voip_asterisk_ping($server_config);
 
@@ -112,13 +121,6 @@ function voip_asterisk_send($request_id, $options) {
  */
 function voip_asterisk_send_request($server_config, $request_id, $options) {
 
-  if ($server_config['voip_asterisk_ssl']) {
-    $scheme = 'https';
-  }
-  else {
-    $scheme = 'http';
-  }
-
   switch($request_id) {
     default:
       // Invalid request id
@@ -128,6 +130,7 @@ function voip_asterisk_send_request($server_config, $request_id, $options) {
       watchdog('voip_asterisk', $error_message, $variables, WATCHDOG_ERROR);
       voip_error("(asterisk server) Invalid request id received: " . $request_id);
       break;
+
     case 'voip_dial_out': // dial the given number and then execute the script provided
       $invalid_args = FALSE;
       if(!$options['number']) {
@@ -179,7 +182,8 @@ function voip_asterisk_voip_process_request($request_id, $options) {
         'ami_port' => '5038',
         'ami_user' => 'voip_drupal_ami',
         'ami_password' => 'vd123',
-        'system_caller_id' => 'Voip Drupal <9999999999>',
+        'system_cid_name' => 'Voip Drupal Test',
+        'system_cid_number' => '9999999999',
       );
       $response['result'] = voip_asterisk_send_request($server_config, $request_id, $options);
       break;

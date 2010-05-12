@@ -1,0 +1,6 @@
+; $Id$
+name = Voip Tracker
+description = Keeps track of the different calls made and received by the Voip Drupal system
+package = Voip Drupal
+core = 6.x
+

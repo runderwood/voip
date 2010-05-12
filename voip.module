@@ -6,7 +6,7 @@
  * Enables communication between Drupal and VoIP servers.
  */
 
-foreach (array('voip_error.inc') as $file) {
+foreach (array('voip_error.inc', 'voip_log_server.inc') as $file) {
   require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'includes' . DIRECTORY_SEPARATOR . $file);
 }
 
@@ -49,31 +49,70 @@ function voip_send_request($request, $options = array()) {
 }
 
 
-/**
- * Implementation of hook_xmlrpc().
- * Map external names of XML-RPC methods to PHP callback functions.
- */
-function voip_xmlrpc() {
+/*
+* Implementation of hook_disable()
+*/
+function voip_disable() {
+  cache_clear_all('services:methods', 'cache');
+}
+
+/*
+* Implementation of hook_enable()
+*/
+function voip_enable() {
+  cache_clear_all('services:methods', 'cache');
+}
+
+/*
+* Implementation of hook_service()
+*/
+function voip_service() {
   $methods = array();
 
   $methods[] = array(
-    'voip.processRequest',      // External method name.
-    'xmls_voip_process_request', // PHP function to run.
-    array('array', 'string', 'array'),// The return value's type, then any parameter types.
-    t('Processes incoming requests from VoIP servers.')  // Description.
+    '#method'   => 'voip.processRequest',
+    '#callback' => 'voip_process_request',
+    //'#key'     => FALSE,
+    //'#auth'     => FALSE,
+    '#args'     => array(
+      array(
+        '#name'         => 'request_id',
+        '#type'         => 'string',
+        '#description'  => t('Id of the request.'),
+      ),
+      array(
+        '#name'         => 'options',
+        '#type'         => 'array',
+        '#description'  => t('Options associated with the specified request.'),
+      ),
+    ),
+    '#return'   => 'array',
+    '#help'     => t('Processes incoming requests from VoIP servers.')
   );
 
-  // NOTE: the following method is only here for test purposes. In the real system it should never be called via xmlrpc.
   $methods[] = array(
-    'voip.sendRequest',
-    'voip_send_request', 
-    array('array', 'string', 'array'),
-    t('Send request to default VoIP server.')
+    '#method'   => 'voip.sendRequest',
+    '#callback' => 'voip_send_request',
+    //'#key'     => FALSE,
+    //'#auth'     => FALSE,
+    '#args'     => array(
+      array(
+        '#name'         => 'request_id',
+        '#type'         => 'string',
+        '#description'  => t('Id of the request.'),
+      ),
+      array(
+        '#name'         => 'options',
+        '#type'         => 'array',
+        '#description'  => t('Options associated with the specified request.'),
+      ),
+    ),
+    '#return'   => 'array',
+    '#help'     => t('Send request to current VoIP server.')
   );
 
   return $methods;
 }
-
 
 /**
  * Implementation of hook_menu().
@@ -213,28 +252,10 @@ function voip_servers($op = 'servers', $server = NULL) {
   }
 }
 
-
-/**
- * Implementation of hook_voip_server_info().
- */
-function voip_voip_server_info() {
-  return array(
-    'log' => array(
-      'name' => t('Log only'),
-      'send' => 'voip_send_log',
-    ),
-  );
-}
-
-function voip_send_log($request, $options) {
-  watchdog('voip', 'Voip request %request sent with the following options: @options', array('%request' => $request, '@options' => print_r($options, TRUE)), WATCHDOG_INFO);
-  return array('status' => TRUE);
-}
-
 /**
  * Process requests received from VoIP servers.
  */
-function xmls_voip_process_request($request_id, $options=array())
+function voip_process_request($request_id, $options=array())
 {
   $response = array();
   voip_error_reset();
@@ -244,9 +265,9 @@ function xmls_voip_process_request($request_id, $options=array())
     $result = call_user_func($function, $request_id, $options);
     // stop at the first execution error
     if(voip_error()) {
-      // report processing errors with code -32500 ('application error')
       $error_message = voip_error_message(); // voip_error()->message;
-      $response = xmlrpc_error(-32500, $error_message);
+      // report processing errors with http code 500 ('internal server error')
+      $response = services_error($error_message, 500);
       break;
     }
     if (isset($result)) {
@@ -255,8 +276,10 @@ function xmls_voip_process_request($request_id, $options=array())
   }
   if (!$response) {
     $error_message = "(voip.module) Request $request_id not processed by any module.";
-    $response = xmlrpc_error(-32500, $error_message);
+    // report http code 501 ('not implemented')
+    $response = services_error($error_message, 501);
   }
   return $response;
 }
+
 

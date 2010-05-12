@@ -3,7 +3,7 @@
 
 /**
  * @file
- * Internal functions that handle interactions with the Asterisk server
+ * Implementation of a simple log server for Voip Drupal
  */
 
 // TODO: connect via SSL
@@ -28,15 +28,25 @@ foreach (array('phpagi-asmanager.php') as $file) {
  */
 function _voip_asterisk_manager()
 {
-  // by default, initialize the manager with the voip_asterisk.module logger
   static $manager = NULL;
   if(is_null($manager)) {
     $manager = new AGI_AsteriskManager(NULL, array('log_method' => '_voip_asterisk_ami_log'));
+    // set a default "catch all" event handler
+    $event = '*';
+    $callback = '_voip_asterisk_generic_event_handler';
+    $manager->add_event_handler($event, $callback);
   }
 
   return $manager;
 }
 
+function _voip_asterisk_generic_event_handler($ecode, $data, $server, $port) {
+  // phpagi-asmanager.php always set the error log no matter what
+  voip_error_reset();
+
+  // by default, we do not do anything with unsolicited events coming from the server
+  return TRUE;
+}
 
 /**
  * Define how AMI errors should be reported
@@ -75,108 +85,44 @@ function _voip_asterisk_ping($server_config) {
   return TRUE;
 }
 
-/*
- * Keeps track of the "dial out' requests
- */
-function voip_asterisk_dial_manager($action='reset', $id=NULL, $status=NULL) {
-  static $_queue = array();
-
-  switch($action){
-    default:
-      return NULL;
-    case 'reset':
-      $_queue = array();
-      break;
-    case 'set':
-      $_queue[$id] = $status;
-      break;
-    case 'delete':
-      unset($_queue[$id]);
-      break;
-    case 'get':
-      $status = isset($_queue[$id])?$_queue['id']:NULL;
-      return $status;
-      break;
-    case 'dump':
-      return $_queue;
-      break;
-  }
-}
-
-
-/**
- * Callback function that handles OriginateResponse events
-_voip_asterisk_event_originate(originateresponse, Array
-(
-    [Event] => OriginateResponse
-    [Privilege] => call,all
-    [ActionID] => 4bc53a5dd850c
-    [Response] => Failure
-    [Channel] => Local/6177920995@vd-dial_out
-    [Context] => vd-bridge
-    [Exten] => s
-    [Reason] => 1
-    [Uniqueid] => <null>
-    [CallerIDNum] => 123456789
-    [CallerIDName] => Voip Drupal
-)
-reason can be any of:
-0 = no such extension or number
-1 = no answer
-4 = answered
-8 = congested or not available 
- */
-function _voip_asterisk_event_originate($ecode, $data, $server, $port) {
-  $rc = TRUE;
-  $reason = $data['Reason'];
-  $id = $data['ActionID'];
-  switch($reason){
-    default:
-      $status = 'unknown';
-      $rc = FALSE;
-      break;
-    case 0:
-      $status = 'invalid number';
-      break;
-    case 1:
-      $status = 'no answer';
-      break;
-    case 4:
-      $status = 'answered';
-      break;
-    case 8:
-      $status = 'busy';
-      break;
-  }
-  voip_asterisk_dial_manager('set', $id, $status);
-
-  return $rc;
-}
 
 /**
  * Establish a new call by dialing the given number and connecting it to the given script
  *
- *  @param array $options is an array containing, among other things, 'variables' to be set in the new channels and a 'unique_id' to be associated with call being made.
+ *   @param array $options is an array containing, among other things, 'variables' to be set in the new channels
+ * 
+ *   @return int A unique id associated with the call. Check voip_error() for processing errors.
  */
 function _voip_asterisk_dial_out($server_config, $number, $script_name, $options) {
 
-  $ami_port = $server_config['voip_asterisk_port'];
-  $ami_host = $server_config['voip_asterisk_host'];
+  $ami_port = $server_config['ami_port'];
+  $ami_host = $server_config['ami_host'];
   $ami_host = ($ami_port)? ($ami_host.':'.$ami_port) : $ami_host;
-  $ami_user = $server_config['voip_asterisk_user'];
-  $ami_pass = $server_config['voip_asterisk_password'];
+  $ami_user = $server_config['ami_user'];
+  $ami_pass = $server_config['ami_password'];
+
+  // define the caller id to be used
+  $cid_name = $server_config['system_cid_name']?$server_config['system_cid_name']:'';
+  $cid_number = $server_config['system_cid_number']?$server_config['system_cid_number']:'';
+  $cid = $cid_name . '<' . $cid_number . '>';
+
+  // define a unique id to be associated with this call
+  $call_id = uniqid();
 
   voip_error_reset();
 
-  $result = _voip_asterisk_manager()->connect($ami_host, $ami_user, $ami_pass);
+  $ami = _voip_asterisk_manager();
+  $result = $ami->connect($ami_host, $ami_user, $ami_pass);
   if(voip_error()) {
     voip_error("Connection to Asterisk manager failed: " . voip_error_message());
     return FALSE;
   }
 
-  // add event handler to handle AMI Originate responses
-  // (http://www.voip-info.org/wiki/view/Asterisk+Manager+API+Action+Originate)
-  _voip_asterisk_manager()->add_event_handler('OriginateResponse','_voip_asterisk_event_originate');
+  // keep track of the dial attempt
+  $call_status = 'dialing';
+  $module = $options['module']?$options['module']:''; // Name of the module originating the call
+  $uid = $options['uid']?$options['uid']:0; // Id of the user placing the call
+  voip_tracker_set_call_info('voip_asterisk', $call_id, $call_status, $cid_number, $number, $uid, $script_name, $variables);
 
   // The following channel string should match the one in voip_drupal.conf
 //  $channel_string = 'Local/%number@vd-dial_out/n'; // This is the goal.  But it's not working...
@@ -192,61 +138,208 @@ function _voip_asterisk_dial_out($server_config, $number, $script_name, $options
   $timeout = 30000; // Timeout (in milliseconds) for the originating connection to happen
                     // (defaults to 30000 milliseconds) 
 
-  $cid = $server_config['system_caller_id']?$server_config['system_caller_id']:NULL;
   $caller_id = $cid;  // CallerID to be used for both ends of the call.  Note that some
                       // voicemail systems might be automatically activated if the
                       // caller id is the same as the number being dialed.
 
-  $variable = NULL; // Channel variables to set (max 32). Variables will be set for both
-                    // channels (local and connected). Note that the syntax for Asterisk 1.4+
-                    // and 1.6+ are different from the previous versions 
-  $variables = $options['variables']?$options['variables']:array();
+  // Channel variables to set (max 32). Variables will be set for both channels
+  // (local and connected). Note that the syntax for Asterisk 1.4+ and 1.6+ is
+  // different from the previous versions 
+  $variables = $options['variables']?$options['variables']:array(); // NOTE: This might not be supported by non-Asterisk voip servers...
   $variables['VD_SCRIPT_NAME'] = $script_name;
+  $variables['VD_CALL_ID'] = $call_id;
   $numOfItems = count($variables);
   $counter = 0;
+  $var_string = NULL;
   foreach($variables as $name => $value){
     $counter += 1;
     if ($counter <> $numOfItems){
-      $variable .= $name . '=' . $value . "\r\nVariable: ";
+      $var_string .= $name . '=' . $value . "\r\nVariable: ";
     } else {
-      $variable .= $name . '=' . $value;
+      $var_string .= $name . '=' . $value;
     }
   } 
 
-  $account = NULL; // Account code for the call 
+  // Account code for the call. Used for call data record (CDR) management
+  $account = $call_id; 
 
-  $async = 1; 
-//  $async = 0; // Use 1 for the origination to be asynchronous (allows multiple calls to be
-              // generated without waiting for a response). Using Async leads to an
-              // OriginateResponse event which contains the failure reason if any. Reason
-              // may be one of the following: 0 = no such extension or number; 1 = no answer;
-              // 4 = answered; and 8 = congested or not available 
+  // Origination mode. Use 0 for the origination to be synchronous and 1 for
+  // the origination to be asynchronous (allows multiple calls to be generated
+  // without waiting for a response). Using Async leads to an OriginateResponse
+  // event which contains the failure reason if any. Reasons may be one of the
+  // following: 0 = no such extension or number; 1 = no answer; 4 = answered;
+  // and 8 = congested or not available 
+  $async = 1; // Note: the async parameter is likely to be removed in future 
+              //   versions of Asterisk.  By default Originate calls will be
+              //   all asynchronous.
 
-  $action_id = NULL; // The request identifier. It allows you to identify the response to
-                     // this request. You may use a number or a string. Useful when you make
-                     // several simultaneous requests. 
-  $action_id = $options['unique_id']?$options['unique_id']:NULL;
+  // The request identifier. It allows you to identify the response to this
+  // request. You may use a number or a string. Useful when you make several
+  // simultaneous requests. 
+  $action_id = $call_id;
 
-  $result = _voip_asterisk_manager()->Originate(
+  $result = $ami->Originate(
      $channel, $exten, $context, $priority, $application, $application_data,
-     $timeout, $caller_id, $variable, $account, $async, $action_id);
+     $timeout, $caller_id, $var_string, $account, $async, $action_id);
 
-  // keep track of the dial attempt
-  if($action_id){
-    voip_asterisk_dial_manager('set', $action_id, 'processing');
-  }
 
   if($result['Response'] != 'Success'){
     voip_error("AMI command Originate failed: " . print_r($result, TRUE));
     return FALSE;
   }
 
-// wait a little bit for the events to arrive before disconnecting
-for($i=0;$i<30;$i++){
-    sleep(1);
+  // wait for event confirming result of the originate execution
+  $event_handler = '_voip_asterisk_event_handler';
+  $event_code = 'OriginateResponse';
+  $r =  _voip_asterisk_process_events($ami, $event_handler, $event_code, $action_id);
+
+  $ami->disconnect();
+  return $call_id;
 }
 
-  _voip_asterisk_manager()->disconnect();
-  return TRUE;
+
+/**
+ * Process AMI events
+ *
+ * @param AMI @ami Instance of the AMI, already connected to the server
+ *
+ * @param string $event_handler with the name of the function that will handle events
+ *   It should be in the format foo($event_code, $data, $server, $port)
+ * 
+ * @param string $event_code listing the code of the event that will trigger
+ * the event handler.  Use '*' for any event.
+ * 
+ * @param int $action_id with the Action Id of the event that should trigger
+ * the handler.  Use Null for any id.
+ *
+ * @return TRUE in case of success. Check voip_error() for processing errors.
+ *
+ */
+function _voip_asterisk_process_events($ami, $event_handler, $event_code='*', $action_id=NULL)
+{
+// TODO: Ideally, we should have event handler running in its own process and with its own socket to the server...
+
+  $rc = TRUE;
+  voip_error_reset();
+
+  // start processing events from the server
+  // Note: the following functionality was based on phpagi_asmanager.php->wait_response()
+  $timeout = false;
+  $done = FALSE;
+  do
+  {
+    $type = NULL;
+    $parameters = array();
+
+    // read input from the socket
+    $buffer = trim(fgets($ami->socket, 4096));
+    while($buffer != '')
+    {
+      $a = strpos($buffer, ':');
+      if($a) {
+        if(!count($parameters)) // first line in a response?
+        {
+          $type = strtolower(substr($buffer, 0, $a));
+          if(substr($buffer, $a + 2) == 'Follows')
+          {
+            // A follows response means there is a multiline field that follows.
+            $parameters['data'] = '';
+            $buff = fgets($ami->socket, 4096);
+            while(substr($buff, 0, 6) != '--END ')
+            {
+              $parameters['data'] .= $buff;
+              $buff = fgets($ami->socket, 4096);
+            }
+          }
+        }
+
+        // store parameter in $parameters
+        $parameters[substr($buffer, 0, $a)] = substr($buffer, $a + 2);
+      }
+        $buffer = trim(fgets($ami->socket, 4096));
+    }
+
+    // process response
+    switch($type)
+    {
+      case '': // timeout occured
+        $timeout = TRUE;
+        $ami->log('Time out processing events from the Asterisk Manager');
+        $rc = FALSE;
+        $done = TRUE;
+        break;
+      case 'event':
+        $e = $parameters['Event'];
+        $event_match = FALSE;
+        if ($event_code == '*') {
+          $event_match = TRUE;
+        }
+        else {
+          $event_match = (strcasecmp($e, $event_code) == 0); 
+        }
+        $id_match = FALSE;
+        if(is_null($action_id)) {
+          $id_match = TRUE;
+        }
+        else if($action_id == $parameters['ActionID']){
+            $id_match = TRUE;
+        }
+        $done = FALSE;
+        if($event_match && $id_match){
+          $done = $event_handler($e, $parameters, $ami->server, $ami->port);
+        }
+        break;
+      case 'response':
+        break;
+      default:
+        $ami->log('Unhandled response packet from Manager: ' . print_r($parameters, true));
+        $rc = FALSE;
+        $done = TRUE;
+        break;
+    }
+  } while(!$timeout && !$done);
+
+  return $rc;
 }
+
+/**
+ * Callback function to handle AMI events
+ */
+function _voip_asterisk_event_handler($ecode, $data, $server, $port) {
+  $rc = TRUE;
+
+  $call_id = $data['ActionID'];
+  $ecode = strtolower($ecode);
+  switch($ecode) {
+    default:
+      break;
+    case 'originateresponse':
+      $reason = $data['Reason'];
+      switch($reason){
+        default:
+          $call_status = 'invalid';
+          voip_error("Invalid AMI event: $ecode");
+          $rc = FALSE;
+          break;
+        case 0: // no such extension or number
+          $call_status = 'invalid number';
+          break;
+        case 1: // no answer
+          $call_status = 'no answer';
+          break;
+        case 4: // answered
+          $call_status = 'answered';
+          break;
+        case 8: // busy
+          $call_status = 'busy';
+          break;
+      }
+      // keep track of the dial attempt
+      $caller_number = $data['CallerIDNum'];
+      voip_tracker_set_call_info('voip_asterisk',$call_id,$call_status,$caller_number);
+      break;
+  }
+  return $rc;
+}
+
 

@@ -13,7 +13,8 @@ require_once('../../includes/voip_error.inc');
  * Global variables
  */
 
-$ami_host = 'localhost';
+//$ami_host = 'localhost';
+$ami_host = 'whatsupserver.media.mit.edu';
 $ami_port = '5038';
 $ami_user = 'voip_drupal_ami';
 $ami_pass = 'vd123';
@@ -41,8 +42,8 @@ echo('result: ' . print_r($result, TRUE) . "\n\n");
 
 //$number = '16172130536'; // Leo's Google Voice number
 //$number = '16174890192';
-//$number = '6177920995'; // Leo's cell phone
-$number = '2674962399'; // Leo's cell phone
+$number = '6177920995'; // Leo's cell phone
+//$number = '2674962399'; // Bryan's cell phone
 //$number = '6171231234'; // invalid number
 //$number = '6176888319'; // Danielle's cell phone
 //$number = '6174525510'; // media lab office

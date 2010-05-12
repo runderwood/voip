@@ -1,0 +1,63 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ * Keeps track of the calls made and received by the Voip Drupal system
+ */
+
+/**
+ * Stores information about a given call
+ *
+ * @param string $module Name of the module calling the function
+ *
+ * @param $call_id Unique identifier associated with the call
+ *
+ * @param $call_status One of the following: 'uncalled', 'dialing', 'invalid number', 'no answer', 'busy', 'answered', 'hang up'
+ *
+ */
+function voip_tracker_set_call_info($module, $call_id, $call_status=NULL, $caller_number=NULL, $callee_number=NULL, $uid=NULL, $script_name=NULL, $vars=NULL){
+
+  $table = 'voip_tracker_call_list';
+
+  $new_data = array();
+  $new_data['call_id'] = $call_id;
+  if(!is_null($caller_number)){ $new_data['caller_number'] = $caller_number; };
+  if(!is_null($callee_number)){ $new_data['callee_number'] = $callee_number; };
+  $new_data['module'] = $module;
+  if(!is_null($uid)){ $new_data['uid'] = $uid; };
+  if(!is_null($script_name)){ $new_data['script_name'] = $script_name; };
+// TODO: mark vars as 'serialized' in the db schema to avoid the need for serialization below    
+  if(!is_null($vars)){ $new_data['vars'] = serialize($vars); };
+  if(!is_null($call_status)){ $new_data['call_status'] = $call_status; };
+  $new_data['dispatch_time'] = time();
+
+  $update = array();
+
+  // determine if a record for the call already exists in the database
+  $call_info = db_fetch_array(db_query("SELECT * FROM {$table} WHERE call_id = '%s'", $call_id));
+
+  if($call_info == FALSE){
+    // create new record
+    $rc = drupal_write_record($table,$new_data,$update);
+  }
+  else {
+    // update existing record
+    $new_data = array_merge($call_info, $new_data);
+    $update = 'call_id'; // the database key to be used for the updates
+    $rc = drupal_write_record($table,$new_data,$update);
+  }
+
+  return;
+}
+
+/**
+ * Get status information about a given call
+ */
+function voip_tracker_get_call_status($call_id){
+  $query = "SELECT c.call_status FROM {voip_tracker_call_list} c WHERE c.call_id = %d ORDER BY c.dispatch_time DESC";
+  $db_entry = db_fetch_array(db_query($query, $call_id));
+  $call_status = $db_entry['call_status'];
+
+  return $call_status;
+}
