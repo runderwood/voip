@@ -1,0 +1,11 @@
+<?php 
+/**
+ * @file 
+ *  cbinstall.module
+ * 
+ *  nothing goes here. this module exists for the .install file
+ */
+ 
+function cbinstall_nothing() {
+  // nothing to do
+}

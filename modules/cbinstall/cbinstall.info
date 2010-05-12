@@ -1,8 +1,0 @@
-; $Id$
-name = Call Blast Installer 
-description = Install required table for Call Blast module. Temporary solution until call blasts are exportable.
-package = Voip Drupal
-core = 6.x
-dependencies[] = voip
-dependencies[] = callblast 
-

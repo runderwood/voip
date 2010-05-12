@@ -10,21 +10,21 @@
 /**
  * Implementation of hook_install().
  */
-function cbinstall_install() {
-  drupal_install_schema('cbinstall');
+function callblast_install() {
+  drupal_install_schema('callblast');
 }
 
 /**
  * Implementation of hook_uninstall().
  */
-function cbinstall_uninstall() {
-  drupal_uninstall_schema('cbinstall');
+function callblast_uninstall() {
+  drupal_uninstall_schema('callblast');
 }
 
 /**
  * Implementation of hook_schema().
  */
-function cbinstall_schema() {
+function callblast_schema() {
   /**
    * callblast_call table
    * 
@@ -38,13 +38,13 @@ function cbinstall_schema() {
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'default' => 0,
+        'default' => 1,
       ),
       'voipcall_nid' => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'default' => 0,
+        'default' => 1,
     ), 
     'primary key' => array('callblast_nid', 'voipcall_nid'),
     ),

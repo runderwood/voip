@@ -1,8 +1,5 @@
 <?php
 
-// Provided by Features module.
-include_once('callblast.features.inc');
-
 // Custom code and logic.
 include_once('callblast.inc');
 
