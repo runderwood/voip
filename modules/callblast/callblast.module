@@ -61,7 +61,7 @@ function callblast_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
     // batch
     $batch = array(
        'operations' => array(
-         array('callblast_save_voipcall_nodes', array($size, $list, $details),),
+         array('callblast_save_voipcall_nodes', array($size, $list, $details, $node),),
          ),
        'finished' => 'callblast_save_voipcall_nodes_finished',
        'title' => t('Scheduling calls'),
@@ -75,6 +75,7 @@ function callblast_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
     batch_process($url);
 
     // Set message, success
+     
   }
   // CONTINUE HERE - ADD HANDLING FOR AN UPDATED CALLBLAST NODE
 }
@@ -272,9 +273,10 @@ function callblast_widget(&$form, &$form_state, $field, $items, $delta = 0) {
  *  $list, full call list with phone numbers and any other 
  *  details supplied by the module that created it.
  * 
- *  $node, callblast node, including default values to send to voipcall_save().
+ * @param
+ *  $node, callblast node.
  */
-function callblast_save_voipcall_nodes($size, $list, $details) {
+function callblast_save_voipcall_nodes($size, $list, $details, $node) {
   // Initialize sandbox the first time through.
   if (!isset($context['sandbox']['progress'])) {
     $context['sandbox']['progress'] = 1;
@@ -292,10 +294,11 @@ function callblast_save_voipcall_nodes($size, $list, $details) {
     if ($list[$i]['destination']) {
       $details['destination'] = $list[$i]['destination']['value'];
       // save voipcall node
-      //$voipcall_node = voipcall_save($details);
       voipcall_save($details);
+      $voipcall_nid = db_last_insert_id('node', 'nid');
+      $callblast_nid = $node->nid;
 // CONTINUE HERE
-      // callblast_calls($voipcall_node->nid); // TODO add nid to callblast_calls table
+//      drupal_write_record(:);
     } else {
       // no destination number
       // drupal_set_message(t(''), 'warning');

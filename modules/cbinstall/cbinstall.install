@@ -1,27 +1,30 @@
 <?php 
 /**
  * @file
- *  Install Call Blast module.
+ *  Install tables used by  module.
+ * 
+ * TODO This is a quick fix, until we 
+ * make callblasts exportable.
  */
 
 /**
  * Implementation of hook_install().
  */
-function callblast_install() {
-  drupal_install_schema('callblast');
+function cbinstall_install() {
+  drupal_install_schema('cbinstall');
 }
 
 /**
  * Implementation of hook_uninstall().
  */
-function callblast_uninstall() {
-  drupal_uninstall_schema('callblast');
+function cbinstall_uninstall() {
+  drupal_uninstall_schema('cbinstall');
 }
 
 /**
  * Implementation of hook_schema().
  */
-function callblast_schema() {
+function cbinstall_schema() {
   /**
    * callblast_call table
    * 
