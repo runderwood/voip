@@ -1,8 +1,0 @@
-; $Id$
-name = Call Blast 
-description = Call Blast module.  
-package = Voip Drupal
-core = 6.x
-dependencies[] = voip
-dependencies[] = callblast
-
