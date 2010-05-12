@@ -1,0 +1,3 @@
+<?php
+
+include_once('vf_call_blast.features.inc');
