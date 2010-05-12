@@ -23,28 +23,33 @@ function call_blast_uninstall() {
  */
 function call_blast_schema() {
   /**
-   * callblast_voipcall table
+   * call_blast_call table
    * 
    * This table keeps track of which voipcall nodes
    * belong to which callblast nodes. That is, 
    * which calls are part of which callblast. 
    */
-  $schema['callblast_voipcall'] = array(
+  $schema['call_blast_call'] = array(
     'fields' => array(
+      'id' => array(
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
       'callblast_nid' => array(
         'type' => 'int',
         'unsigned' => TRUE,
-        'not null' => TRUE,
         'default' => 0,
       ),
       'voipcall_nid' => array(
         'type' => 'int',
         'unsigned' => TRUE,
-        'not null' => TRUE,
         'default' => 0,
+      ),
     ), 
-    'primary key' => array('callblast_nid', 'voipcall_nid'),
-    ),
+//    'primary key' => array('callblast_nid', 'voipcall_nid'),
+     'primary key' => array('id'),
+//    'unique keys' => array('callblast_call' => array('callblast_nid', 'voipcall_nid')),
   );
 
   return $schema;
