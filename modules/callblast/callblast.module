@@ -90,8 +90,12 @@ function callblast_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
       $list_name = check_plain($node->field_callblast_calllist[0]['value']);
       $list = module_invoke_all('callblast_get_list', $list_name);
 dsm($list);      
-// get $callblast_list
-            
+      // get $callblast_list
+      // then compare lists and update callblast_call table where appropriate            
+// CONTINUE HERE
+// This might require batch processing. Need to do node loads to get phone numbers.
+// Maybe use litenode here?  
+
  
     break;
     }
