@@ -31,25 +31,20 @@ function callblast_schema() {
    */
   $schema['callblast_call'] = array(
     'fields' => array(
-      'id' => array(
-        'type' => 'serial',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-      ),
       'callblast_nid' => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'default' => 0,
+        'not null' => TRUE,
       ),
       'voipcall_nid' => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'default' => 0,
+        'not null' => TRUE,
       ),
     ), 
-//    'primary key' => array('callblast_nid', 'voipcall_nid'),
-     'primary key' => array('id'),
-//    'unique keys' => array('callblast_call' => array('callblast_nid', 'voipcall_nid')),
+    'primary key' => array('callblast_nid', 'voipcall_nid'),
   );
 
   return $schema;
