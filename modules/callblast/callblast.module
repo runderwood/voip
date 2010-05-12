@@ -43,39 +43,59 @@ function callblast_menu() {
  */
 function callblast_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
   // create call nodes from call blast's call list
-  if ($node->type == 'callblast' && $op == 'insert') {
+  if ($node->type == 'callblast') { 
+    switch($op) {
+      case 'insert': 
+      // Get selected call list
+      $list_name = check_plain($node->field_callblast_calllist[0]['value']);
+      $list = module_invoke_all('callblast_get_list', $list_name);
 
-    // Get selected call list
-    $list_name = check_plain($node->field_callblast_calllist[0]['value']);
-    $list = module_invoke_all('callblast_get_list', $list_name);
-
-    // Set up batch 
-    $size = 5; // save up 5 nodes at a time
-    // generic call details from callblast node
-    $details['script'] = $node->field_callblast_script[0]['nid'];
-    $details['caller number'] = $node->field_callblast_caller_number[0]['value'];
-    $details['caller name'] = $node->field_callblast_caller_name[0]['value'];
-    $details['parent node'] = $node->nid;
-    $details['scheduled start'] = $node->field_callblast_scheduled_start[0]['value'];
-    // batch
-    $batch = array(
-       'operations' => array(
-         array('callblast_save_voipcall_nodes', array($size, $list, $details),),
-         ),
-       'finished' => 'callblast_save_voipcall_nodes_finished',
-       'title' => t('Scheduling calls'),
-       'init_message' => t('Creating records for each phone number on call list'),
-       'progress_message' => t('Scheduled @current of @total calls.'),
-       'error_message' => t('Processing error'),
-    );
-    $url = "node/$node->nid";
-    // Save voipcall nodes
-    batch_set($batch);
-    batch_process($url);
-
-    // Set message, success
+      // Set up batch 
+      $size = 5; // save up 5 nodes at a time
+      // generic call details from callblast node
+      $details['script'] = $node->field_callblast_script[0]['nid'];
+      $details['caller number'] = $node->field_callblast_caller_number[0]['value'];
+      $details['caller name'] = $node->field_callblast_caller_name[0]['value'];
+      $details['parent node'] = $node->nid;
+      $details['scheduled start'] = $node->field_callblast_scheduled_start[0]['value'];
+      // batch
+      $batch = array(
+         'operations' => array(
+           array('callblast_save_voipcall_nodes', array($size, $list, $details, $node),),
+           ),
+         'finished' => 'callblast_save_voipcall_nodes_finished',
+         'title' => t('Scheduling calls'),
+         'init_message' => t('Creating records for each phone number on call list'),
+         'progress_message' => t('Scheduled @current of @total calls.'),
+         'error_message' => t('Processing error'),
+      );
+      $url = "node/$node->nid";
+      // Save voipcall nodes
+      batch_set($batch);
+      batch_process($url);
+    break;
+    
+    case 'update': 
+      /**
+       * Check for changes to the call list by 
+       * comparing $list and $callblast_call_list.
+       *
+       *  $list will have the most up-to-date version of 
+       * the users call list. 
+       *
+       * $callblast_call_list will have the saved call list
+       * as of the last update/save. $list should override $callblast_list.
+       */
+      // get $list       
+      $list_name = check_plain($node->field_callblast_calllist[0]['value']);
+      $list = module_invoke_all('callblast_get_list', $list_name);
+dsm($list);      
+// get $callblast_list
+            
+ 
+    break;
+    }
   }
-  // CONTINUE HERE - ADD HANDLING FOR AN UPDATED CALLBLAST NODE
 }
 
 // HOOK_NODEAPI -> CREATE CALL NODES ON SAVE
@@ -92,6 +112,7 @@ function callblast_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
  * 
  * TODO Add test call before running call blast.
  * TODO Enable user to schedule date/time for test call and blast.
+ * TODO Call node_save to update list before running blast. If people have been deleted from a dynamic list, don't call them.
  * 
  * Implementation of hook_cron().
  */
@@ -181,7 +202,7 @@ function callblast_cron() {
  * 
  *  $node, callblast node, including default values to send to voipcall_save().
  */
-function callblast_save_voipcall_nodes($size, $list, $details) {
+function callblast_save_voipcall_nodes($size, $list, $details, $node) {
   // Initialize sandbox the first time through.
   if (!isset($context['sandbox']['progress'])) {
     $context['sandbox']['progress'] = 1;
@@ -197,17 +218,19 @@ function callblast_save_voipcall_nodes($size, $list, $details) {
   // save up voipcall nodes from $list
   while ($i < $max && $j < $size) {
     if ($list[$i]['destination']) {
-      $details['destination'] = $list[$i]['destination']['value'];
+      $details['destination'] = $list[$i]['destination'];
       // save voipcall node
-      //$voipcall_node = voipcall_save($details);
       voipcall_save($details);
-// CONTINUE HERE
-      // callblast_calls($voipcall_node->nid); // TODO add nid to callblast_calls table
+      // store callblast_nid / voipcall_nid pairs in  callblast_call table
+      $callblast_call->voipcall_nid = db_last_insert_id('node', 'nid');
+      $callblast_call->callblast_nid = $node->nid;
+      drupal_write_record('callblast_call', $callblast_call);
     } else {
       // no destination number
-      // drupal_set_message(t(''), 'warning');
-      // TODO Add some error handling here for when there's no destination number.
-      // TODO $context['results'] doesn't seem to be passing $results to 'finished' function. Telling user how many numbers failed without also saying how many passed seems unhelpful.
+      // TODO Add validation/error handling here. 
+      //   Right now we're just checking for something or nothing. 
+      //   But, for example, a 6 digit phone number should trigger an error too.
+      drupal_set_message(t('Invalid destination number on call list.'), 'warning');
     }
     $i++;
   }
@@ -221,6 +244,7 @@ function callblast_save_voipcall_nodes($size, $list, $details) {
   if ($context['sandbox']['progress'] == $context['sandbox']['max']) {
     // Done!
     $context['finished'] = 1;
+    $context['results'] = $context['sandbox']['max'];
     // incase 'finished' function wants to use these
   } else {
     $context['finished'] = $context['sandbox']['progress'] / $context['sandbox']['max'];
@@ -232,8 +256,7 @@ function callblast_save_voipcall_nodes($size, $list, $details) {
  */
 function callblast_save_voipcall_nodes_finished($success, $results, $operations) {
   if ($success) {
-    $num = count($results);
-    $txt = t('Call blast set up complete. %num calls scheduled.', array('%num' => $num) );
+    $txt = t('Call blast set up complete.');
     drupal_set_message($txt);
   } else {
     // a fatal error occurred during batch processing

@@ -100,7 +100,7 @@ function calllist_callblast_get_list($list_name) {
   $node = node_load($nid);
   $list = array();
   foreach ($node->field_calllist_phone_numbers as $num) {
-    $list[]['destination'] = $num;
+    $list[]['destination'] = $num['value'];
   } 
 
   return $list;
