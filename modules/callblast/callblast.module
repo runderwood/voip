@@ -70,6 +70,8 @@ function callblast_cron() {
     $list = callblast_list($node);
     // Save call list. (Each number on list must
     // be stored as a voipcall node.)
+// CONTINUE HERE
+// CAN'T USE BATCH API TO SAVE THESE NODES
     callblast_save_list($list, $node);
 
     // get list of voipcall nids 
