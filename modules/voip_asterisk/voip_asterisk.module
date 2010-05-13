@@ -131,35 +131,10 @@ function voip_asterisk_send_request($server_config, $request_id, $options) {
       voip_error("(asterisk server) Invalid request id received: " . $request_id);
       break;
 
-    case 'voip_dial_out': // dial the given number and then execute the script provided
-      $invalid_args = FALSE;
-      if(!$options['number']) {
-        $invalid_args = TRUE;
-        $arg_name = 'number';
-      }
-      if(!$options['script_name']) {
-        $invalid_args = TRUE;
-        $arg_name = 'script_name';
-      }
-      if($invalid_args){
-        $response = FALSE;
-        $error_message = "Invalid options: missing %arg.";
-        $variables = array('%arg' => $arg_name);
-        watchdog('voip_asterisk', $error_message, $variables, WATCHDOG_ERROR);
-// TODO: replace this by the appropriate error message
-        voip_error("(asterisk server) Invalid dial-out request received: " . $request_id);
-        break;
-      }
-      // number to be called
-      $number = $options['number'];
-      // script to be activated for the call
-      $script_name = $options['script_name'];
-      // global variables to be passed to Asterisk
-      if($options['variables']) { $dial_options['variables'] = $options['variables']; };
-      // unique id to be associated with this call
-      if($options['unique_id']) { $dial_options['unique_id'] = $options['unique_id']; };
-
-      $response = _voip_asterisk_dial_out($server_config, $number, $script_name, $dial_options);
+    case 'voip_dial_out': // dial the given call node
+      // call node
+      $call_node = $options['call_node'];
+      $response = _voip_asterisk_dial_out($server_config, $call_node);
       break;
   }
 
@@ -170,22 +145,16 @@ function voip_asterisk_send_request($server_config, $request_id, $options) {
 /**
  * Implementation of hook_voip_process_request().
  *
- * NOTE: This function has been added here for test purposes only!!!
+ * TODO: This function has been added here for test purposes only!!!
  */
 function voip_asterisk_voip_process_request($request_id, $options) {
   $response = NULL;
 
   switch($request_id) {
     case 'voip_dial_out':
-      $server_config = array(
-        'ami_host' => 'localhost',
-        'ami_port' => '5038',
-        'ami_user' => 'voip_drupal_ami',
-        'ami_password' => 'vd123',
-        'system_cid_name' => 'Voip Drupal Test',
-        'system_cid_number' => '9999999999',
-      );
-      $response['result'] = voip_asterisk_send_request($server_config, $request_id, $options);
+      $server = voip_servers('server', 'asterisk');
+      $config = $server['configuration'];
+      $response['result'] = voip_asterisk_send_request($config, $request_id, $options);
       break;
   }
 

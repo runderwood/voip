@@ -6,11 +6,6 @@
  * Implementation of a simple log server for Voip Drupal
  */
 
-// TODO: connect via SSL
-// TODO: define max number of simultaneous connections
-
-
-
 foreach (array('phpagi-asmanager.php') as $file) {
   require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . $file); 
 }
@@ -91,9 +86,10 @@ function _voip_asterisk_ping($server_config) {
  *
  *   @param array $options is an array containing, among other things, 'variables' to be set in the new channels
  * 
- *   @return int A unique id associated with the call. Check voip_error() for processing errors.
+ *   @return XXXXXX the call. Check voip_error() for processing errors.
  */
-function _voip_asterisk_dial_out($server_config, $number, $script_name, $options) {
+//TODO:function _voip_asterisk_dial_out($server_config, $number, $script_name, $options) {
+function _voip_asterisk_dial_out($server_config, $call_node) {
 
   $ami_port = $server_config['ami_port'];
   $ami_host = $server_config['ami_host'];
@@ -101,13 +97,29 @@ function _voip_asterisk_dial_out($server_config, $number, $script_name, $options
   $ami_user = $server_config['ami_user'];
   $ami_pass = $server_config['ami_password'];
 
-  // define the caller id to be used
-  $cid_name = $server_config['system_cid_name']?$server_config['system_cid_name']:'';
-  $cid_number = $server_config['system_cid_number']?$server_config['system_cid_number']:'';
-  $cid = $cid_name . '<' . $cid_number . '>';
+  // determine the number to be dialed
+  $dest_number = $call_node->field_voipcall_dest_number[0]['value'];
 
-  // define a unique id to be associated with this call
-  $call_id = uniqid();
+  // determine the caller id to be used
+  if(!is_null($call_node->field_voipcall_caller_name[0]['value'])){
+    $caller_name = $call_node->field_voipcall_caller_name[0]['value'];
+  }
+  else {
+    $caller_name = $server_config['system_cid_name']?$server_config['system_cid_name']:'';
+  }
+  if(!is_null($call_node->field_voipcall_caller_number[0]['value'])){
+    $caller_number = $call_node->field_voipcall_caller_number[0]['value'];
+  }
+  else {
+    $caller_number = $server_config['system_cid_number']?$server_config['system_cid_number']:'';
+  }
+  $cid = $caller_name . '<' . $caller_number . '>';
+
+  // determine the unique id of the call
+  $call_id = $call_node->field_voipcall_call_id[0]['value'];
+
+  // determine the script name to be used
+  $script_name = $call_node->field_voipcall_script_name[0]['value'];
 
   voip_error_reset();
 
@@ -118,16 +130,14 @@ function _voip_asterisk_dial_out($server_config, $number, $script_name, $options
     return FALSE;
   }
 
-  // keep track of the dial attempt
-  $call_status = 'dialing';
-  $module = $options['module']?$options['module']:''; // Name of the module originating the call
-  $uid = $options['uid']?$options['uid']:0; // Id of the user placing the call
-  voip_tracker_set_call_info('voip_asterisk', $call_id, $call_status, $cid_number, $number, $uid, $script_name, $variables);
+  // update the status of the call
+  $call_node->call_status = 'dialing';
+  voipcall_save($call_node);
 
   // The following channel string should match the one in voip_drupal.conf
 //  $channel_string = 'Local/%number@vd-dial_out/n'; // This is the goal.  But it's not working...
-  $channel_string = 'Local/%number@vd-dial_out'; // This seems to be working... (note the lack of /n at the end
-  $channel = str_replace("%number", $number, $channel_string); // Channel from which to originate the call
+  $channel_string = 'Local/%number@vd-dial_out'; // This seems to be working... (note the lack of /n at the end)
+  $channel = str_replace("%number", $dest_number, $channel_string); // Channel from which to originate the call
 
   $exten = 's'; // Extension to use on connect (must use Context & Priority with it) 
   $context = 'vd-bridge'; // Context to use on connect (must use Exten & Priority with it) 
@@ -184,6 +194,8 @@ function _voip_asterisk_dial_out($server_config, $number, $script_name, $options
 
 
   if($result['Response'] != 'Success'){
+    $call_node->field_voipcall_status[0]['value'] = 'processing error';
+    voipcall_save($call_node);
     voip_error("AMI command Originate failed: " . print_r($result, TRUE));
     return FALSE;
   }
@@ -334,6 +346,7 @@ function _voip_asterisk_event_handler($ecode, $data, $server, $port) {
           $call_status = 'busy';
           break;
       }
+// XXXX TODO: call voipcall_node_from_id($call_id) and then voipcall_save(array(nid, call_status)
       // keep track of the dial attempt
       $caller_number = $data['CallerIDNum'];
       voip_tracker_set_call_info('voip_asterisk',$call_id,$call_status,$caller_number);

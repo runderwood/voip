@@ -41,7 +41,8 @@ function voip_send_request($request, $options = array()) {
     // TODO: remove the following code block after xmlrpc testing is over
     if($options['xmlrpc_test']) {
       $error_message = ' The server said: '. voip_error_message();
-      $response = xmlrpc_error(-32500, $error_message);
+      // report processing errors with http code 500 ('internal server error')
+      $response = services_error($error_message, 500);
     }
 
   }
