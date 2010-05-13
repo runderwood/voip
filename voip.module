@@ -15,23 +15,23 @@ foreach (array('voip_error.inc', 'voip_log_server.inc') as $file) {
 /**
  * Sends a request to the active voip server
  *
- * @param $request
- *   The request to be executed
+ * @param $request_id
+ *   The id of the request to be executed
  *
  * @param $options
  *   An array of additional options as defined by each request
  */
-function voip_send_request($request, $options = array()) {
+function voip_send_request($request_id, $options = array()) {
   $response[status] = TRUE;
   $voip_server = voip_default_server();
 
   if (function_exists($voip_server['send'])) {
-    $response = $voip_server['send']($request, $options);
+    $response = $voip_server['send']($request_id, $options);
   }
 
   if (voip_error()) {
-    $error_message = 'Failure executing request %request with options %options.';
-    $variables['%request'] = $request;
+    $error_message = 'Failure executing request %request_id with options %options.';
+    $variables['%request_id'] = $request_id;
     $variables['%options'] = print_r($options, TRUE);
     if (voip_error_message()) {
       $error_message .= ' The server said: '. voip_error_message();
