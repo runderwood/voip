@@ -121,6 +121,10 @@ function voip_asterisk_send($request_id, $options) {
  */
 function voip_asterisk_send_request($server_config, $request_id, $options) {
 
+  if(is_object($options)){
+    $options = (array)$options;
+  }
+
   switch($request_id) {
     default:
       // Invalid request id

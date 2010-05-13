@@ -22,6 +22,10 @@ foreach (array('voip_error.inc', 'voip_log_server.inc') as $file) {
  *   An array of additional options as defined by each request
  */
 function voip_send_request($request_id, $options = array()) {
+  if(is_object($options)){
+    $options = (array)$options;
+  }
+
   $response[status] = TRUE;
   $voip_server = voip_default_server();
 

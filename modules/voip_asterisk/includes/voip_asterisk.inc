@@ -91,6 +91,8 @@ function _voip_asterisk_ping($server_config) {
 //TODO:function _voip_asterisk_dial_out($server_config, $number, $script_name, $options) {
 function _voip_asterisk_dial_out($server_config, $call_node) {
 
+//TODO: set start and end times
+
   $ami_port = $server_config['ami_port'];
   $ami_host = $server_config['ami_host'];
   $ami_host = ($ami_port)? ($ami_host.':'.$ami_port) : $ami_host;
