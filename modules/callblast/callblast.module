@@ -46,33 +46,11 @@ function callblast_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
   if ($node->type == 'callblast') { 
     switch($op) {
       case 'insert': 
-      // Get selected call list
-      $list_name = check_plain($node->field_callblast_calllist[0]['value']);
-      $list = module_invoke_all('callblast_get_list', $list_name);
-
-      // Set up batch 
-      $size = 5; // save up 5 nodes at a time
-      // generic call details from callblast node
-      $details['script'] = $node->field_callblast_script[0]['nid'];
-      $details['caller number'] = $node->field_callblast_caller_number[0]['value'];
-      $details['caller name'] = $node->field_callblast_caller_name[0]['value'];
-      $details['parent node'] = $node->nid;
-      $details['scheduled start'] = $node->field_callblast_scheduled_start[0]['value'];
-      // batch
-      $batch = array(
-         'operations' => array(
-           array('callblast_save_voipcall_nodes', array($size, $list, $details, $node),),
-           ),
-         'finished' => 'callblast_save_voipcall_nodes_finished',
-         'title' => t('Scheduling calls'),
-         'init_message' => t('Creating records for each phone number on call list'),
-         'progress_message' => t('Scheduled @current of @total calls.'),
-         'error_message' => t('Processing error'),
-      );
-      $url = "node/$node->nid";
-      // Save voipcall nodes
-      batch_set($batch);
-      batch_process($url);
+      // Get selected call list.
+      $list = callblast_list($node);
+      // Save call list. (Each number on list must
+      // be stored as a voipcall node.)
+      callblast_save_list($list, $node);
     break;
     
     case 'update': 
@@ -87,17 +65,56 @@ function callblast_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
        * as of the last update/save. $list should override $callblast_list.
        */
       // get $list       
-      $list_name = check_plain($node->field_callblast_calllist[0]['value']);
-      $list = module_invoke_all('callblast_get_list', $list_name);
+      $list = callblast_list($node);
+dsm('$list:');
 dsm($list);      
-      // get $callblast_list
-      // then compare lists and update callblast_call table where appropriate            
-// TODO 
-// CONTINUE HERE
-// This might require batch processing. Need to do node loads to get phone numbers.
-// Maybe use litenode here?  
-
  
+     // get $callblast_list
+      $result =  db_query("SELECT field_voipcall_dest_number_value AS destination "
+             ."FROM {content_type_voipcall} vc "
+             ."JOIN {callblast_call} cb ON voipcall_nid = vc.nid "
+             ."WHERE cb.callblast_nid = %d ", $node->nid);
+      $callblast_list = array();
+      while ($row = db_fetch_array($result)) {
+        $callblast_list[] = array('destination' => $row['destination']);
+      }
+dsm('$callblast_list:'); 
+dsm($callblast_list); 
+ 
+      // create $list2 by getting numbers on $list that aren't in $callblast_list
+      $list2 = array();
+      foreach ($list as $num) {
+        if (!in_array($num, $callblast_list)) {
+          $list2[] = $num;
+        }
+      }
+dsm('$list2:');
+dsm($list2);
+
+      // add $list2 to $callblast_list
+      callblast_save_list($list2, $node);
+ 
+      // get $list again (including any new additions)
+      $list = callblast_list($node);
+      // now check for numbers on $callblast_list that are NOT on $list 
+      // (these numbers have been removed from the list since it was originally
+      // created.) delete these.
+      foreach ($callblast_list as $num) {
+        if (!in_array($num, $list)) {
+          $nid = db_result("SELECT nid "
+                            ."FROM {content_type_voipcall} vc "
+                            ."JOIN {callblast_call} cb ON vc.nid = cv.voipcall_nid " 
+                            ."WHERE field_voipcall_dest_number_value = '%s'"
+                            ."AND cb.callblast_nid = %d ", $num['destination'], $node->nid);
+          // todo add batch processing here in case of mass deletion.
+          node_delete($nid); 
+        }
+// CONTINUE HERE. TEST TO SEE IF DELETE WORKED.
+$list = callblast_list($node);
+dsm('updated $list:');
+dsm($list);
+      }
+// TODO note: $list could have more than just $list['destination']. Handle this possibilty.
     break;
     }
   }
@@ -339,4 +356,60 @@ function callblast_widget(&$form, &$form_state, $field, $items, $delta = 0) {
   return $element;
 }
 
+/**
+ * Invoke hook_callblast_get_list to get 
+ * the numbers on the list from the module 
+ * (or, modules if there are more than one)
+ * that provided it.
+ * 
+ * @param
+ *  $node object
+ * 
+ * @return
+ *  string, callblast list selected on callblast node.
+ */
+function callblast_list($node) {
+  $list_name = check_plain($node->field_callblast_calllist[0]['value']);
+  $list = module_invoke_all('callblast_get_list', $list_name);
+
+  return $list;
+}
+
+/**
+ * Save a callblast list. This function uses
+ * Batch API to process a list of calls and selected
+ * callblast options to generated voipcall nodes for
+ * each number on the list.
+ * 
+ * @param
+ *  $list, an array of numbers to be called. 
+ * 
+ * @param
+ *  $node, object, a callblast node.
+ */
+function callblast_save_list($list, $node) {
+  // Set up batch 
+  $size = 5; // save up 5 nodes at a time
+  // generic call details from callblast node
+  $details['script'] = $node->field_callblast_script[0]['nid'];
+  $details['caller number'] = $node->field_callblast_caller_number[0]['value'];
+  $details['caller name'] = $node->field_callblast_caller_name[0]['value'];
+  $details['parent node'] = $node->nid;
+  $details['scheduled start'] = $node->field_callblast_scheduled_start[0]['value'];
+  // batch
+  $batch = array(
+     'operations' => array(
+       array('callblast_save_voipcall_nodes', array($size, $list, $details, $node),),
+       ),
+     'finished' => 'callblast_save_voipcall_nodes_finished',
+     'title' => t('Scheduling calls'),
+     'init_message' => t('Creating records for each phone number on call list'),
+     'progress_message' => t('Scheduled @current of @total calls.'),
+     'error_message' => t('Processing error'),
+  );
+  $url = "node/$node->nid";
+  // Save voipcall nodes
+  batch_set($batch);
+  batch_process($url);
+}
 
