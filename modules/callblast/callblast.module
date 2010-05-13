@@ -145,7 +145,7 @@ function callblast_cron() {
   $sql = "SELECT n.nid, n.vid " 
         ."FROM {node} n " 
         ."JOIN {content_type_callblast} cb ON n.nid = cb.nid "
-        ."WHERE field_blast_sent_value = 0";
+        ."WHERE field_callblast_sent_value = 0";
         // TODO add AND where TIME_SCHEDULED < CURRENT_TIME
   $result = db_query($sql);
 
