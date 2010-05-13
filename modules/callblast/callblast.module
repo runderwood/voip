@@ -39,97 +39,6 @@ function callblast_menu() {
 }
 
 /**
- * Implementation of hook_nodeapi().
- */
-function callblast_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
-  // create call nodes from call blast's call list
-  if ($node->type == 'callblast') { 
-    switch($op) {
-      case 'insert': 
-      // Get selected call list.
-      $list = callblast_list($node);
-      // Save call list. (Each number on list must
-      // be stored as a voipcall node.)
-      callblast_save_list($list, $node);
-    break;
-    
-    case 'update': 
-      /**
-       * Check for changes to the call list by 
-       * comparing $list and $callblast_call_list.
-       *
-       *  $list will have the most up-to-date version of 
-       * the users call list. 
-       *
-       * $callblast_call_list will have the saved call list
-       * as of the last update/save. $list should override $callblast_list.
-       */
-      // get $list       
-      $list = callblast_list($node);
-dsm('$list:');
-dsm($list);      
- 
-     // get $callblast_list
-      $result =  db_query("SELECT field_voipcall_dest_number_value AS destination "
-             ."FROM {content_type_voipcall} vc "
-             ."JOIN {callblast_call} cb ON voipcall_nid = vc.nid "
-             ."WHERE cb.callblast_nid = %d ", $node->nid);
-      $callblast_list = array();
-      while ($row = db_fetch_array($result)) {
-        $callblast_list[] = array('destination' => $row['destination']);
-      }
-dsm('$callblast_list:'); 
-dsm($callblast_list); 
- 
-      // create $list2 by getting numbers on $list that aren't in $callblast_list
-      $list2 = array();
-      foreach ($list as $num) {
-        if (!in_array($num, $callblast_list)) {
-          $list2[] = $num;
-        }
-      }
-dsm('$list2:');
-dsm($list2);
-
-      // add $list2 to $callblast_list
-      callblast_save_list($list2, $node);
- 
-      // get $list again (including any new additions)
-      $list = callblast_list($node);
-      // now check for numbers on $callblast_list that are NOT on $list 
-      // (these numbers have been removed from the list since it was originally
-      // created.) delete these.
-      foreach ($callblast_list as $num) {
-        if (!in_array($num, $list)) {
-          $nid = db_result("SELECT nid "
-                            ."FROM {content_type_voipcall} vc "
-                            ."JOIN {callblast_call} cb ON vc.nid = cv.voipcall_nid " 
-                            ."WHERE field_voipcall_dest_number_value = '%s'"
-                            ."AND cb.callblast_nid = %d ", $num['destination'], $node->nid);
-          // todo add batch processing here in case of mass deletion.
-          node_delete($nid); 
-        }
-// CONTINUE HERE. TEST TO SEE IF DELETE WORKED.
-$list = callblast_list($node);
-dsm('updated $list:');
-dsm($list);
-      }
-// TODO note: $list could have more than just $list['destination']. Handle this possibilty.
-    break;
-    }
-  }
-}
-
-// HOOK_NODEAPI -> CREATE CALL NODES ON SAVE
-// CALL RELATED CALL NODES ON CRON
-// USE CALL BLAST'S MESSAGE
-// README.txt, explain hooks implemented in calllist module
-// FORM ALTER TO PREVENT MANUAL CREATION OF CALLS (LIKE EXTENSIONS)?
-// PROVIDE ADMIN SETTINGS FORM TOE ENABLE MANUAL CREATION OF CALLS? 
-// BUILD CIVICRM MODULE
-
-
-/**
  * On cron, run call blasts.
  * 
  * TODO This is untested. TEST!
@@ -155,7 +64,16 @@ function callblast_cron() {
     $callblast_nid = $row->nid;
     $callblast_vid = $row->vid;
 
-    // get list of phone numbers for the current call blast list
+    // create voipcall nodes for everyone on the call list
+    $node = node_load($callblast_nid);
+    // Get selected call list.
+    $list = callblast_list($node);
+    // Save call list. (Each number on list must
+    // be stored as a voipcall node.)
+    callblast_save_list($list, $node);
+
+    // get list of voipcall nids 
+    // voip.module gets the phone numbers from the voipcall node
     $sql = 'SELECT voipcall_nid FROM {callblast_call} WHERE callblast_nid = %d'; 
     $result2 = db_query($sql, $callblast_nid);
 
