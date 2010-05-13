@@ -55,14 +55,23 @@ function _voip_asterisk_ami_log($message, $level=1)
  * Test the connection with the Asterisk server
  */
 function _voip_asterisk_ping($server_config) {
+dsm("ping() config is: " . print_r($server_config,true));
 
+/****
   $ami_port = $server_config['ami_port'];
   $ami_host = $server_config['ami_host'];
   $ami_host = ($ami_port)? $ami_host.':'.$ami_port : $ami_host;
   $ami_user = $server_config['ami_user'];
   $ami_pass = $server_config['ami_password'];
+****/
+  $ami_host = $server_config['voip_asterisk_host'];
+  $ami_port = $server_config['voip_asterisk_port'];
+  $ami_host = ($ami_port)? $ami_host.':'.$ami_port : $ami_host;
+  $ami_user = $server_config['voip_asterisk_user'];
+  $ami_pass = $server_config['voip_asterisk_password'];
 
   voip_error_reset();
+dsm("about to call: connect($ami_host, $ami_user, $ami_pass);");
 
   $result = _voip_asterisk_manager()->connect($ami_host, $ami_user, $ami_pass);
   if(voip_error()) {
@@ -88,16 +97,24 @@ function _voip_asterisk_ping($server_config) {
  * 
  *   @return XXXXXX the call. Check voip_error() for processing errors.
  */
-//TODO:function _voip_asterisk_dial_out($server_config, $number, $script_name, $options) {
 function _voip_asterisk_dial_out($server_config, $call_node) {
+dsm("dial_out config is: " . print_r($server_config,true));
+
 
 //TODO: set start and end times
 
+/****
   $ami_port = $server_config['ami_port'];
   $ami_host = $server_config['ami_host'];
   $ami_host = ($ami_port)? ($ami_host.':'.$ami_port) : $ami_host;
   $ami_user = $server_config['ami_user'];
   $ami_pass = $server_config['ami_password'];
+*****/
+  $ami_host = $server_config['voip_asterisk_host'];
+  $ami_port = $server_config['voip_asterisk_port'];
+  $ami_host = ($ami_port)? $ami_host.':'.$ami_port : $ami_host;
+  $ami_user = $server_config['voip_asterisk_user'];
+  $ami_pass = $server_config['voip_asterisk_password'];
 
   // determine the number to be dialed
   $dest_number = $call_node->field_voipcall_dest_number[0]['value'];
@@ -107,13 +124,13 @@ function _voip_asterisk_dial_out($server_config, $call_node) {
     $caller_name = $call_node->field_voipcall_caller_name[0]['value'];
   }
   else {
-    $caller_name = $server_config['system_cid_name']?$server_config['system_cid_name']:'';
+    $caller_name = $server_config['voip_asterisk_cid_name']?$server_config['voip_asterisk_cid_name']:'';
   }
   if(!is_null($call_node->field_voipcall_caller_number[0]['value'])){
     $caller_number = $call_node->field_voipcall_caller_number[0]['value'];
   }
   else {
-    $caller_number = $server_config['system_cid_number']?$server_config['system_cid_number']:'';
+    $caller_number = $server_config['voip_asterisk_cid_number']?$server_config['voip_asterisk_cid_number']:'';
   }
   $cid = $caller_name . '<' . $caller_number . '>';
 
@@ -126,6 +143,7 @@ function _voip_asterisk_dial_out($server_config, $call_node) {
   voip_error_reset();
 
   $ami = _voip_asterisk_manager();
+dsm("about to call: connect($ami_host, $ami_user, $ami_pass);");
   $result = $ami->connect($ami_host, $ami_user, $ami_pass);
   if(voip_error()) {
     voip_error("Connection to Asterisk manager failed: " . voip_error_message());
@@ -134,7 +152,9 @@ function _voip_asterisk_dial_out($server_config, $call_node) {
 
   // update the status of the call
   $call_node->call_status = 'dialing';
-  voipcall_save($call_node);
+  $n = voipcall_save($call_node);
+dsm('node w/ dialing: ');
+dsm($n);
 
   // The following channel string should match the one in voip_drupal.conf
 //  $channel_string = 'Local/%number@vd-dial_out/n'; // This is the goal.  But it's not working...
@@ -190,9 +210,11 @@ function _voip_asterisk_dial_out($server_config, $call_node) {
   // simultaneous requests. 
   $action_id = $call_id;
 
+dsm("About to call: Originate( $channel, $exten, $context, $priority, $application, $application_data, $timeout, $caller_id, $var_string, $account, $async, $action_id);");
   $result = $ami->Originate(
      $channel, $exten, $context, $priority, $application, $application_data,
      $timeout, $caller_id, $var_string, $account, $async, $action_id);
+dsm('result: ' . print_r($result,true));
 
 
   if($result['Response'] != 'Success'){
@@ -205,6 +227,7 @@ function _voip_asterisk_dial_out($server_config, $call_node) {
   // wait for event confirming result of the originate execution
   $event_handler = '_voip_asterisk_event_handler';
   $event_code = 'OriginateResponse';
+dsm("About to call_voip_asterisk_process_events(ami, $event_handler, $event_code, $action_id)");
   $r =  _voip_asterisk_process_events($ami, $event_handler, $event_code, $action_id);
 
   $ami->disconnect();
@@ -322,7 +345,10 @@ function _voip_asterisk_process_events($ami, $event_handler, $event_code='*', $a
 function _voip_asterisk_event_handler($ecode, $data, $server, $port) {
   $rc = TRUE;
 
+dsm("entering:  _voip_asterisk_event_handler($ecode, $data, $server, $port)");
   $call_id = $data['ActionID'];
+dsm("call_id: $call_id");
+
   $ecode = strtolower($ecode);
   switch($ecode) {
     default:
@@ -348,10 +374,14 @@ function _voip_asterisk_event_handler($ecode, $data, $server, $port) {
           $call_status = 'busy';
           break;
       }
-// XXXX TODO: call voipcall_node_from_id($call_id) and then voipcall_save(array(nid, call_status)
-      // keep track of the dial attempt
-      $caller_number = $data['CallerIDNum'];
-      voip_tracker_set_call_info('voip_asterisk',$call_id,$call_status,$caller_number);
+      // update the status of the call
+dsm("future call_status: $call_status");
+      $nid = voipcall_get_nid_from_call_id($call_id);
+dsm("nid: $nid");
+      $details = array('nid' => $nid, 'call_status' => $call_status);
+      $n = voipcall_save($details);
+dsm("node saved with $call_status:");
+dsm($n);
       break;
   }
   return $rc;

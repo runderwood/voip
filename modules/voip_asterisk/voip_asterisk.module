@@ -91,6 +91,7 @@ function voip_asterisk_admin_form_validate($form, &$form_state) {
 
   // Send a test request to validate the configuration of the Asterisk connection
   $values = $form_state['values'];
+/****
   $server_config = array(
     'ami_host' => $values['voip_asterisk_host'],
     'ami_port' => $values['voip_asterisk_port'],
@@ -100,6 +101,9 @@ function voip_asterisk_admin_form_validate($form, &$form_state) {
     'system_cid_number' => $values['voip_asterisk_cid_number'],
   );
   $result = _voip_asterisk_ping($server_config);
+*****/
+dsm("about to call ping with config: " . print_r($values,true));
+  $result = _voip_asterisk_ping($values);
 
   if(voip_error()){
     form_set_error('', t('An Asterisk Manager error occurred: @error', array('@error' => voip_error_message())));
@@ -112,6 +116,7 @@ function voip_asterisk_admin_form_validate($form, &$form_state) {
 function voip_asterisk_send($request_id, $options) {
   $server = voip_servers('server', 'asterisk');
   $config = $server['configuration'];
+dsm("config is: " . print_r($config,true));
   $result =  voip_asterisk_send_request($config, $request_id, $options);
   return $result;
 }
@@ -120,10 +125,8 @@ function voip_asterisk_send($request_id, $options) {
  * Sends a request to the Asterisk Manager API (AMI) associated with the current Asterisk server
  */
 function voip_asterisk_send_request($server_config, $request_id, $options) {
+dsm("in send_request config is: " . print_r($server_config,true));
 
-  if(is_object($options)){
-    $options = (array)$options;
-  }
 
   switch($request_id) {
     default:
@@ -137,7 +140,7 @@ function voip_asterisk_send_request($server_config, $request_id, $options) {
 
     case 'voip_dial_out': // dial the given call node
       // call node
-      $call_node = $options['call_node'];
+      $call_node = (object)$options;
       $response = _voip_asterisk_dial_out($server_config, $call_node);
       break;
   }

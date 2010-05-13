@@ -17,7 +17,7 @@ include_once('voipcall.features.inc');
  *    'script_name', the name of the dialplan script to be run when call is answered
  *    'start_time', the start time of the call
  *    'end_time', the end time of the call
- *    'other' array of 'field' => 'value' for other optional node fields to be
+ *    'fields' array of 'field' => 'value' for other optional node fields to be
  *        set, e.g. uid, sticky, moderate, promoted, title, etc.
  *  );
  * 
@@ -64,8 +64,8 @@ function voipcall_save($details) {
   if(!is_null($details['end_time'])) $node->field_voipcall_end_time[0]['value'] = $details['end_time'];
 
   // set other optional node fields
-  if(!is_null($details['other'])){
-    foreach($details['other'] as $field => $value){
+  if(!is_null($details['fields'])){
+    foreach($details['fields'] as $field => $value){
       $node->$field = $value;
     }
   }
@@ -75,4 +75,18 @@ function voipcall_save($details) {
 
 dsm($node);
   return $node;
+}
+
+/**
+ * Return the voipcall nid associated with the given call_id.
+ * 
+ * @param string $call_id, the unique identifier of a call
+ *
+ * @return $nid or NULL depending on the result of the query
+ */
+function voipcall_get_nid_from_call_id($call_id){
+
+  // fetch the desired voipcall node
+  $nid = db_result(db_query("SELECT `nid` FROM `content_type_voipcall` WHERE `field_voipcall_call_id_value` = '%s'", $call_id));
+  return $nid;
 }
