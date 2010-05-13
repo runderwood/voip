@@ -1,10 +1,7 @@
 <?php 
 /**
  * @file
- *  Install tables used by  module.
- * 
- * TODO This is a quick fix, until we 
- * make callblasts exportable.
+ *  Install Call Blast module.
  */
 
 /**
@@ -37,17 +34,17 @@ function callblast_schema() {
       'callblast_nid' => array(
         'type' => 'int',
         'unsigned' => TRUE,
+        'default' => 0,
         'not null' => TRUE,
-        'default' => 1,
       ),
       'voipcall_nid' => array(
         'type' => 'int',
         'unsigned' => TRUE,
+        'default' => 0,
         'not null' => TRUE,
-        'default' => 1,
+      ),
     ), 
     'primary key' => array('callblast_nid', 'voipcall_nid'),
-    ),
   );
 
   return $schema;
