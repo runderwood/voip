@@ -92,6 +92,7 @@ function callblast_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
 dsm($list);      
       // get $callblast_list
       // then compare lists and update callblast_call table where appropriate            
+// TODO 
 // CONTINUE HERE
 // This might require batch processing. Need to do node loads to get phone numbers.
 // Maybe use litenode here?  
@@ -114,69 +115,43 @@ dsm($list);
 /**
  * On cron, run call blasts.
  * 
+ * TODO This is untested. TEST!
+ * 
  * TODO Add test call before running call blast.
  * TODO Enable user to schedule date/time for test call and blast.
  * TODO Call node_save to update list before running blast. If people have been deleted from a dynamic list, don't call them.
  * 
  * Implementation of hook_cron().
  */
-// TODO Update this to pull numbers from designated list.
 function callblast_cron() {
   // check for call blasts that have been scheduled but not sent
   $sql = "SELECT n.nid, n.vid " 
         ."FROM {node} n " 
         ."JOIN {content_type_callblast} cb ON n.nid = cb.nid "
         ."WHERE field_blast_sent_value = 0";
+        // TODO add AND where TIME_SCHEDULED < CURRENT_TIME
   $result = db_query($sql);
 
+  // @todo these should be added to a queue. Lots of big lists could get messy.
   // loop through unblasted blast lists and blast them
   while ($row = db_fetch_object($result)) {
-    $nid = $row->nid;
-    $vid = $row->vid;
+    $callblast_nid = $row->nid;
+    $callblast_vid = $row->vid;
 
     // get list of phone numbers for the current call blast list
-    $sql = "SELECT field_blast_phone_num_value "
-          ."FROM content_field_blast_phone_num "
-          ."WHERE nid = %d "
-          ."AND vid = %d " ;
-    $result2 = db_query($sql, $nid, $vid);
+    $sql = 'SELECT voipcall_nid FROM {callblast_call} WHERE callblast_nid = %d'; 
+    $result2 = db_query($sql, $callblast_nid);
 
-    // Add each number from the blast call list to $options, to be sent to voip.
-    // Clear out $options, in case there is an old list stored here.
-    $options = array();
+    // place phone calls to each number on the list, one-by-one
+    while ($voipcall_nid = db_result($result2)) { 
+      $voipcall_node = node_load($voipcall_nid);    
 
-    // server sending request
-    global $base_url;
-    // TODO: once we switch to services.module, the extension '/xmlrpc.php' will have to change
-    $variables['VD_XMLRPC_URL'] = 'http://localhost/d6/xmlrpc.php'; // TODO uncomment $base_url . '/xmlrpc.php';
-    // user sending request
-    global $user;
-    $variables['VD_USER_NAME'] = $user->name;
-    $options['variables'] = $variables;
-
-    while ($num = db_result($result2)) {
-      $options['number'] = $num;
-      
-      // Set unique call id
-      // TODO Use this for keeping track of call status?
-      $options['unique_id'] = uniqid();
-
-      // TODO User (creator of blast) needs a way to determine script called here.
-      $options['script_name'] = 'hello_world';
-
-      // $request_id, Type of call being requested, 'call list'.
+      // $request_id, Type of call being requested.
       $request_id = 'voip_dial_out';
 
       // place outgoing call
-      voip_send_request($request_id, $options);
+      voip_send_request($request_id, $voipcall_node);
     }
-    /**
-     * TODO Revisit whether this is still a good way to keep track of "sent".
-     * Now that individual calls are sent one-at-a-time, and looking ahead to
-     * keeping track of call status number-by-number, we need something 
-     * more granular here. Maybe each call becomes a node. And the call blast
-     * node gets marked "sent" after all calls go through.
-     */
     // Update node to indicate that blast has been sent.
     db_query("UPDATE {content_type_callblast} "
             ."SET field_blast_sent_value = 1 " 
