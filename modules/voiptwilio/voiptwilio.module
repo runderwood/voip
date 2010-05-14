@@ -123,31 +123,37 @@ function voiptwilio_enable() {
 }
 
 /*
-* Implementation of hook_service()
-*/
-function voiptwilio_service() {
-  $methods = array();
-
-  $methods[] = array(
-    '#method'   => 'voiptwilio.callHandler',
-    '#callback' => 'voiptwilio_call_handler',
-    //'#key'     => FALSE,
-    //'#auth'     => FALSE,
-    '#args'     => array(),
-    '#return'   => 'string',
-    '#help'     => t('Handles incoming calls from Twilio.')
-  );
-
-  return $methods;
+ * hook_perm()
+ */
+function voiptwilio_perm() {
+  return array('access voiptwilio content');
 }
 
+/*
+ * hook_menu()
+ */
+function voiptwilio_menu() {
+  $items = array();
+
+  $items['voip/twilio/callhandler'] = array(
+    'title' => 'Voip Twilio call handler',
+    'description' => 'Handles incoming calls from Twilio.',
+    'access arguments' => array('access voiptwilio content'), // TODO: define appropriate permissions
+    'page callback' => '_voiptwilio_call_handler',
+    'type' => MENU_CALLBACK,
+  );
+
+  return $items;
+}
+
+/*
+ * Internal functions
+ */
 
 /*
  * Process incoming calls from Twilio
- *
- * Note: This function only works via REST API
  */
-function voiptwilio_call_handler() {
+function _voiptwilio_call_handler() {
 
 dsm('voiptwilio_call_handler is alive and happy!');
 dsm($_REQUEST);
