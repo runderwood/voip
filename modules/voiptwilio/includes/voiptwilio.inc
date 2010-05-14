@@ -19,7 +19,40 @@ foreach (array('twilio.php') as $file) {
  * Test the connection with the Twilio server
  */
 function _voiptwilio_ping($server_config) {
-dsm('In twilio ping');
+
+  // Twilio configuration
+  $api_version = '2008-08-01';
+  $account_sid = $server_config['voiptwilio_account_sid'];
+  $auth_token = $server_config['voiptwilio_auth_token'];
+    
+  // Instantiate a new Twilio Rest Client
+  $client = new TwilioRestClient($account_sid, $auth_token);
+    
+  // Request a call log as a way to test the server connectivity
+  voip_error_reset();
+  $path = "/$api_version/Accounts/$account_sid/Calls";
+  $vars = array();
+  $response = $client->request($path, "GET", $vars);
+
+  if($response->IsError){
+    voip_error("Twilio command Ping failed: " . $response->ErrorMessage);
+    return FALSE;
+  }
+  return TRUE;
+}
+
+
+/**
+ * Establish a new call by dialing the given number and connecting it to the given script
+ *
+ *   @param array $options is an array containing, among other things, 'variables' to be set in the new channels
+ * 
+ *   @return XXXXXX the call. Check voip_error() for processing errors.
+ */
+function _voiptwilio_dial_out($server_config, $call_node) {
+
+/****
+dsm('In twilio dial_out');
 dsm($server_config);
 
   // Twilio configuration
@@ -50,18 +83,7 @@ dsm($response);
   }
 
 dsm("Started call: " . $response->ResponseXml->Call->Sid);
-  return TRUE;
-}
-
-
-/**
- * Establish a new call by dialing the given number and connecting it to the given script
- *
- *   @param array $options is an array containing, among other things, 'variables' to be set in the new channels
- * 
- *   @return XXXXXX the call. Check voip_error() for processing errors.
- */
-function _voiptwilio_dial_out($server_config, $call_node) {
+******/
 
 
 //TODO: set start and end times
@@ -189,5 +211,3 @@ dsm("About to call_voip_asterisk_process_events(ami, $event_handler, $event_code
   $ami->disconnect();
   return $call_id;
 }
-
-

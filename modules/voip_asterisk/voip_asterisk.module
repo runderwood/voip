@@ -102,7 +102,6 @@ function voip_asterisk_admin_form_validate($form, &$form_state) {
   );
   $result = _voip_asterisk_ping($server_config);
 *****/
-dsm("about to call ping with config: " . print_r($values,true));
   $result = _voip_asterisk_ping($values);
 
   if(voip_error()){
@@ -116,7 +115,6 @@ dsm("about to call ping with config: " . print_r($values,true));
 function voip_asterisk_send($request_id, $options) {
   $server = voip_servers('server', 'asterisk');
   $config = $server['configuration'];
-dsm("config is: " . print_r($config,true));
   $result =  voip_asterisk_send_request($config, $request_id, $options);
   return $result;
 }
@@ -125,8 +123,6 @@ dsm("config is: " . print_r($config,true));
  * Sends a request to the Asterisk Manager API (AMI) associated with the current Asterisk server
  */
 function voip_asterisk_send_request($server_config, $request_id, $options) {
-dsm("in send_request config is: " . print_r($server_config,true));
-
 
   switch($request_id) {
     default:

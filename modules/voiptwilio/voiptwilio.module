@@ -44,14 +44,6 @@ function voiptwilio_admin_form($configuration) {
     '#description' => t("The authorization token provided in your Twilio account dashboard."),
     '#default_value' => ($configuration['voiptwilio_auth_token']?$configuration['voiptwilio_auth_token']:''),
   );
-  $form['voiptwilio_cid_name'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Caller id name'),
-    '#description' => t('Caller id name to be used in Voip Drupal calls.'),
-    '#size' => 40,
-    '#maxlength' => 255,
-    '#default_value' => ($configuration['voiptwilio_cid_name']?$configuration['voiptwilio_cid_name']:'Voip Drupal'),
-  );
   $form['voiptwilio_cid_number'] = array(
     '#type' => 'textfield',
     '#title' => t('Caller id number'),
@@ -71,7 +63,6 @@ function voiptwilio_admin_form_validate($form, &$form_state) {
 
   // Send a test request to validate the configuration of the Twilio server
   $values = $form_state['values'];
-dsm("about to call ping with config: " . print_r($values,true));
   $result = _voiptwilio_ping($values);
 
   if(voip_error()){
@@ -80,7 +71,7 @@ dsm("about to call ping with config: " . print_r($values,true));
 }
 
 /**
- * Callback for sending requests to the Asterisk server
+ * Callback for sending requests to Twilio
  */
 function voiptwilio_send($request_id, $options) {
   $server = voip_servers('server', 'twilio');
@@ -91,7 +82,7 @@ dsm("config is: " . print_r($config,true));
 }
 
 /**
- * Sends a request to the Asterisk Manager API (AMI) associated with the current Asterisk server
+ * Sends a request to Twilio
  */
 function voiptwilio_send_request($server_config, $request_id, $options) {
 dsm("in send_request config is: " . print_r($server_config,true));
