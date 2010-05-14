@@ -1,0 +1,119 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ * Adds support for sending and receiving VoIP requests to and from Twilio.
+ */
+
+//-----------------------------------------------------------------------------
+// Include files
+//-----------------------------------------------------------------------------
+foreach (array('voiptwilio.inc') as $file) {
+  require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'includes' . DIRECTORY_SEPARATOR . $file);
+}
+
+
+//-----------------------------------------------------------------------------
+// Public functions
+//-----------------------------------------------------------------------------
+
+/**
+ * Implementation of hook_voip_server_info().
+ */
+function voiptwilio_voip_server_info() {
+  return array(
+    'twilio' => array(
+      'name' => 'Twilio',
+      'configure form' => 'voiptwilio_admin_form',
+      'send' => 'voiptwilio_send',
+    ),
+  );
+}
+
+function voiptwilio_admin_form($configuration) {
+  $form['voiptwilio_account_sid'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Twilio Account SID'),
+    '#description' => t("The account SID provided in your Twilio account dashboard."),
+    '#default_value' => ($configuration['voiptwilio_account_sid']?$configuration['voiptwilio_account_sid']:''),
+  );
+  $form['voiptwilio_auth_token'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Twilio Auth Token'),
+    '#description' => t("The authorization token provided in your Twilio account dashboard."),
+    '#default_value' => ($configuration['voiptwilio_auth_token']?$configuration['voiptwilio_auth_token']:''),
+  );
+  $form['voiptwilio_cid_name'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Caller id name'),
+    '#description' => t('Caller id name to be used in Voip Drupal calls.'),
+    '#size' => 40,
+    '#maxlength' => 255,
+    '#default_value' => ($configuration['voiptwilio_cid_name']?$configuration['voiptwilio_cid_name']:'Voip Drupal'),
+  );
+  $form['voiptwilio_cid_number'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Caller id number'),
+    '#description' => t('Caller id number to be used in Voip Drupal calls. That number has to be registered in the "Phone Numbers" section of your Twilio account.'),
+    '#size' => 40,
+    '#maxlength' => 255,
+    '#default_value' => ($configuration['voiptwilio_cid_name']?$configuration['voiptwilio_cid_number']:'1234567890'),
+  );
+
+  return $form;
+}
+
+/**
+ * Validates the submission of the configuration form.
+ */
+function voiptwilio_admin_form_validate($form, &$form_state) {
+
+  // Send a test request to validate the configuration of the Twilio server
+  $values = $form_state['values'];
+dsm("about to call ping with config: " . print_r($values,true));
+  $result = _voiptwilio_ping($values);
+
+  if(voip_error()){
+    form_set_error('', t('A Twilio-related error occurred: @error', array('@error' => voip_error_message())));
+  }
+}
+
+/**
+ * Callback for sending requests to the Asterisk server
+ */
+function voiptwilio_send($request_id, $options) {
+  $server = voip_servers('server', 'twilio');
+  $config = $server['configuration'];
+dsm("config is: " . print_r($config,true));
+  $result =  voiptwilio_send_request($config, $request_id, $options);
+  return $result;
+}
+
+/**
+ * Sends a request to the Asterisk Manager API (AMI) associated with the current Asterisk server
+ */
+function voiptwilio_send_request($server_config, $request_id, $options) {
+dsm("in send_request config is: " . print_r($server_config,true));
+
+
+  switch($request_id) {
+    default:
+      // Invalid request id
+      $response = FALSE;
+      $error_message = "Invalid request id received: %request_id.";
+      $variables = array('%request_id' => $request_id);
+      watchdog('voiptwilio', $error_message, $variables, WATCHDOG_ERROR);
+      voip_error("(voiptwilio) Invalid request id received: " . $request_id);
+      break;
+
+    case 'voip_dial_out': // dial the given call node
+      // call node
+      $call_node = (object)$options;
+      $response = _voiptwilio_dial_out($server_config, $call_node);
+      break;
+  }
+
+  return $response;
+}
+
