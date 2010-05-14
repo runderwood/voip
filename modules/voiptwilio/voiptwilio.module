@@ -108,3 +108,67 @@ dsm("in send_request config is: " . print_r($server_config,true));
   return $response;
 }
 
+/*
+* Implementation of hook_disable()
+*/
+function voiptwilio_disable() {
+  cache_clear_all('services:methods', 'cache');
+}
+
+/*
+* Implementation of hook_enable()
+*/
+function voiptwilio_enable() {
+  cache_clear_all('services:methods', 'cache');
+}
+
+/*
+* Implementation of hook_service()
+*/
+function voiptwilio_service() {
+  $methods = array();
+
+  $methods[] = array(
+    '#method'   => 'voiptwilio.callHandler',
+    '#callback' => 'voiptwilio_call_handler',
+    //'#key'     => FALSE,
+    //'#auth'     => FALSE,
+    '#args'     => array(),
+    '#return'   => 'string',
+    '#help'     => t('Handles incoming calls from Twilio.')
+  );
+
+  return $methods;
+}
+
+
+/*
+ * Process incoming calls from Twilio
+ *
+ * Note: This function only works via REST API
+ */
+function voiptwilio_call_handler() {
+
+dsm('voiptwilio_call_handler is alive and happy!');
+dsm($_REQUEST);
+$msg = 'in voiptwilio_call_handler() with $_REQUEST: ' . print_r($_REQUEST, TRUE);
+$vars = array();
+watchdog('voiptwilio', $msg, $vars, WATCHDOG_INFO);
+
+
+  // process input here
+
+  // call voiptwilio_script_handler()
+
+  // send response back to Twilio
+  $response = '
+    <?xml version="1.0" encoding="UTF-8" ?>  
+      <Response> 
+        <Say>Hello World</Say>
+        <Play>http://api.twilio.com/Cowbell.mp3</Play>
+      </Response> ';
+
+  return $response;
+
+}
+
