@@ -155,26 +155,56 @@ function voiptwilio_menu() {
  */
 function _voiptwilio_call_handler() {
 
-dsm('voiptwilio_call_handler is alive and happy!');
-dsm($_REQUEST);
 $msg = 'in voiptwilio_call_handler() with $_REQUEST: ' . print_r($_REQUEST, TRUE);
 $vars = array();
 watchdog('voiptwilio', $msg, $vars, WATCHDOG_INFO);
 
 
-  // process input here
+  // create voipcall node based on input received
+  $accound_sid = $_REQUEST['AccountSid'];
+  $account_guid = $_REQUEST['AccountGuid']; // account code
+$z = $_REQUEST['CallSid'];
+  $call_guid = $_REQUEST['CallGuid']; // unique identifier of the call, 34 char
+  $caller_number = $_REQUEST['Caller'];
+  $caller_name = $_REQUEST['CallerName']; // optional
+  $dest_number = $_REQUEST['Called'];
+  $status = $REQUEST['CallStatus']; // One of the following: "failed", "no-answer", "in-progress", "busy", "completed".
+
+$z = $_REQUEST['DialStatus']; // for outgoing calls: answered, busy, failed, or no-answer. If answering machine detection is being used, the additional values answered-machine, answered-human, and hangup-machine may be sent, depending on your settings. For incoming calls, DialStatus is always reported as "answered"
+
+$z = $_REQUEST['CallSegmentGuid'];
+$z = $_REQUEST['Duration']; // upon complete
+
+$z = $_REQUEST['CallerCity'];
+$z = $_REQUEST['CallerState'];
+$z = $_REQUEST['CallerZip'];
+$z = $_REQUEST['CallerCountry'];
+
+$z = $_REQUEST['CalledCity'];
+$z = $_REQUEST['CalledState'];
+$z = $_REQUEST['CalledZip'];
+$z = $_REQUEST['CalledCountry'];
+
+  switch($status) {
+    default:
+      break;
+    case 'in-progress':
+      $call_status = 'XXX';
+      break;
+  }
+  
 
   // call voiptwilio_script_handler()
 
   // send response back to Twilio
-  $response = '
-    <?xml version="1.0" encoding="UTF-8" ?>  
+  $output = '<?xml version="1.0" encoding="UTF-8" ?>';
+  $output .= '
       <Response> 
         <Say>Hello World</Say>
         <Play>http://api.twilio.com/Cowbell.mp3</Play>
       </Response> ';
 
-  return $response;
-
+  drupal_set_header('Content-Type: text/xml; charset=utf-8');
+  print $output;
 }
 
