@@ -90,3 +90,46 @@ function voipcall_get_nid_from_call_id($call_id){
   $nid = db_result(db_query("SELECT `nid` FROM `content_type_voipcall` WHERE `field_voipcall_call_id_value` = '%s'", $call_id));
   return $nid;
 }
+
+/**
+ * Return the specified script
+ *
+ * @param string $script_name
+ *
+ * @return array with the script commands.  Returns an empty array in case no 
+ *   script is found for the given name.
+ */
+function voipcall_get_script($script_name){
+  $script = array();
+  foreach (module_implements('voipcall_get_script') as $module) {
+    $function = $module .'_'. 'voipcall_get_script';
+    $result = call_user_func($function, $script_name);
+    if (isset($result)) {
+      $script = array_merge_recursive($script, $result);
+    }
+  }
+  return $script;
+
+}
+
+/**
+ * Return the name of the default script to be used with new incoming calls
+ */
+function voipcall_get_default_script_name() {
+  // TODO: Ideally, users should define the name of the default script via form
+
+  return 'voipcall_call_start';
+}
+
+/**
+ * Implementation of hook_voipcall_get_script()
+ */
+function voipcall_voipcall_get_script($script_name) {
+  $script = NULL;
+  if($script_name == 'voipcall_call_start') { 
+   $script = array();
+   $script[] = array('say' => "Hello world!");
+   $script[] = array('hangup');
+  }
+ return $script;
+}
