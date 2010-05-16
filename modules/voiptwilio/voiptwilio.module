@@ -123,14 +123,14 @@ function voiptwilio_enable() {
 }
 
 /*
- * hook_perm()
+ * Implementation of hook_perm()
  */
 function voiptwilio_perm() {
   return array('access voiptwilio content');
 }
 
 /*
- * hook_menu()
+ * Implementation of hook_menu()
  */
 function voiptwilio_menu() {
   $items = array();
@@ -152,10 +152,14 @@ function voiptwilio_menu() {
 
 /*
  * Process incoming calls from Twilio
+ *
+ * @param string $call_id with the call's unique identifier.  If NULL, the
+ * call is coming from Twilio and 'CallGuid' should be used as the unique id.
+ *
  */
-function _voiptwilio_call_handler() {
+function _voiptwilio_call_handler($call_id=NULL) {
 
-$msg = 'in voiptwilio_call_handler() with $_REQUEST: ' . print_r($_REQUEST, TRUE);
+$msg = "in voiptwilio_call_handler() with call_id: $call_id and _REQUEST: " . print_r($_REQUEST, TRUE);
 $vars = array();
 watchdog('voiptwilio', $msg, $vars, WATCHDOG_INFO);
 
