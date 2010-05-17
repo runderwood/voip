@@ -7,24 +7,32 @@ include_once('voipcall.features.inc');
  * 
  * @param 
  *  $details = array with the following optional values:
- *    'nid', the nid of the voipcall node to be updated
+ *    'nid', the nid of the voipcall node to be updated. If not provided, a new
+ *       node will be created.
  *    'dest_number', the destination number for the phone call
- *    'caller_number', the caller id number
- *    'caller_name', the caller id name
- *    'call_status', the status of the call. Possile values: 'processing error',
- *                   'not called', 'calling', 'answered', 'no answer', 'busy',
- *                   'invalid number'
- *    'script_name', the name of the dialplan script to be run when call is answered
+ *    'caller_number', the caller number
+ *    'caller_name', the caller name
+ *    'status', the status of the call. Possile values: 'processing error',
+ *             'not called', 'calling', 'answered', 'no answer', 'busy',
+ *             'invalid number'
+ *    'script_name', the name of the current dialplan script
+ *    'script_commands', array with the script commands
+ *    'script_index', the index of the current command
+ *    'script_variables', variables accessed and updated by the script
+ *    'uid', the id of the user associated with the script
+ *    'source', the server that originated the call ('drupal', 'asterisk', etc.)
  *    'start_time', the start time of the call
  *    'end_time', the end time of the call
- *    'fields' array of 'field' => 'value' for other optional node fields to be
+ *    'duration', the final duration of the call in seconds
+ *    'error_message', an error message associated with the call, if any
+ *    'other' array of 'field' => 'value' for other optional node fields to be
  *        set, e.g. uid, sticky, moderate, promoted, title, etc.
  *  );
  * 
  * @return
  *  $node, the newly saved voipcall node.
  */
-function voipcall_save($details) {
+function voipcall_save($details=array()) {
 
   if(is_object($details)){
     $details = (array)$details;
@@ -43,29 +51,52 @@ function voipcall_save($details) {
 
     // all calls start as 'not called'
     $node->field_voipcall_status[0]['value'] = 'not called';
+
+    // initialize script-related fields with their default values
+    $script_name = voipcall_get_default_script_name();
+    $node->field_voipcall_script_name[0]['value'] = $script_name;
+// todo: serialize commands
+    $node->field_voipcall_script_commands[0]['value'] =  serialize(voipcall_get_script($script_name));
+    $node->field_voipcall_script_index[0]['value'] =  0;
+// todo: serialize variables
+    $node->field_voipcall_script_variables[0]['value'] =  serialize(array());
+
   }
   else {
     // load the node
     $node = node_load($details['nid']);
   }
 
-  // update selected fields
-
-  global $user;
-  $node->uid = $user->uid;          // UID of content owner
-
+  // update node fields
   if(!is_null($details['dest_number'])) $node->title = check_plain($details['dest_number']);
+  if(!is_null($details['uid'])) $node->uid = $details['uid'];
+
+  // update voipcall-specific fields
+
   if(!is_null($details['dest_number'])) $node->field_voipcall_dest_number[0]['value'] = $details['dest_number'];
   if(!is_null($details['caller_number'])) $node->field_voipcall_caller_number[0]['value'] = $details['caller_number'];
   if(!is_null($details['caller_name'])) $node->field_voipcall_caller_name[0]['value'] = $details['caller_name'];
-  if(!is_null($details['call_status'])) $node->field_voipcall_status[0]['value'] = $details['call_status'];
+
+  if(!is_null($details['status'])) $node->field_voipcall_status[0]['value'] = $details['status'];
+
   if(!is_null($details['script_name'])) $node->field_voipcall_script_name[0]['value'] =  $details['script_name'];
+// todo: serialize commands
+  if(!is_null($details['script_commands'])) $node->field_voipcall_script_commands[0]['value'] =  serialize($details['script_commands']);
+  if(!is_null($details['script_index'])) $node->field_voipcall_script_index[0]['value'] =  $details['script_index'];
+// todo: serialize variables
+  if(!is_null($details['script_variables'])) $node->field_voipcall_script_variables[0]['value'] =  serialize($details['script_variables']);
+
+  if(!is_null($details['source'])) $node->field_voipcall_script_source[0]['value'] =  $details['source'];
+
   if(!is_null($details['start_time'])) $node->field_voipcall_start_time[0]['value'] = $details['start_time'];
   if(!is_null($details['end_time'])) $node->field_voipcall_end_time[0]['value'] = $details['end_time'];
+  if(!is_null($details['duration'])) $node->field_voipcall_duration[0]['value'] = $details['duration'];
+
+  if(!is_null($details['error_message'])) $node->field_voipcall_error_message[0]['value'] = $details['error_message'];
 
   // set other optional node fields
-  if(!is_null($details['fields'])){
-    foreach($details['fields'] as $field => $value){
+  if(!is_null($details['other'])){
+    foreach($details['other'] as $field => $value){
       $node->$field = $value;
     }
   }
@@ -160,7 +191,7 @@ function voipcall_admin_form() {
  */
 function voipcall_admin_form_validate($form, &$form_state) {
   $values = $form_state['values'];
-
+//todo: make sure that default script name is not empty ''
   return;
 }
 
