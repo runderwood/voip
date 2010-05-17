@@ -9,12 +9,14 @@ include_once('voipcall.features.inc');
  *  $details = array with the following optional values:
  *    'nid', the nid of the voipcall node to be updated. If not provided, a new
  *       node will be created.
+ *    'call_id', the call unique_id.  If not provided, the function will
+ *       generate one for new nodes
  *    'dest_number', the destination number for the phone call
  *    'caller_number', the caller number
  *    'caller_name', the caller name
  *    'status', the status of the call. Possile values: 'processing error',
- *             'not called', 'calling', 'answered', 'no answer', 'busy',
- *             'invalid number'
+ *      'not called', 'calling', 'answered', 'no answer', 'busy',
+ *      'invalid number'
  *    'script_name', the name of the current dialplan script
  *    'script_commands', array with the script commands
  *    'script_index', the index of the current command
@@ -73,6 +75,7 @@ function voipcall_save($details=array()) {
 
   // update voipcall-specific fields
 
+  if(!is_null($details['call_id'])) $node->field_voipcall_dest_call_id[0]['value'] = $details['call_id'];
   if(!is_null($details['dest_number'])) $node->field_voipcall_dest_number[0]['value'] = $details['dest_number'];
   if(!is_null($details['caller_number'])) $node->field_voipcall_caller_number[0]['value'] = $details['caller_number'];
   if(!is_null($details['caller_name'])) $node->field_voipcall_caller_name[0]['value'] = $details['caller_name'];
@@ -104,7 +107,6 @@ function voipcall_save($details=array()) {
   // save the node
   node_save($node);
 
-dsm($node);
   return $node;
 }
 

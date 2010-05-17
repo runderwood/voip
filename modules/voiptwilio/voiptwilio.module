@@ -144,7 +144,7 @@ function voiptwilio_menu() {
  */
 
 /*
- * Process incoming calls from Twilio
+ * Process incoming requests and responses from Twilio
  *
  * @param string $call_id with the call's unique identifier.  If NULL, the
  * call is coming from Twilio and 'CallGuid' should be used as the unique id.
@@ -156,6 +156,22 @@ $msg = "in voiptwilio_call_handler() with call_id: $call_id and _REQUEST: " . pr
 $vars = array();
 watchdog('voiptwilio', $msg, $vars, WATCHDOG_INFO);
 
+  if(is_null($call_id)) {
+    // handle new incoming calls from Twilio
+$z = $_REQUEST['CallerCity'];
+$z = $_REQUEST['CallerState'];
+$z = $_REQUEST['CallerZip'];
+$z = $_REQUEST['CallerCountry'];
+
+$z = $_REQUEST['CalledCity'];
+$z = $_REQUEST['CalledState'];
+$z = $_REQUEST['CalledZip'];
+$z = $_REQUEST['CalledCountry'];
+
+  }
+  else {
+    // handle responses associated with already-existing calls
+  }
 
   // create voipcall node based on input received
   $accound_sid = $_REQUEST['AccountSid'];
@@ -171,16 +187,6 @@ $z = $_REQUEST['DialStatus']; // for outgoing calls: answered, busy, failed, or 
 
 $z = $_REQUEST['CallSegmentGuid'];
 $z = $_REQUEST['Duration']; // upon complete
-
-$z = $_REQUEST['CallerCity'];
-$z = $_REQUEST['CallerState'];
-$z = $_REQUEST['CallerZip'];
-$z = $_REQUEST['CallerCountry'];
-
-$z = $_REQUEST['CalledCity'];
-$z = $_REQUEST['CalledState'];
-$z = $_REQUEST['CalledZip'];
-$z = $_REQUEST['CalledCountry'];
 
   switch($status) {
     default:
