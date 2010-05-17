@@ -92,7 +92,97 @@ function voipcall_get_nid_from_call_id($call_id){
 }
 
 /**
- * Return the specified script
+ * Implementation of hook_menu()
+ */
+function voipcall_menu() {
+  $items = array();
+
+  $items['admin/voip/call'] = array(
+    'title' => 'Default call configuration',
+    'description' => 'Defines default parameters used in Voip Drupal calls.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('voipcall_admin_form', NULL),
+    'access arguments' => array('administer voipcall setup')
+  );
+
+  return $items;
+}
+
+/**
+ * Implementation of hook_perm()
+ */
+function voipcall_perm() {
+ return array('administer voipcall setup');
+}
+
+/**
+ * Form implementation
+ */
+function voipcall_admin_form() {
+  $form['voipcall_cid_name'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Caller id name'),
+    '#description' => t('Caller id name to be used in Voip Drupal calls.'),
+    '#size' => 40,
+    '#maxlength' => 255,
+    '#default_value' => variable_get('voipcall_cid_name',''),
+  );
+
+  $form['voipcall_cid_number'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Caller id number'),
+    '#description' => t('Caller id number to be used in Voip Drupal calls.'),
+    '#size' => 40,
+    '#maxlength' => 255,
+    '#default_value' => variable_get('voipcall_cid_number',''),
+  );
+
+  $form['voipcall_pickup_script_name'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Pickup script name'),
+    '#description' => t('Name of the of the dialplan script to be called upon call pickup.'),
+    '#size' => 40,
+    '#maxlength' => 255,
+    '#default_value' => variable_get('voipcall_pickup_script_name', 'voipcall_call_pickup'),
+  );
+
+  $form['submit'] = array(
+    '#type' => 'submit', 
+    '#value' => t('Save'),
+  );
+
+  return $form;
+}
+
+
+/**
+ * Validates the submission of the configuration form.
+ */
+function voipcall_admin_form_validate($form, &$form_state) {
+  $values = $form_state['values'];
+
+  return;
+}
+
+
+function voipcall_admin_form_submit($form, &$form_state) {
+  
+  // Remove unecessary values
+  unset($form_state['values']['op'], $form_state['values']['submit'], $form_state['values']['form_token'], $form_state['values']['form_id']);
+
+  // store values
+  variable_set('voipcall_cid_name', $form_state['values']['voipcall_cid_name']);
+  variable_set('voipcall_cid_number', $form_state['values']['voipcall_cid_number']);
+  variable_set('voipcall_pickup_script_name', $form_state['values']['voipcall_pickup_script_name']);
+
+  drupal_set_message(t('The default call settings have been saved.'));
+
+  $form_state['redirect'] = 'admin/voip';
+}
+
+
+/**
+ * Return the specified dialplan script
  *
  * @param string $script_name
  *
@@ -116,9 +206,8 @@ function voipcall_get_script($script_name){
  * Return the name of the default script to be used with new incoming calls
  */
 function voipcall_get_default_script_name() {
-  // TODO: Ideally, users should define the name of the default script via form
-
-  return 'voipcall_call_start';
+  $script_name = variable_get('voipcall_pickup_script_name', 'voipcall_call_pickup');
+  return $script_name;
 }
 
 /**
@@ -126,7 +215,7 @@ function voipcall_get_default_script_name() {
  */
 function voipcall_voipcall_get_script($script_name) {
   $script = NULL;
-  if($script_name == 'voipcall_call_start') { 
+  if($script_name == 'voipcall_call_pickup') { 
    $script = array();
    $script[] = array('say' => "Hello world!");
    $script[] = array('hangup');
