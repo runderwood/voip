@@ -158,15 +158,18 @@ watchdog('voiptwilio', $msg, $vars, WATCHDOG_INFO);
 
   if(is_null($call_id)) {
     // handle new incoming calls from Twilio
-$z = $_REQUEST['CallerCity'];
-$z = $_REQUEST['CallerState'];
-$z = $_REQUEST['CallerZip'];
-$z = $_REQUEST['CallerCountry'];
 
-$z = $_REQUEST['CalledCity'];
-$z = $_REQUEST['CalledState'];
-$z = $_REQUEST['CalledZip'];
-$z = $_REQUEST['CalledCountry'];
+    // store call location, if available
+    $call_location = array();
+    if(isset($_REQUEST['CallerCity'])) $call_location['caller_city'] = $_REQUEST['CallerCity'];
+    if(isset($_REQUEST['CallerState'])) $call_location['caller_state'] = $_REQUEST['CallerState'];
+    if(isset($_REQUEST['CallerZip'])) $call_location['caller_zip'] = $_REQUEST['CallerZip'];
+    if(isset($_REQUEST['CallerCountry'])) $call_location['caller_country'] = $_REQUEST['CallerCountry'];
+
+    if(isset($_REQUEST['CalledCity'])) $call_location['called_city'] = $_REQUEST['CalledCity'];
+    if(isset($_REQUEST['CalledState'])) $call_location['called_state'] = $_REQUEST['CalledState'];
+    if(isset($_REQUEST['CalledZip'])) $call_location['calldr_zip'] = $_REQUEST['CalledZip'];
+    if(isset($_REQUEST['CalledCountry'])) $call_location['called_country'] = $_REQUEST['CalledCountry'];
 
   }
   else {
