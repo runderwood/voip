@@ -102,20 +102,6 @@ dsm("in send_request config is: " . print_r($server_config,true));
 }
 
 /*
-* Implementation of hook_disable()
-*/
-function voiptwilio_disable() {
-  cache_clear_all('services:methods', 'cache');
-}
-
-/*
-* Implementation of hook_enable()
-*/
-function voiptwilio_enable() {
-  cache_clear_all('services:methods', 'cache');
-}
-
-/*
  * Implementation of hook_perm()
  */
 function voiptwilio_perm() {
@@ -176,10 +162,9 @@ dsm($msg);
   }
 
   // update common call variables
-// TODO: use CCK names or just regular names?
-  if(!isset($call['caller_number'])) $call['caller_number'] = $_REQUEST['Caller'];
-  if(!isset($call['caller_name'])) $call['caller_name'] = $_REQUEST['CallerName'];
-  if(!isset($call['dest_number'])) $call['dest_number'] = $_REQUEST['Called'];
+  if(!isset($call['caller_number'])) $call['field_voipcall_caller_number'][0]['value'] = $_REQUEST['Caller'];
+  if(!isset($call['caller_name'])) $call['field_voipcall_caller_name'][0]['value'] = $_REQUEST['CallerName'];
+  if(!isset($call['dest_number'])) $call['field_voipcall_dest_number'][0]['value'] = $_REQUEST['Called'];
 
   // store call location, if available
   $call_location = array();
@@ -296,17 +281,6 @@ dsm($msg);
   // process the call script
  $r = voiptwilio_script_handler($call);
 
-  // send response back to Twilio
-  $output = '<?xml version="1.0" encoding="UTF-8" ?>';
-  $output .= '<!--' . "voipcall: " . print_r($call,true) . '-->';
-  $output .= '
-      <Response> 
-        <Say>Hello World</Say>
-        <Play>http://api.twilio.com/Cowbell.mp3</Play>
-      </Response> ';
-
-  drupal_set_header('Content-Type: text/xml; charset=utf-8');
-  print $output;
 }
 
 /**
@@ -339,5 +313,17 @@ dsm($voipcall);
   // check status of the call and process script accordingly
     // TODO: create special script just for hangup situations?
 
+  // send response back to Twilio
+  $output = '<?xml version="1.0" encoding="UTF-8" ?>';
+  $output .= '<!--' . "voipcall: " . print_r($voipcall,true) . '-->';
+  $output .= '
+      <Response> 
+        <Say>Hello World</Say>
+        <Play>http://api.twilio.com/Cowbell.mp3</Play>
+      </Response> ';
+
+  drupal_set_header('Content-Type: text/xml; charset=utf-8');
+  print $output;
+dsm('does this get executed?');
   return $rc;
 }
