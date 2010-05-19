@@ -53,7 +53,6 @@ dsm($msg);
     $call_guid = $_REQUEST['CallGuid']; // unique identifier of the call, 34 char
     $call['call_id'] = $call_guid;
     $call['source'] = 'twilio';
-    $call['start_time'] = time();
     $call['status'] = VOIPCALL_NOT_CALLED;
     // for the sake of consistency, init the new node before updating it
     $call = (array)voipcall_save($call);
@@ -87,6 +86,9 @@ dsm($msg);
 
   // handle new incoming calls
   if($dial_status) {
+
+    $call['start_time'] = time();
+
     switch($dial_status){
       default:
         $call['status'] = VOIP_CALL_ERROR;
@@ -195,25 +197,53 @@ dsm($voipcall);
 
     // TODO: do we have to differentiate inbound X outbound calls here?
 
+  if(is_object($voipcall)){
+    $voipcall = (array)$voipcall;
+  }
+
   $rc = TRUE;
 
-  // retrive script context
-/*****
- *    'script_name', the name of the current dialplan script
- *    'script_commands', array with the script commands
- *    'script_index', the index of the current command
- *    'script_variables', variables accessed and updated by the script
-*****/
+  // retrieve script context
+  $script_name = $voipcall['field_voipcall_script_name'][0]['value'];
+// todo: serialize commands
+  $script_commands = unserialize($voipcall['field_voipcall_script_commands'][0]['value']);
+  $script_index = $voipcall['field_voipcall_script_index'][0]['value'];
+// todo: serialize variables
+  $script_variables = unserialize($voipcall['field_voipcall_script_variables'][0]['value']);
+
+  $status = $voipcall['field_voipcall_status'][0]['value'];
 
 
   // add call variables to script variables
+
+  $script_variables['uid'] = $voipcall['uid'];
+
+  $script_variables['status'] = $status;
+
+  $script_variables['call_id'] = $voipcall['field_voipcall_call_id'][0]['value'];
+  $script_variables['dest_number'] = $voipcall['field_voipcall_dest_number'][0]['value'];
+  $script_variables['caller_number'] = $voipcall['field_voipcall_caller_number'][0]['value'];
+  $script_variables['caller_name'] = $voipcall['field_voipcall_caller_name'][0]['value'];
+
+  $script_variables['source'] = $voipcall['field_voipcall_source'][0]['value'];
+
+  $script_variables['start_time'] = $voipcall['field_voipcall_start_time'][0]['value'];
+  $script_variables['end_time'] = $voipcall['field_voipcall_end_time'][0]['value'];
+  $script_variables['duration'] = $voipcall['field_voipcall_duration'][0]['value'];
+
+  $script_variables['error_message'] = $voipcall['field_voipcall_error_message'][0]['value'];
+
 
   // check status of the call and process script accordingly
     // TODO: create special script just for hangup situations?
 
   // send response back to Twilio
   $output = '<?xml version="1.0" encoding="UTF-8" ?>';
-  $output .= '<!--' . "voipcall: " . print_r($voipcall,true) . '-->';
+  $output .= '<!--' . "voipcall: " . print_r($voipcall,true) .  "\n" . '-->';
+  $output .= '<!--' . "script_name: " . $script_name .  "\n" . '-->';
+  $output .= '<!--' . "script_commands: " . print_r($script_commands,true) .  "\n" . '-->';
+  $output .= '<!--' . "script_index: " . $script_index .  "\n" . '-->';
+  $output .= '<!--' . "script_variables: " . print_r($script_variables,true) .  "\n" . '-->';
   $output .= '
       <Response> 
         <Say>Hello World</Say>
