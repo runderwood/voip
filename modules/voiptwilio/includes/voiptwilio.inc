@@ -29,7 +29,19 @@ $vars = array();
 watchdog('voiptwilio', $msg, $vars, WATCHDOG_INFO);
 dsm($msg);
 
-// TODO: Validate $_REQUEST['AccountGuid'] to avoid hack attempts
+  voip_error_reset();
+
+// validate $_REQUEST['AccountSid'] to avoid hack attempts
+  $server = voip_servers('server', 'twilio');
+  $account_sid = $server['configuration']['voiptwilio_account_sid'];
+  $incoming_sid = $_REQUEST['AccountSid'];
+  if ($account_sid != $incoming_sid) {
+     $msg = '_voip_twilio_call_handler called with invalid AccountSid: @sid';
+     $params = array('@sid' => $incoming_sid);
+     watchdog('voiptwilio', $msg, $params, WATCHDOG_WARNING);
+     return;  // TODO: should we return an error response to the server?
+  }
+
 
   // load the variables already associated with the call, if any
   if($call_id) {
