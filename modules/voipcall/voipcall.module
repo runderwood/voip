@@ -52,6 +52,8 @@ define('VOIPCALL_COMPLETED', 'completed');
  *  $node, the newly saved voipcall node.
  */
 function voipcall_save($details=array()) {
+dsm('details array:');
+dsm($details);
 
   if(is_object($details)){
     $details = (array)$details;
@@ -85,37 +87,39 @@ function voipcall_save($details=array()) {
     // load the node
     $node = node_load($details['nid']);
   }
+dsm('node inside voipcall_save()');
+dsm($node);
 
   // update node fields
-  if(!is_null($details['dest_number'])) $node->title = check_plain($details['dest_number']);
-  if(!is_null($details['uid'])) $node->uid = $details['uid'];
+  if(isset($details['dest_number'])) $node->title = check_plain($details['dest_number']);
+  if(isset($details['uid'])) $node->uid = $details['uid'];
 
   // update voipcall-specific fields
 
-  if(!is_null($details['call_id'])) $node->field_voipcall_dest_call_id[0]['value'] = $details['call_id'];
-  if(!is_null($details['dest_number'])) $node->field_voipcall_dest_number[0]['value'] = $details['dest_number'];
-  if(!is_null($details['caller_number'])) $node->field_voipcall_caller_number[0]['value'] = $details['caller_number'];
-  if(!is_null($details['caller_name'])) $node->field_voipcall_caller_name[0]['value'] = $details['caller_name'];
+  if(isset($details['call_id'])) $node->field_voipcall_call_id[0]['value'] = $details['call_id'];
+  if(isset($details['dest_number'])) $node->field_voipcall_dest_number[0]['value'] = $details['dest_number'];
+  if(isset($details['caller_number'])) $node->field_voipcall_caller_number[0]['value'] = $details['caller_number'];
+  if(isset($details['caller_name'])) $node->field_voipcall_caller_name[0]['value'] = $details['caller_name'];
 
-  if(!is_null($details['status'])) $node->field_voipcall_status[0]['value'] = $details['status'];
+  if(isset($details['status'])) $node->field_voipcall_status[0]['value'] = $details['status'];
 
-  if(!is_null($details['script_name'])) $node->field_voipcall_script_name[0]['value'] =  $details['script_name'];
+  if(isset($details['script_name'])) $node->field_voipcall_script_name[0]['value'] =  $details['script_name'];
 // todo: serialize commands
-  if(!is_null($details['script_commands'])) $node->field_voipcall_script_commands[0]['value'] =  serialize($details['script_commands']);
-  if(!is_null($details['script_index'])) $node->field_voipcall_script_index[0]['value'] =  $details['script_index'];
+  if(isset($details['script_commands'])) $node->field_voipcall_script_commands[0]['value'] =  serialize($details['script_commands']);
+  if(isset($details['script_index'])) $node->field_voipcall_script_index[0]['value'] =  $details['script_index'];
 // todo: serialize variables
-  if(!is_null($details['script_variables'])) $node->field_voipcall_script_variables[0]['value'] =  serialize($details['script_variables']);
+  if(isset($details['script_variables'])) $node->field_voipcall_script_variables[0]['value'] =  serialize($details['script_variables']);
 
-  if(!is_null($details['source'])) $node->field_voipcall_script_source[0]['value'] =  $details['source'];
+  if(isset($details['source'])) $node->field_voipcall_source[0]['value'] =  $details['source'];
 
-  if(!is_null($details['start_time'])) $node->field_voipcall_start_time[0]['value'] = $details['start_time'];
-  if(!is_null($details['end_time'])) $node->field_voipcall_end_time[0]['value'] = $details['end_time'];
-  if(!is_null($details['duration'])) $node->field_voipcall_duration[0]['value'] = $details['duration'];
+  if(isset($details['start_time'])) $node->field_voipcall_start_time[0]['value'] = $details['start_time'];
+  if(isset($details['end_time'])) $node->field_voipcall_end_time[0]['value'] = $details['end_time'];
+  if(isset($details['duration'])) $node->field_voipcall_duration[0]['value'] = $details['duration'];
 
-  if(!is_null($details['error_message'])) $node->field_voipcall_error_message[0]['value'] = $details['error_message'];
+  if(isset($details['error_message'])) $node->field_voipcall_error_message[0]['value'] = $details['error_message'];
 
   // set other optional node fields
-  if(!is_null($details['other'])){
+  if(isset($details['other'])){
     foreach($details['other'] as $field => $value){
       $node->$field = $value;
     }
