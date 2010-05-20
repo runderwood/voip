@@ -19,19 +19,24 @@ foreach (array('twilio.php') as $file) {
  * Process incoming requests and responses from Twilio
  *
  * @param string $call_id with the call's unique identifier.  If NULL, the
- * call is coming from Twilio and 'CallGuid' should be used as the unique id.
+ *   call is coming from Twilio and 'CallGuid' should be used as the unique id.
+ *
+ * @param string $action set to the action to be executed in response to a
+ *  previously issued request to Twilio.  Is only valid with $call_id is not
+ *  NULL.  It can assume any of the following values: process_dial,
+ *  process_gather, and process_record.
  *
  */
-function _voiptwilio_call_handler($call_id=NULL) {
+function _voiptwilio_call_handler($call_id=NULL, $action=NULL) {
 
-$msg = "in voiptwilio_call_handler() with call_id: $call_id and _REQUEST: " . print_r($_REQUEST, TRUE);
+$msg = "in voiptwilio_call_handler() with call_id: $call_id, action: $action, and _REQUEST: " . print_r($_REQUEST, TRUE);
 $vars = array();
 watchdog('voiptwilio', $msg, $vars, WATCHDOG_INFO);
 dsm($msg);
 
   voip_error_reset();
 
-// validate $_REQUEST['AccountSid'] to avoid hack attempts
+  // validate $_REQUEST['AccountSid'] to avoid hack attempts
   $server = voip_servers('server', 'twilio');
   $account_sid = $server['configuration']['voiptwilio_account_sid'];
   $incoming_sid = $_REQUEST['AccountSid'];
@@ -54,6 +59,8 @@ dsm($msg);
     $call['call_id'] = $call_guid;
     $call['source'] = 'twilio';
     $call['status'] = VOIPCALL_NOT_CALLED;
+    $call['start_time'] = time();
+
     // for the sake of consistency, init the new node before updating it
     $call = (array)voipcall_save($call);
   }
@@ -63,31 +70,29 @@ dsm($msg);
   if(!isset($call['caller_name'])) $call['field_voipcall_caller_name'][0]['value'] = $_REQUEST['CallerName'];
   if(!isset($call['dest_number'])) $call['field_voipcall_dest_number'][0]['value'] = $_REQUEST['Called'];
 
-  // store call location, if available
-  $call_location = array();
-  if(isset($_REQUEST['CallerCity'])) $call_location['caller_city'] = $_REQUEST['CallerCity'];
-  if(isset($_REQUEST['CallerState'])) $call_location['caller_state'] = $_REQUEST['CallerState'];
-  if(isset($_REQUEST['CallerZip'])) $call_location['caller_zip'] = $_REQUEST['CallerZip'];
-  if(isset($_REQUEST['CallerCountry'])) $call_location['caller_country'] = $_REQUEST['CallerCountry'];
-
-  if(isset($_REQUEST['CalledCity'])) $call_location['called_city'] = $_REQUEST['CalledCity'];
-  if(isset($_REQUEST['CalledState'])) $call_location['called_state'] = $_REQUEST['CalledState'];
-  if(isset($_REQUEST['CalledZip'])) $call_location['calldr_zip'] = $_REQUEST['CalledZip'];
-  if(isset($_REQUEST['CalledCountry'])) $call_location['called_country'] = $_REQUEST['CalledCountry'];
-  if($call_location) {
-    // TODO: what to do about serialize/unserialize?
-    $variables = unserialize($call['field_voipcall_script_commands'][0]['value']); 
-    $variables['call_location'] = $call_location;
-    $call['script_variables'] = $variables;
-  }
-
-  $dial_status = isset($_REQUEST['DialStatus'])?$_REQUEST['DialStatus']:NULL;
   $hangup = FALSE;
 
-  // handle new incoming calls
+  // handle 'dial' requests and responses
+  $dial_status = isset($_REQUEST['DialStatus'])?$_REQUEST['DialStatus']:NULL;
   if($dial_status) {
 
-    $call['start_time'] = time();
+    // store call location, if available
+    $call_location = array();
+    if(isset($_REQUEST['CallerCity'])) $call_location['caller_city'] = $_REQUEST['CallerCity'];
+    if(isset($_REQUEST['CallerState'])) $call_location['caller_state'] = $_REQUEST['CallerState'];
+    if(isset($_REQUEST['CallerZip'])) $call_location['caller_zip'] = $_REQUEST['CallerZip'];
+    if(isset($_REQUEST['CallerCountry'])) $call_location['caller_country'] = $_REQUEST['CallerCountry'];
+    
+    if(isset($_REQUEST['CalledCity'])) $call_location['called_city'] = $_REQUEST['CalledCity'];
+    if(isset($_REQUEST['CalledState'])) $call_location['called_state'] = $_REQUEST['CalledState'];
+    if(isset($_REQUEST['CalledZip'])) $call_location['calldr_zip'] = $_REQUEST['CalledZip'];
+    if(isset($_REQUEST['CalledCountry'])) $call_location['called_country'] = $_REQUEST['CalledCountry'];
+    if($call_location) {
+      // TODO: what to do about serialize/unserialize?
+      $variables = unserialize($call['field_voipcall_script_commands'][0]['value']); 
+      $variables['call_location'] = $call_location;
+      $call['script_variables'] = $variables;
+    }
 
     switch($dial_status){
       default:
@@ -164,7 +169,19 @@ dsm($msg);
     }
   }
 
+  if(!$hangup && $action) {
+    // process response actions, if any
+    switch($action) {
+      case 'process_dial':
+      case 'process_record':
+      case 'process_gather':
+      break;
+// TODO: don't forget to pass action to script_handler. it should only advance index after processing the response action.
+    }
+  }
+
   if($hangup) {
+    // update basic hangup variables
     $call['end_time'] = time();
     $duration = isset($_REQUEST['Duration'])?$_REQUEST['Duration']:NULL;
     if(!$duration) {
@@ -255,6 +272,7 @@ dsm($voipcall);
 dsm('does this get executed?');
   return $rc;
 }
+
 /**
  * Test the connection with the Twilio server
  */
