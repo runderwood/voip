@@ -21,20 +21,18 @@ foreach (array('twilio.php') as $file) {
  * @param string $call_id with the call's unique identifier.  If NULL, the
  *   call is coming from Twilio and 'CallGuid' should be used as the unique id.
  *
- * @param string $action set to the action to be executed in response to a
- *  previously issued request to Twilio.  Is only valid with $call_id is not
- *  NULL.  It can assume any of the following values: process_dial,
- *  process_gather, and process_record.
+ * @param string $response_action set to the action to be executed in response
+ *  to a previously issued request to Twilio.  Is only valid with $call_id
+ *  is not NULL.  It can assume any of the following values: process_gather
+ *  and process_record.
  *
  */
-function _voiptwilio_call_handler($call_id=NULL, $action=NULL) {
+function _voiptwilio_call_handler($call_id=NULL, $response_action=NULL) {
 
-$msg = "in voiptwilio_call_handler() with call_id: $call_id, action: $action, and _REQUEST: " . print_r($_REQUEST, TRUE);
+$msg = "in voiptwilio_call_handler() with call_id: $call_id, response_action: $response_action, and _REQUEST: " . print_r($_REQUEST, TRUE);
 $vars = array();
 watchdog('voiptwilio', $msg, $vars, WATCHDOG_INFO);
 dsm($msg);
-
-  voip_error_reset();
 
   // validate $_REQUEST['AccountSid'] to avoid hack attempts
   $server = voip_servers('server', 'twilio');
@@ -44,9 +42,8 @@ dsm($msg);
      $msg = '_voip_twilio_call_handler called with invalid AccountSid: @sid';
      $params = array('@sid' => $incoming_sid);
      watchdog('voiptwilio', $msg, $params, WATCHDOG_WARNING);
-     return;  // TODO: should we return an error response to the server?
+     return FALSE;  // TODO: should we return an error response to the server?
   }
-
 
   // load the variables already associated with the call, if any
   if($call_id) {
@@ -100,7 +97,8 @@ dsm($msg);
         $error_message = 'Invalid DialStatus: ' . $dial_status;
         $call['error_message'] = $error_message;
         watchdog('voiptwilio', $error_msg, array(), WATCHDOG_ERROR);
-        $hangup = TRUE;
+        voipcall_save($call);
+        return FALSE;
         break;
       case 'failed':
         $call['status'] = VOIP_CALL_ERROR;
@@ -142,7 +140,8 @@ dsm($msg);
         $error_message = 'Invalid CallStatus: ' . $call_status;
         $call['error_message'] = $error_message;
         watchdog('voiptwilio', $error_msg, array(), WATCHDOG_ERROR);
-        $hangup = TRUE;
+        voipcall_save($call);
+        return FALSE;
         break;
       case 'failed':
         $call['status'] = VOIP_CALL_ERROR;
@@ -169,13 +168,29 @@ dsm($msg);
     }
   }
 
-  if(!$hangup && $action) {
+  if(!$hangup && $response_action) {
     // process response actions, if any
-    switch($action) {
-      case 'process_dial':
+    switch($response_action) {
+      default:
+        $call['status'] = VOIP_CALL_ERROR;
+        $error_message = 'Invalid response_action: ' . $response_action;
+        $call['error_message'] = $error_message;
+        watchdog('voiptwilio', $error_msg, array(), WATCHDOG_ERROR);
+        voipcall_save($call);
+        return FALSE;
+        break;
       case 'process_record':
+        $variables = unserialize($call['field_voipcall_script_commands'][0]['value']); 
+        $variables['recording_url'] = $_REQUEST['RecordingUrl'];
+        $variables['recording_duration'] = $_REQUEST['Duration'];
+        $variables['recording_digits'] = $_REQUEST['Digits'];
+        $call['script_variables'] = $variables;
+        break;
       case 'process_gather':
-      break;
+        $variables = unserialize($call['field_voipcall_script_commands'][0]['value']); 
+        $variables['gather_digits'] = $_REQUEST['Digits'];
+        $call['script_variables'] = $variables;
+        break;
 // TODO: don't forget to pass action to script_handler. it should only advance index after processing the response action.
     }
   }
