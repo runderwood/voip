@@ -25,7 +25,7 @@ define('VOIPCALL_PLAY', 'play'); // play the specified audio file
 define('VOIPCALL_RECORD', 'record');
 define('VOIPCALL_HANGUP', 'hangup'); // hangup the call
 define('VOIPCALL_GATHER', 'menu'); // present an audio menu with options
-define('VOIPCALL_GET_SCRIPT', 'get script'); // load the specified script
+define('VOIPCALL_LOAD_SCRIPT', 'get script'); // load the specified script
 define('VOIPCALL_SET', 'set'); // set the value of a given script variable
 
 
@@ -42,12 +42,9 @@ define('VOIPCALL_SET', 'set'); // set the value of a given script variable
  *    'caller_number', the caller number
  *    'caller_name', the caller name
  *    'status', the status of the call. Check constants.
- *    'script_name', the name of the current dialplan script
- *    'script_commands', array with the script commands
+ *    'script_name', the name of the dialplan script to be executed
  *    'script_index', the index of the current command
  *    'script_variables', variables accessed and updated by the script
- *    'process_response', set to non-0 in case script handler needs to process
- *       response to existing command before moving to next command
  *    'hangup_script', the name of the script to be invoked in case of hangup
  *    'uid', the id of the user associated with the script
  *    'source', the server that originated the call ('drupal', 'asterisk', etc.)
@@ -87,9 +84,6 @@ dsm($details);
     // initialize script-related fields with their default values
     $script_name = voipcall_get_default_script_name();
     $node->field_voipcall_script_name[0]['value'] = $script_name;
-// todo: serialize commands
-// todo: remove script_commands from voipcall
-    $node->field_voipcall_script_commands[0]['value'] =  serialize(voipcall_get_script($script_name));
     $node->field_voipcall_script_index[0]['value'] =  0;
 // todo: serialize variables
     $node->field_voipcall_script_variables[0]['value'] =  serialize(array());
@@ -116,13 +110,10 @@ dsm($node);
   if(isset($details['status'])) $node->field_voipcall_status[0]['value'] = $details['status'];
 
   if(isset($details['script_name'])) $node->field_voipcall_script_name[0]['value'] =  $details['script_name'];
-// todo: serialize commands
-  if(isset($details['script_commands'])) $node->field_voipcall_script_commands[0]['value'] =  serialize($details['script_commands']);
   if(isset($details['script_index'])) $node->field_voipcall_script_index[0]['value'] =  $details['script_index'];
 // todo: serialize variables
   if(isset($details['script_variables'])) $node->field_voipcall_script_variables[0]['value'] =  serialize($details['script_variables']);
-  if(isset($details['hangup_script'])) $node->field_voipcall_hangup_script[0]['value'] =  serialize($details['hangup_script']);
-  if(isset($details['process_response'])) $node->field_voipcall_process_response[0]['value'] =  serialize($details['process_response']);
+  if(isset($details['hangup_script'])) $node->field_voipcall_hangup_script[0]['value'] =  $details['hangup_script'];
 
   if(isset($details['source'])) $node->field_voipcall_source[0]['value'] =  $details['source'];
 
@@ -250,29 +241,6 @@ function voipcall_admin_form_submit($form, &$form_state) {
 
 
 /**
- * Return the specified dialplan script
- *
- * @param string $script_name
- *
- * @param array $voipcall with info about the call associated w/ the script
- *
- * @return array with the script commands.  Returns an empty array in case no 
- *   script is found for the given name.
- */
-function voipcall_get_script($script_name, $voipcall=NULL){
-  $script = array();
-  foreach (module_implements('voipcall_get_script') as $module) {
-    $function = $module .'_'. 'voipcall_get_script';
-    $result = call_user_func($function, $script_name, $voipcall);
-    if (isset($result)) {
-      $script = array_merge_recursive($script, $result);
-    }
-  }
-  return $script;
-
-}
-
-/**
  * Return the name of the default script to be used with new incoming calls
  */
 function voipcall_get_default_script_name() {
@@ -281,13 +249,15 @@ function voipcall_get_default_script_name() {
 }
 
 /**
- * Implementation of hook_voipcall_get_script()
+ * Implementation of hook_voipcall_load_script()
  */
-function voipcall_voipcall_get_script($script_name) {
+function voipcall_voipcall_load_script($voipcall, $script_name) {
   $script = NULL;
   if($script_name == 'voipcall_call_pickup') { 
    $script = array();
-   $script[] = array('id' => VOIPCALL_SAY, 'arg' => "Hello world!");
+   $script[] = array('id' => VOIPCALL_SAY,
+                     'text' => "Hello world!"
+               );
    $script[] = array('id' => VOIPCALL_HANGUP);
   }
  return $script;
@@ -318,19 +288,37 @@ function voipcall_is_hangup($voipcall) {
  *
  * @param array $voipcall instance with the script info
  *
+ * @param string $script_name. If NULL, the function will use the call's current script name.
+ *
  * @return array with the new context. Check voip_error() for processing errors.
  */
-function voipcall_load_context($voipcall) {
+function voipcall_load_script($voipcall, $script_name=NULL) {
 
+  if(!$script_name) {
+    $script_name = $voipcall['field_voipcall_script_name'][0]['value'];
+  }
+
+  // evoke hook_load_script() giving modules the opportunity to return a
+  // custom script and update $voipcall as needed
+  $script_commands = array();
+  foreach (module_implements('voipcall_load_script') as $module) {
+    $function = $module .'_'. 'voipcall_load_script';
+    $result = call_user_func($function, &$voipcall, $script_name);
+    if(isset($result)) {
+      $script_commands = array_merge_recursive($script_commands, $result);
+    }
+  }
+
+  // now set the context for the script to run with
   $context = array();
 
   $context['status'] = $voipcall['field_voipcall_status'][0]['value'];
 
   $context['script_name'] = $voipcall['field_voipcall_script_name'][0]['value'];
-  $context['script_commands'] = voipcall_get_script($script_name, $voipcall);
+  $context['script_commands'] = $script_commands;
   $context['script_index'] = $voipcall['field_voipcall_script_index'][0]['value'];
   $context['script_variables'] = unserialize($voipcall['field_voipcall_script_variables'][0]['value']);
-  $context['process_response'] = $voipcall['field_voipcall_process_response'][0]['value'];
+  $context['hangup_script'] = $voipcall['field_voipcall_hangup_script'][0]['value'];
 
   // add call variables to script variables
 
