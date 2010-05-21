@@ -58,7 +58,7 @@ dsm($msg);
     $call['status'] = VOIPCALL_NOT_CALLED;
     $call['start_time'] = time();
 
-    // for the sake of consistency, init the new node before updating it
+    // init the new node before updating it
     $call = (array)voipcall_save($call);
   }
 
@@ -191,7 +191,6 @@ dsm($msg);
         $variables['gather_digits'] = $_REQUEST['Digits'];
         $call['script_variables'] = $variables;
         break;
-// TODO: don't forget to pass action to script_handler. it should only advance index after processing the response action.
     }
   }
 
@@ -213,7 +212,7 @@ dsm($msg);
   // process the call script
   $rc = _voiptwilio_script_handler($call);
 
-  return;  // NOTE: this function cannot return any value.  If it does, the output to Twilio will get messed up with Drupal hmtl...
+  return;  // NOTE: this function must not return any value.  If it does, the output to Twilio will get messed up with Drupal hmtl...
 }
 
 /**
@@ -234,7 +233,7 @@ dsm($voipcall);
   $rc = TRUE;
 
   // retrieve script context
-  $context = _voiptwilio_load_context($voipcall);
+  $context = voipcall_load_context($voipcall);
 
   $name = $context['script_name'];
   $commands = $context['script_commands'];
@@ -357,47 +356,6 @@ function _voiptwilio_send_response($twiml_response) {
   return TRUE;
 }
 
-
-/**
- * Load script context associated with the given call
- *
- * @param array $voipcall instance with the script info
- *
- * @return array with the new context. Check voip_error() for processing errors.
- */
-function _voiptwilio_load_context($voipcall) {
-
-  $context = array();
-
-  $context['status'] = $voipcall['field_voipcall_status'][0]['value'];
-
-  $context['script_name'] = $voipcall['field_voipcall_script_name'][0]['value'];
-  $context['script_commands'] = voipcall_get_script($script_name, $voipcall);
-  $context['script_index'] = $voipcall['field_voipcall_script_index'][0]['value'];
-  $context['script_variables'] = unserialize($voipcall['field_voipcall_script_variables'][0]['value']);
-  $context['process_response'] = $voipcall['field_voipcall_process_response'][0]['value'];
-
-  // add call variables to script variables
-
-  $context['script_variables']['uid'] = $voipcall['uid'];
-
-  $context['script_variables']['status'] = $status;
-
-  $context['script_variables']['call_id'] = $voipcall['field_voipcall_call_id'][0]['value'];
-  $context['script_variables']['dest_number'] = $voipcall['field_voipcall_dest_number'][0]['value'];
-  $context['script_variables']['caller_number'] = $voipcall['field_voipcall_caller_number'][0]['value'];
-  $context['script_variables']['caller_name'] = $voipcall['field_voipcall_caller_name'][0]['value'];
-
-  $context['script_variables']['source'] = $voipcall['field_voipcall_source'][0]['value'];
-
-  $context['script_variables']['start_time'] = $voipcall['field_voipcall_start_time'][0]['value'];
-  $context['script_variables']['end_time'] = $voipcall['field_voipcall_end_time'][0]['value'];
-  $context['script_variables']['duration'] = $voipcall['field_voipcall_duration'][0]['value'];
-
-  $context['script_variables']['error_message'] = $voipcall['field_voipcall_error_message'][0]['value'];
-
-  return $context;
-}
 
 /**
  * Test the connection with the Twilio server
