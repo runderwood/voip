@@ -211,8 +211,9 @@ dsm($msg);
   $call = voipcall_save($call);
 
   // process the call script
- $r = _voiptwilio_script_handler($call);
+  $rc = _voiptwilio_script_handler($call);
 
+  return;  // NOTE: this function cannot return any value.  If it does, the output to Twilio will get messed up with Drupal hmtl...
 }
 
 /**
@@ -222,12 +223,9 @@ dsm($msg);
  *
  * @return boolean.  TRUE on success or FALSE on failure.  Check voip_error() for processing failure.
  */
-
 function _voiptwilio_script_handler($voipcall) {
 dsm('entering voiptwilio_script_handler()');
 dsm($voipcall);
-
-    // TODO: do we have to differentiate inbound X outbound calls here?
 
   if(is_object($voipcall)){
     $voipcall = (array)$voipcall;
@@ -236,21 +234,148 @@ dsm($voipcall);
   $rc = TRUE;
 
   // retrieve script context
+  $context = _voiptwilio_load_context($voipcall);
+
+  $name = $context['script_name'];
+  $commands = $context['script_commands'];
+  $index = $context['script_index'];
+  $variables = $context['script_variables'];
+    
+  // process script commands
+  $processing = TRUE;
+  while($processing) {
+/*********
+
+    // process response requested by current command
+// TODO: with VOIPCALL_SET, this won't be needed anymore... vars will be set automatically by commands... and then renamed/copied if needed
+    $process_response = $context['process_response'];
+    if($process_response) {
+      $cmd_id = $commands[$index]['id'];
+      $cmd_arg = $commands[$index]['arg'];
+      switch($cmd_id){
+        default:
+          $msg = 'Invalid command id @cmd_id in @script_name';
+          $params = array('@cmd_id' => $cmd_id, '@script_name' => $script_name);
+          watchdog('voiptwilio',$msg, $params, WATCHDOG_ERROR);
+          $msg2 = "Invalid command $cmd_id in $script_name";
+          voip_error($msg2);
+          $voipcall['error_message'] = $msg2;
+          $voipcall['status'] = VOIPCALL_ERROR;
+          $voipcall_save($voipcall);
+          $rc = FALSE;
+          $processing = FALSE;
+          break;
+        case 'VOIPCALL_RECORD':
+        case 'VOIPCALL_GATHER':
+          break;
+      }
+    }
+**********/
+   
+    if($processing) {
+      // process next command, if any
+      $index++;
+
+      if($index >= count($commands)) {
+        // no more commands to be processed
+        $processing = FALSE;
+      }
+      else {
+
+        $cmd_id = $commands[$index]['id'];
+        $cmd_arg = $commands[$index]['arg'];
+   
+        switch($cmd_id) {
+          default:
+            $msg = 'Invalid command id @cmd_id in @script_name';
+            $params = array('@cmd_id' => $cmd_id, '@script_name' => $script_name);
+            watchdog('voiptwilio',$msg, $params, WATCHDOG_ERROR);
+            $msg2 = "Invalid command $cmd_id in $script_name";
+            voip_error($msg2);
+            $voipcall['error_message'] = $msg2;
+            $voipcall['status'] = VOIPCALL_ERROR;
+            $voipcall_save($voipcall);
+            $rc = FALSE;
+            $processing = FALSE;
+            break;
+          case 'VOIPCALL_SAY':
+            if($cmd_arg[0] == 'var') {
+              $var_name = $cmd_arg[1];
+              $text = $variables[$var_name];
+            }
+            else {
+              $text = $cmd_arg[1];
+            }
+            break;
+
+          case 'VOIPCALL_PLAY':
+            break;
+          case 'VOIPCALL_RECORD':
+            break;
+          case 'VOIPCALL_HANGUP':
+            break;
+          case 'VOIPCALL_GATHER':
+            break;
+          case 'VOIPCALL_GET_SCRIPT':
+            break;
+          case 'VOIPCALL_SET';
+          break;
+        }
+      }
+    }
+  }
+
+  // update voipcall with current context values
+// TODO: update $context with $index, variables, etc. and do the above with _voiptwilio_save_context($voipcall, $context);
+  // send response back to Twilio
+  $response = '<!--' . "voipcall: " . print_r($voipcall,true) .  "\n" . '-->';
+  $response .= '<!--' . "script_context: " . print_r($context, true) .  "\n" . '-->';
+  $response .= '<!--' . "script_variables: " . print_r($script_variables,true) .  "\n" . '-->';
+  $response .= '
+      <Response> 
+        <Say>Hello World</Say>
+        <Play>http://api.twilio.com/Cowbell.mp3</Play>
+        <dance>heyhey</dance>
+      </Response> ';
+  _voiptwilio_send_response($response);
+
+  return $rc;
+}
+
+/**
+ * Send response back to Twilio
+ */
+function _voiptwilio_send_response($twiml_response) {
+  $output = '<?xml version="1.0" encoding="UTF-8" ?>';
+  $output .= '<Response>'; 
+  $output .= $twiml_response;
+  $output .= '</Response>';
+
+  drupal_set_header('Content-Type: text/xml; charset=utf-8');
+  print $output;
+
+  return TRUE;
+}
+
+
+/**
+ * Load script context associated with the given call
+ *
+ * @param array $voipcall instance with the script info
+ *
+ * @return array with the new context. Check voip_error() for processing errors.
+ */
+function _voiptwilio_load_context($voipcall) {
+
   $context = array();
+
+  $context['status'] = $voipcall['field_voipcall_status'][0]['value'];
+
   $context['script_name'] = $voipcall['field_voipcall_script_name'][0]['value'];
-// todo: serialize commands
-  $context['script_commands'] = unserialize($voipcall['field_voipcall_script_commands'][0]['value']);
+  $context['script_commands'] = voipcall_get_script($script_name, $voipcall);
   $context['script_index'] = $voipcall['field_voipcall_script_index'][0]['value'];
-// todo: serialize variables
   $context['script_variables'] = unserialize($voipcall['field_voipcall_script_variables'][0]['value']);
-  $context['hangup_script'] = $voipcall['field_voipcall_hangup_script'][0]['value'];
   $context['process_response'] = $voipcall['field_voipcall_process_response'][0]['value'];
-
-  $status = $voipcall['field_voipcall_status'][0]['value'];
-
-  // TODO: update context to process hangup-related events
-  // - check status
-  // - load new script and reset variables (similar to goto command)
 
   // add call variables to script variables
 
@@ -271,25 +396,7 @@ dsm($voipcall);
 
   $context['script_variables']['error_message'] = $voipcall['field_voipcall_error_message'][0]['value'];
 
-
-  // check status of the call and process script accordingly
-
-
-  // send response back to Twilio
-  $output = '<?xml version="1.0" encoding="UTF-8" ?>';
-  $output .= '<!--' . "voipcall: " . print_r($voipcall,true) .  "\n" . '-->';
-  $output .= '<!--' . "script_context: " . print_r($context, true) .  "\n" . '-->';
-  $output .= '<!--' . "script_variables: " . print_r($script_variables,true) .  "\n" . '-->';
-  $output .= '
-      <Response> 
-        <Say>Hello World</Say>
-        <Play>http://api.twilio.com/Cowbell.mp3</Play>
-      </Response> ';
-
-  drupal_set_header('Content-Type: text/xml; charset=utf-8');
-  print $output;
-dsm('does this get executed?');
-  return $rc;
+  return $context;
 }
 
 /**

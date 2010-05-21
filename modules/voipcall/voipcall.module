@@ -3,8 +3,7 @@
 include_once('voipcall.features.inc');
 
 /**
- * Possible states of a call
- *
+ * Possible status of a call
  */
 define('VOIPCALL_ERROR', 'processing error');
 define('VOIPCALL_NOT_CALLED', 'not called'); // the call has yet to be called
@@ -17,6 +16,17 @@ define('VOIPCALL_ANSWERED_MACHINE', 'answered by machine');
 define('VOIPCALL_ANSWERED_HUMAN', 'answered by human');
 define('VOIPCALL_MACHINE_HANGUP', 'machine hangup'); // call hangup due to machine pickup
 define('VOIPCALL_COMPLETED', 'completed');
+
+/**
+ * Voip command types
+ */
+define('VOIPCALL_SAY', 'say'); // say a given text
+define('VOIPCALL_PLAY', 'play'); // play the specified audio file
+define('VOIPCALL_RECORD', 'record');
+define('VOIPCALL_HANGUP', 'hangup'); // hangup the call
+define('VOIPCALL_GATHER', 'menu'); // present an audio menu with options
+define('VOIPCALL_GET_SCRIPT', 'get script'); // load the specified script
+define('VOIPCALL_SET', 'set'); // set the value of a given script variable
 
 
 /**
@@ -31,9 +41,7 @@ define('VOIPCALL_COMPLETED', 'completed');
  *    'dest_number', the destination number for the phone call
  *    'caller_number', the caller number
  *    'caller_name', the caller name
- *    'status', the status of the call. Possile values: 'processing error',
- *      'not called', 'calling', 'answered', 'no answer', 'busy',
- *      'invalid number'
+ *    'status', the status of the call. Check constants.
  *    'script_name', the name of the current dialplan script
  *    'script_commands', array with the script commands
  *    'script_index', the index of the current command
@@ -80,6 +88,7 @@ dsm($details);
     $script_name = voipcall_get_default_script_name();
     $node->field_voipcall_script_name[0]['value'] = $script_name;
 // todo: serialize commands
+// todo: remove script_commands from voipcall
     $node->field_voipcall_script_commands[0]['value'] =  serialize(voipcall_get_script($script_name));
     $node->field_voipcall_script_index[0]['value'] =  0;
 // todo: serialize variables
@@ -245,14 +254,16 @@ function voipcall_admin_form_submit($form, &$form_state) {
  *
  * @param string $script_name
  *
+ * @param array $voipcall with info about the call associated w/ the script
+ *
  * @return array with the script commands.  Returns an empty array in case no 
  *   script is found for the given name.
  */
-function voipcall_get_script($script_name){
+function voipcall_get_script($script_name, $voipcall=NULL){
   $script = array();
   foreach (module_implements('voipcall_get_script') as $module) {
     $function = $module .'_'. 'voipcall_get_script';
-    $result = call_user_func($function, $script_name);
+    $result = call_user_func($function, $script_name, $voipcall);
     if (isset($result)) {
       $script = array_merge_recursive($script, $result);
     }
@@ -276,11 +287,31 @@ function voipcall_voipcall_get_script($script_name) {
   $script = NULL;
   if($script_name == 'voipcall_call_pickup') { 
    $script = array();
-   $script[] = array('say' => "Hello world!");
-   $script[] = array('hangup');
+   $script[] = array('id' => VOIPCALL_SAY, 'arg' => "Hello world!");
+   $script[] = array('id' => VOIPCALL_HANGUP);
   }
  return $script;
 }
+
+/**
+ * Check if the call is in a hangup state
+ */
+function voipcall_is_hangup($voipcall) {
+  $rc = FALSE;
+  $status = $voipcall['field_voipcall_status'][0]['value'];
+  switch($status) {
+    case 'VOIPCALL_ERROR':
+    case 'VOIPCALL_NO_ANSWER':
+    case 'VOIPCALL_BUSY':
+    case 'VOIPCALL_INVALID':
+    case 'VOIPCALL_MACHINE_HANGUP':
+    case 'VOIPCALL_COMPLETED':
+      $rc = TRUE;
+      break;
+  }
+  return $rc;
+}
+
 
 /**
  * Internal functions
