@@ -27,6 +27,7 @@ define('VOIPCALL_HANGUP', 'hangup'); // hangup the call
 define('VOIPCALL_GATHER', 'menu'); // present an audio menu with options
 define('VOIPCALL_LOAD_SCRIPT', 'get script'); // load the specified script
 define('VOIPCALL_SET', 'set'); // set the value of a given script variable
+define('VOIPCALL_DIAL', 'dial'); // dial the specified number
 
 
 /**
@@ -340,6 +341,48 @@ function voipcall_load_script($voipcall, $script_name=NULL) {
   $context['script_variables']['error_message'] = $voipcall['field_voipcall_error_message'][0]['value'];
 
   return $context;
+}
+
+
+/**
+ * Save the script context within the given call
+ *
+ * @param array $voipcall instance 
+ *
+ * @param string $context
+ *
+ * @return array with the updated voipcall info
+ */
+function voipcall_save_script_context($voipcall, $context) {
+
+  $details = array();
+
+  $details['script_name'] = $context['script_name'];
+  $details['script_index'] = $context['script_index'];
+  $details['script_variables'] = $context['script_variables'];
+  $details['hangup_script'] = $context['hangup_script'];
+
+  // retrieve script variables
+
+  $details['uid'] = $context['script_variables']['uid'];
+
+  $details['status'] = $context['script_variables']['status'];
+
+  $details['call_id'] = $context['script_variables']['call_id'];
+  $details['dest_number'] = $context['script_variables']['dest_number'];
+  $details['caller_number'] = $context['script_variables']['caller_number'];
+  $details['caller_name'] = $context['script_variables']['caller_name'];
+
+  $details['source'] = $context['script_variables']['source'];
+
+  $details['start_time'] = $context['script_variables']['start_time'];
+  $details['end_time'] = $context['script_variables']['end_time'];
+  $details['duration'] = $context['script_variables']['duration'];
+
+  $details['error_message'] = $context['script_variables']['error_message'];
+
+  $call = voipcall_save($details);
+  return $call;
 }
 
 

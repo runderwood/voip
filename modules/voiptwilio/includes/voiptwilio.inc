@@ -302,6 +302,8 @@ dsm("cmd_id: $cmd_id");
         case VOIPCALL_RECORD:
           break;
         case VOIPCALL_HANGUP:
+          $response = '<Hangup/>';
+          $processing = FALSE;
           break;
         case VOIPCALL_GATHER:
           break;
@@ -309,12 +311,18 @@ dsm("cmd_id: $cmd_id");
           break;
         case VOIPCALL_SET;
         break;
+        case VOIPCALL_DIAL;
+        break;
       }
 
       // go to next command
       $index++;
     }
   }
+
+  // store context for next script iteration
+// TODO: return variables -- index, variables, ...to context before saving it
+  voipcall_save_script_context($voipcall, $context);
 
   // send response back to Twilio
   if($response) {
@@ -324,14 +332,11 @@ $response .= '<Play>http://api.twilio.com/Cowbell.mp3</Play>';
     _voiptwilio_send_response($response);
   }
 
-  // update voipcall with current context values
-// TODO: update $context with $index, variables, etc. and do the above with _voiptwilio_save_context($voipcall, $context);
-
   return $rc;
 }
 
 /**
- * Send response back to Twilio
+ * Send responses to Twilio
  */
 function _voiptwilio_send_response($response) {
   $output .= '<?xml version="1.0" encoding="UTF-8" ?>';
