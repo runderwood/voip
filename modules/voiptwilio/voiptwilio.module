@@ -109,11 +109,22 @@ function voiptwilio_menu() {
   $items['voip/twilio/callhandler'] = array(
     'title' => 'Voip Twilio call handler',
     'description' => 'Handles incoming calls from Twilio.',
-    'access arguments' => array('administer voip drupal framework'), // TODO: define appropriate permissions
+    'access arguments' => array('make inbound calls'), // Note: Since we cannot
+                                       // check users before they call in, it's
+                                       // important that anonymous users be
+                                       // able to make inbound calls
     'page callback' => '_voiptwilio_call_handler',
     'type' => MENU_CALLBACK,
   );
 
   return $items;
 }
+
+/*
+ * Implementation of hook_perm()
+ */
+function voiptwilio_perm() {
+  return array('make inbound calls', 'make outbound calls');
+}
+
 

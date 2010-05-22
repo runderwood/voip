@@ -26,6 +26,7 @@ foreach (array('twilio.php') as $file) {
  *  is not NULL.  It can assume any of the following values: process_gather
  *  and process_record.
  *
+ * @return void
  */
 function _voiptwilio_call_handler($call_id=NULL, $response_action=NULL) {
 
