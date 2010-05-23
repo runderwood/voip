@@ -29,6 +29,8 @@ define('VOIPCALL_COMPLETED', 'completed');
 /**
  * Script command types
  */
+define('VOIPCALL_CMDID', 'command id'); // 'command id' indicator
+
 define('VOIPCALL_SAY', 'say'); // say a given text
 define('VOIPCALL_PLAY', 'play'); // play the specified audio file
 define('VOIPCALL_RECORD', 'record');
@@ -71,12 +73,52 @@ function voipcall_voipcall_load_script($voipcall, $script_name) {
   $script = NULL;
   if($script_name == 'voipcall_call_pickup') { 
    $script = array();
-   $script[] = array('id' => VOIPCALL_SAY,
-                     'text' => "Hello world!"
+   $script[] = array(VOIPCALL_CMDID => VOIPCALL_SAY,
+                     'text' => array(VOIPCALL_VAL => "Hello world!"),
                );
-   $script[] = array('id' => VOIPCALL_HANGUP);
+   $script[] = array(VOIPCALL_CMDID => VOIPCALL_SAY,
+                     'text' => array(VOIPCALL_VAL => "My caller id is "),
+               );
+   $script[] = array(VOIPCALL_CMDID => VOIPCALL_SAY,
+                     'text' => array(VOIPCALL_VAR => 'call_id'),
+               );
+   $script[] = array(VOIPCALL_CMDID => VOIPCALL_SAY,
+                     'text' => array(VOIPCALL_VAL => "Please leave a message after the beep.  When done, press the start key. "),
+               );
+   $script[] = array(VOIPCALL_CMDID => VOIPCALL_RECORD,
+                     'max_length' => array(VOIPCALL_VAL => '20'),
+                     'end_key' => array(VOIPCALL_VAL => '*'),
+               );
+   $script[] = array(VOIPCALL_CMDID => VOIPCALL_PLAY,
+                     'url' => array(VOIPCALL_VAL => "http://api.twilio.com/Cowbell.mp3"),
+               );
+   $script[] = array(VOIPCALL_CMDID => VOIPCALL_HANGUP);
   }
  return $script;
+}
+
+/**
+ * Return the value of the given command parameter
+ */
+function _voipcall_script_get_parameter_value($command, $param_name, $script_variables) {
+  $rc = NULL;
+  $param = $command[$param_name];
+  if($param){
+    if($param[VOIPCALL_VAL]) {
+      $rc = $param[VOIPCALL_VAL];
+    }
+    else if($param[VOIPCALL_VAR]) {
+      $var_name = $param[VOIPCALL_VAR];
+      $rc = $script_variables[$var_name];
+    }
+    else if($param[VOIPCALL_EXEC]) {
+        $function = $param[VOIPCALL_EXEC][0];
+        $args =($param[VOIPCALL_EXEC][1])?$param[VOIPCALL_EXEC][1]:array();
+        $rc = call_user_func_array($function, $args);
+        break;
+    }
+  }
+  return $rc;
 }
 
 /**

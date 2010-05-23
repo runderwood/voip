@@ -256,7 +256,7 @@ dsm($context);
     else {
 
       $command = $commands[$index];
-      $cmd_id = $command['id'];
+      $cmd_id = $command[VOIPCALL_CMDID];
 dsm("cmd_id: $cmd_id");
    
       switch($cmd_id) {
@@ -269,21 +269,19 @@ dsm("cmd_id: $cmd_id");
           break;
 
         case VOIPCALL_SAY:
-          if($command['text']) {
-            $text = $command['text'];
-          }
-          else if($command['var_name']){
-            $text = $variables[$var_name];
-          }
-          $response = "<Say>$text</Say>";
+          $text = _voipcall_script_get_parameter_value($command, 'text', $variables); 
+          $response .= "<Say>$text</Say>";
           break;
 
         case VOIPCALL_PLAY:
+          $url = _voipcall_script_get_parameter_value($command, 'url', $variables); 
+          $response .= "<Play>$url</Play>";
           break;
         case VOIPCALL_RECORD:
+          
           break;
         case VOIPCALL_HANGUP:
-          $response = '<Hangup/>';
+          $response .= '<Hangup/>';
           $processing = FALSE;
           break;
         case VOIPCALL_GATHER:
@@ -309,7 +307,6 @@ dsm("cmd_id: $cmd_id");
   if($response) {
 $response .= '<!--' . "voipcall: " . print_r($voipcall,true) .  "\n" . '-->';
 $response .= '<!--' . "script_context: " . print_r($context, true) .  "\n" . '-->';
-$response .= '<Play>http://api.twilio.com/Cowbell.mp3</Play>';
     _voiptwilio_send_response($response);
   }
 
