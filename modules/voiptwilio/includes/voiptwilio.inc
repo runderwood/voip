@@ -3,7 +3,7 @@
 
 /**
  * @file
- * Implementation of a simple log server for Voip Drupal
+ * Implementation of Twilio-related functionality
  */
 
 foreach (array('twilio.php') as $file) {
@@ -46,21 +46,22 @@ dsm($msg);
      return FALSE;  // TODO: should we return an error response to the server?
   }
 
-  // load the variables already associated with the call, if any
-  if($call_id) {
-    $call_nid = voipcall_get_nid_from_call_id($call_id);
-    $call = (array)node_load($call_nid);
-  }
-  else {
+  // handle incoming call requests
+  if(!$call_id) {
     $call = array();
     $call_guid = $_REQUEST['CallGuid']; // unique identifier of the call, 34 char
     $call['call_id'] = $call_guid;
     $call['source'] = 'twilio';
-    $call['status'] = VOIPCALL_NOT_CALLED;
+    $call['status'] = VOIPCALL_IN_PROGRESS;
     $call['start_time'] = time();
 
-    // init the new node before updating it
+    // create a new node for the call
     $call = (array)voipcall_save($call);
+  }
+  else {
+    // load the variables already associated with the call, if any
+    $call_nid = voipcall_get_nid_from_call_id($call_id);
+    $call = (array)node_load($call_nid);
   }
 
   // update common call variables
@@ -68,117 +69,106 @@ dsm($msg);
   if(!isset($call['caller_name'])) $call['field_voipcall_caller_name'][0]['value'] = $_REQUEST['CallerName'];
   if(!isset($call['dest_number'])) $call['field_voipcall_dest_number'][0]['value'] = $_REQUEST['Called'];
 
+  // store call location, if available
+  $call_location = array();
+  if(isset($_REQUEST['CallerCity'])) $call_location['caller_city'] = $_REQUEST['CallerCity'];
+  if(isset($_REQUEST['CallerState'])) $call_location['caller_state'] = $_REQUEST['CallerState'];
+  if(isset($_REQUEST['CallerZip'])) $call_location['caller_zip'] = $_REQUEST['CallerZip'];
+  if(isset($_REQUEST['CallerCountry'])) $call_location['caller_country'] = $_REQUEST['CallerCountry'];
+  if(isset($_REQUEST['CalledCity'])) $call_location['called_city'] = $_REQUEST['CalledCity'];
+  if(isset($_REQUEST['CalledState'])) $call_location['called_state'] = $_REQUEST['CalledState'];
+  if(isset($_REQUEST['CalledZip'])) $call_location['calldr_zip'] = $_REQUEST['CalledZip'];
+  if(isset($_REQUEST['CalledCountry'])) $call_location['called_country'] = $_REQUEST['CalledCountry'];
+  if($call_location) {
+    // TODO: what to do about serialize/unserialize?
+    $variables = unserialize($call['field_voipcall_script_variables'][0]['value']); 
+    $variables['call_location'] = $call_location;
+    $call['script_variables'] = $variables;
+  }
+
   $hangup = FALSE;
 
-  // handle 'dial' requests and responses
-  $dial_status = isset($_REQUEST['DialStatus'])?$_REQUEST['DialStatus']:NULL;
-  if($dial_status) {
-
-    // store call location, if available
-    $call_location = array();
-    if(isset($_REQUEST['CallerCity'])) $call_location['caller_city'] = $_REQUEST['CallerCity'];
-    if(isset($_REQUEST['CallerState'])) $call_location['caller_state'] = $_REQUEST['CallerState'];
-    if(isset($_REQUEST['CallerZip'])) $call_location['caller_zip'] = $_REQUEST['CallerZip'];
-    if(isset($_REQUEST['CallerCountry'])) $call_location['caller_country'] = $_REQUEST['CallerCountry'];
-    
-    if(isset($_REQUEST['CalledCity'])) $call_location['called_city'] = $_REQUEST['CalledCity'];
-    if(isset($_REQUEST['CalledState'])) $call_location['called_state'] = $_REQUEST['CalledState'];
-    if(isset($_REQUEST['CalledZip'])) $call_location['calldr_zip'] = $_REQUEST['CalledZip'];
-    if(isset($_REQUEST['CalledCountry'])) $call_location['called_country'] = $_REQUEST['CalledCountry'];
-    if($call_location) {
-      // TODO: what to do about serialize/unserialize?
-      $variables = unserialize($call['field_voipcall_script_variables'][0]['value']); 
-      $variables['call_location'] = $call_location;
-      $call['script_variables'] = $variables;
-    }
-
-    switch($dial_status){
-      default:
-        $call['status'] = VOIP_CALL_ERROR;
-        $error_message = 'Invalid DialStatus: ' . $dial_status;
-        $call['error_message'] = $error_message;
-        watchdog('voiptwilio', $error_msg, array(), WATCHDOG_ERROR);
-        voipcall_save($call);
-        return FALSE;
-        break;
-      case 'failed':
-        $call['status'] = VOIP_CALL_ERROR;
-        $error_message = 'Twilio processing error';
-        $call['error_message'] = $error_message;
-        watchdog('voiptwilio', $error_msg, array(), WATCHDOG_ERROR);
-        $hangup = TRUE;
-        break;
-      case 'answered':
-        $call['status'] = VOIP_CALL_ANSWERED;
-        break;
-      case 'busy':
-        $call['status'] = VOIP_CALL_BUSY;
-        $hangup = TRUE;
-        break;
-      case 'no-answer':
-        $call['status'] = VOIP_CALL_NO_ANSWER;
-        $hangup = TRUE;
-        break;
-      case 'answered-machine':
-        $call['status'] = VOIP_CALL_ANSWERED_MACHINE;
-        break;
-      case 'answered-human':
-        $call['status'] = VOIP_CALL_ANSWERED_HUMAN;
-        break;
-      case 'hangup-machine':
-        $call['status'] = VOIP_CALL_MACHINE_HANGUP;
-        $hangup = TRUE;
-        break;
-    }
+  // update the status of the call
+  $call_status = $_REQUEST['CallStatus']; 
+  switch($call_status) {
+    default:
+      $msg = 'Invalid CallStatus: @status';
+      $params = array('@status' => $call_status);
+      voipcall_processing_error('voiptwilio', $call, $msg, $params);
+      return FALSE;
+      break;
+    case 'failed':
+      $msg = 'Twilio processing error';
+      $params = array();
+      voipcall_processing_error('voiptwilio', $call, $msg, $params);
+      $hangup = TRUE;
+      break;
+    case 'in-progress':
+      $call['status'] = VOIPCALL_IN_PROGRESS;
+      break;
+    case 'completed':
+      $call['status'] = VOIPCALL_COMPLETED;
+      $hangup = TRUE;
+      break;
+    case 'busy':
+      $call['status'] = VOIPCALL_BUSY;
+      $hangup = TRUE;
+      break;
+    case 'no-answer':
+      $call['status'] = VOIPCALL_NO_ANSWER;
+      $hangup = TRUE;
+      break;
   }
 
-  // process requests/responses from ongoing calls
-  else {
-    $call_status = $_REQUEST['CallStatus']; 
-    switch($call_status) {
-      default:
-        $call['status'] = VOIP_CALL_ERROR;
-        $error_message = 'Invalid CallStatus: ' . $call_status;
-        $call['error_message'] = $error_message;
-        watchdog('voiptwilio', $error_msg, array(), WATCHDOG_ERROR);
-        voipcall_save($call);
-        return FALSE;
-        break;
-      case 'failed':
-        $call['status'] = VOIP_CALL_ERROR;
-        $error_message = 'Twilio processing error';
-        $call['error_message'] = $error_message;
-        watchdog('voiptwilio', $error_msg, array(), WATCHDOG_ERROR);
-        $hangup = TRUE;
-        break;
-      case 'in-progress':
-        $call['status'] = VOIP_CALL_ANSWERED;
-        break;
-      case 'completed':
-        $call['status'] = VOIP_CALL_COMPLETED;
-        $hangup = TRUE;
-        break;
-      case 'busy':
-        $call['status'] = VOIP_CALL_BUSY;
-        $hangup = TRUE;
-        break;
-      case 'no-answer':
-        $call['status'] = VOIP_CALL_NO_ANSWER;
-        $hangup = TRUE;
-        break;
-    }
-  }
-
+  // process responses to requests previously-issued by the call script
   if(!$hangup && $response_action) {
-    // process response actions, if any
     switch($response_action) {
       default:
-        $call['status'] = VOIP_CALL_ERROR;
-        $error_message = 'Invalid response_action: ' . $response_action;
-        $call['error_message'] = $error_message;
-        watchdog('voiptwilio', $error_msg, array(), WATCHDOG_ERROR);
-        voipcall_save($call);
+        $msg = 'Invalid response_action: @action';
+        $params = array('action' => $response_action);
+        voipcall_processing_error('voiptwilio', $call, $msg, $params);
         return FALSE;
+        break;
+      case 'process_dial':
+        $variables = unserialize($call['field_voipcall_script_variables'][0]['value']); 
+        $dial_status = $_REQUEST['DialStatus'];
+        switch($dial_status) {
+          default:
+            $call['status'] = VOIPCALL_ERROR;
+            $error_message = 'Invalid DialStatus for outbound dial request: ' . $dial_status;
+            $call['error_message'] = $error_message;
+            watchdog('voiptwilio', $error_msg, array(), WATCHDOG_ERROR);
+            voipcall_save($call);
+            return FALSE;
+            break;
+          case 'failed':
+            $variables['dial_status'] = VOIPCALL_ERROR;
+            break;
+          case 'answered':
+            $variables['dial_status'] = VOIPCALL_IN_PROGRESS;
+            break;
+          case 'busy':
+            $variables['dial_status'] = VOIPCALL_BUSY;
+            break;
+          case 'no-answer':
+            $variables['dial_status'] = VOIPCALL_NO_ANSWER;
+            break;
+          case 'answered-machine':
+            $variables['dial_status'] = VOIPCALL_ANSWERED_MACHINE;
+            break;
+          case 'answered-human':
+            $variables['dial_status'] = VOIPCALL_ANSWERED_HUMAN;
+            break;
+          case 'hangup-machine':
+            $variables['dial_status'] = VOIPCALL_MACHINE_HANGUP;
+            break;
+        }
+        $call['script_variables'] = $variables;
+        break;
+      case 'process_gather':
+        $variables = unserialize($call['field_voipcall_script_variables'][0]['value']); 
+        $variables['gather_digits'] = $_REQUEST['Digits'];
+        $call['script_variables'] = $variables;
         break;
       case 'process_record':
         $variables = unserialize($call['field_voipcall_script_variables'][0]['value']); 
@@ -187,16 +177,11 @@ dsm($msg);
         $variables['recording_digits'] = $_REQUEST['Digits'];
         $call['script_variables'] = $variables;
         break;
-      case 'process_gather':
-        $variables = unserialize($call['field_voipcall_script_variables'][0]['value']); 
-        $variables['gather_digits'] = $_REQUEST['Digits'];
-        $call['script_variables'] = $variables;
-        break;
     }
   }
 
   if($hangup) {
-    // update basic hangup variables
+    // update core hangup variables
     $call['end_time'] = time();
     $duration = isset($_REQUEST['Duration'])?$_REQUEST['Duration']:NULL;
     if(!$duration) {
@@ -213,7 +198,8 @@ dsm($msg);
   // process the call script
   $rc = _voiptwilio_script_handler($call);
 
-  return;  // NOTE: this function must not return any value.  If it does, the output to Twilio will get messed up with Drupal hmtl...
+  return;  // NOTE: this function MUST not return any value.  If it does, the
+           //       output to Twilio will get messed up with Drupal hmtl...
 }
 
 /**
@@ -275,14 +261,9 @@ dsm("cmd_id: $cmd_id");
    
       switch($cmd_id) {
         default:
-          $msg = 'Invalid command id @cmd_id in @script_name';
+          $msg = "Invalid command id '@cmd_id' in '@script_name'";
           $params = array('@cmd_id' => $cmd_id, '@script_name' => $script_name);
-          watchdog('voiptwilio',$msg, $params, WATCHDOG_ERROR);
-          $msg2 = "Invalid command $cmd_id in $script_name";
-          voip_error($msg2);
-          $voipcall['error_message'] = $msg2;
-          $voipcall['status'] = VOIPCALL_ERROR;
-          voipcall_save($voipcall);
+          voipcall_processing_error('voiptwilio', $voipcall, $msg, $params);
           $rc = FALSE;
           $processing = FALSE;
           break;
@@ -307,12 +288,12 @@ dsm("cmd_id: $cmd_id");
           break;
         case VOIPCALL_GATHER:
           break;
-        case VOIPCALL_LOAD_SCRIPT:
+        case VOIPCALL_LOAD:
           break;
         case VOIPCALL_SET;
-        break;
+          break;
         case VOIPCALL_DIAL;
-        break;
+          break;
       }
 
       // go to next command
