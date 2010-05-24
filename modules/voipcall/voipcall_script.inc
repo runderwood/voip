@@ -85,6 +85,22 @@ function voipcall_voipcall_load_script($voipcall, $script_name) {
 //   $script[] = array(VOIPCALL_CMDID => VOIPCALL_PLAY,
 //                     'url' => array(VOIPCALL_VAL => "http://api.twilio.com/Cowbell.mp3"),
 //               );
+   $script[] = array(VOIPCALL_CMDID => VOIPCALL_GATHER,
+                     'text' => array(VOIPCALL_VAL => "Type your favorite number.  When done, press the pound key."),
+                     'end_key' => array(VOIPCALL_VAL => "#"),
+               );
+   $script[] = array(VOIPCALL_CMDID => VOIPCALL_SAY,
+                     'text' => array(VOIPCALL_VAL => "You pressed: "),
+               );
+   $script[] = array(VOIPCALL_CMDID => VOIPCALL_SAY,
+                     'text' => array(VOIPCALL_VAR => "gather_digits"),
+               );
+   $script[] = array(VOIPCALL_CMDID => VOIPCALL_SAY,
+                     'text' => array(VOIPCALL_VAL => "Dialing your cell number "),
+               );
+   $script[] = array(VOIPCALL_CMDID => VOIPCALL_DIAL,
+                     'number' => array(VOIPCALL_VAL => "6177920995"),
+               );
    $script[] = array(VOIPCALL_CMDID => VOIPCALL_SAY,
                      'text' => array(VOIPCALL_VAL => "Bye bye."),
                );

@@ -318,26 +318,60 @@ watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
           break;
 
         case VOIPCALL_HANGUP:
-/*****
-          // update hangup variables
-          $voipcall['call_status'] = VOIPCALL_COMPLETED;
-          $voipcall['end_time'] = time();
-          if(isset($voipcall['start_time'])) {
-            $duration  = $voipcall['end_time'] - $voipcall['start_time'];
-          }
-          $voipcall['duration'] = $duration;
-*****/
           // send the hangup request and stop processing script commands
+          // Note: this will trigger a response from Twilio with CallStatus = complete
           $response .= '<Hangup/>';
           $processing = FALSE;
           break;
+
         case VOIPCALL_GATHER:
+          $menu_path = 'voip/twilio/callhandler';
+          $call_id = $variables['call_id'];
+          $response_url = $menu_path . '/' . $call_id . '/process_gather';
+          $action = url($response_url, array('absolute' => TRUE));
+          $method = 'POST';
+          $timeout = voipcall_script_get_parameter_value($command, 'timeout', $variables, 5); 
+          $end_key = voipcall_script_get_parameter_value($command, 'end_key', $variables, '#'); 
+          $num_digits = voipcall_script_get_parameter_value($command, 'num_digits', $variables); 
+          $text = voipcall_script_get_parameter_value($command, 'text', $variables); 
+          $response .= '<Gather action="' . $action
+                            . '" method="' . $method
+                            . '" timeout="' . $timeout
+                            . '" finishOnKey="' . $end_key
+                            . '" numDigits="' . $num_digits
+                            . '" >';
+          $response .= '<Say>' . $text . '</Say>';
+          $response .= '</Gather>';
+          $rc = TRUE;
+          $processing = FALSE;
           break;
+
         case VOIPCALL_LOAD:
           break;
         case VOIPCALL_SET;
           break;
         case VOIPCALL_DIAL;
+          $menu_path = 'voip/twilio/callhandler';
+          $call_id = $variables['call_id'];
+          $response_url = $menu_path . '/' . $call_id . '/process_dial';
+          $action = url($response_url, array('absolute' => TRUE));
+          $method = 'POST';
+          $number = voipcall_script_get_parameter_value($command, 'number', $variables); 
+          // TODO: implement the other features such as multi-dial, url and sendDigits?
+          $timeout = voipcall_script_get_parameter_value($command, 'timeout', $variables, 30); 
+          // TODO: implement the hangupOnStar feature?
+          $time_limit = voipcall_script_get_parameter_value($command, 'time_limit', $variables, '14400'); 
+          $caller_id = voipcall_script_get_parameter_value($command, 'caller_id', $variables, $variables['caller_number']); 
+          $response .= '<Dial action="' . $action
+                            . '" method="' . $method
+                            . '" timeout="' . $timeout
+                            . '" timeLimit="' . $time_limit
+                            . '" callerId="' . $caller_id
+                            . '" >';
+          $response .= '<Number>' . $number . '</Number>';
+          $response .= '</Dial>';
+          $rc = TRUE;
+          $processing = FALSE;
           break;
       }
 
