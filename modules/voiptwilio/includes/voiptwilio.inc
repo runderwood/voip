@@ -1,5 +1,5 @@
 <?php
-// $Id$
+// $id$
 
 /**
  * @file
@@ -454,11 +454,10 @@ function _voiptwilio_ping($server_config) {
  * 
  *   @return XXXXXX the call. Check voip_error() for processing errors.
  */
-function _voiptwilio_dial_out($server_config, $call_node) {
-
-/****
+function _voiptwilio_dial_out($server_config, $voipcall) {
 dsm('In twilio dial_out');
-dsm($server_config);
+dsm($server_config, '$server_config');
+dsm($voipcall, '$voipcall');
 
   // Twilio configuration
   $api_version = '2008-08-01';
@@ -488,8 +487,9 @@ dsm($response);
   }
 
 dsm("Started call: " . $response->ResponseXml->Call->Sid);
-******/
 
+  return $rc;
+/******
 
 //TODO: set start and end times
 
@@ -615,4 +615,6 @@ dsm("About to call_voip_asterisk_process_events(ami, $event_handler, $event_code
 
   $ami->disconnect();
   return $call_id;
+*****/
+
 }
