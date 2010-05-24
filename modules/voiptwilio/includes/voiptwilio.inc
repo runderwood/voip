@@ -459,6 +459,12 @@ dsm('In twilio dial_out');
 dsm($server_config, '$server_config');
 dsm($voipcall, '$voipcall');
 
+  voip_error_reset();
+
+  if(is_object($voipcall)) {
+    $voipcall = (array)$voipcall;
+  }
+
   // Twilio configuration
   $api_version = '2008-08-01';
   $account_sid = $server_config['voiptwilio_account_sid'];
@@ -468,17 +474,29 @@ dsm($voipcall, '$voipcall');
   $client = new TwilioRestClient($account_sid, $auth_token);
     
   // Initiate a new outbound call by POST'ing to the Calls resource 
-  voip_error_reset();
-  $path = "/$api_version/Accounts/$account_sid/Calls";
-  $caller = $server_config['voiptwilio_cid_number'];
+  $twilio_path = "/$api_version/Accounts/$account_sid/Calls";
+  $caller_number = ($voipcall['field_voipcall_caller_number'][0]['value'])
+                     ? $voipcall['field_voipcall_caller_number'][0]['value']
+                     : variable_get('voipcall_cid_number', NULL);
+  $dest_number = $voipcall['field_voipcall_dest_number'][0]['value'];
+
+  $menu_path = 'voip/twilio/callhandler';
+  $call_id = $$voipcall['field_voipcall_call_id'][0]['value'];
+  $response_url = $menu_path . '/' . $call_id;
+  $call_handler_url = url($response_url, array('absolute' => TRUE));
+ 
   $vars =    array(
-      "Caller" => $caller,
-      "Called" => "617-489-0192",  // TODO: change this!!
-      "Url" => "http://demo.twilio.com/helloworld/"
+      "Caller" => $caller_number,
+      "Called" => $dest_number,
+      "Url" => $call_handler_url,
+      'Method' => 'POST',
+      'SendDigits' => '',  // TODO: shall we encode extra digits with dest_number?
+      'IfMachine' => 'Continue', // TODO: include machine recognition in the call variables?
+      'Timeout' => 60 // TODO: Set to 15 in order to avoid answering machines?
     );
 
-dsm("About to call client->request($path, 'POST', " . print_r($vars,true));
-  $response = $client->request($path, "POST", $vars);
+dsm("About to call client->request($twilio_path, 'POST', " . print_r($vars,true));
+  $response = $client->request($twilio_path, "POST", $vars);
 dsm($response);
 
   if($response->IsError){
