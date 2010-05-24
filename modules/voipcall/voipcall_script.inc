@@ -12,21 +12,6 @@
  */
 
 /**
- * Possible status of a call
- */
-define('VOIPCALL_ERROR', 'processing error');
-define('VOIPCALL_NOT_CALLED', 'not called'); // the call has yet to be called
-define('VOIPCALL_DIALING', 'dialing'); // the call is being connected/requested
-define('VOIPCALL_NO_ANSWER', 'no answer');
-define('VOIPCALL_BUSY', 'busy');
-define('VOIPCALL_INVALID', 'invalid number');
-define('VOIPCALL_IN_PROGRESS', 'in progress'); // the call is in progress
-define('VOIPCALL_ANSWERED_MACHINE', 'answered by machine');
-define('VOIPCALL_ANSWERED_HUMAN', 'answered by human');
-define('VOIPCALL_MACHINE_HANGUP', 'machine hangup'); // call hangup due to machine pickup
-define('VOIPCALL_COMPLETED', 'completed');
-
-/**
  * Script command types
  */
 define('VOIPCALL_CMDID', 'command id'); // 'command id' indicator
@@ -76,23 +61,34 @@ function voipcall_voipcall_load_script($voipcall, $script_name) {
    $script[] = array(VOIPCALL_CMDID => VOIPCALL_SAY,
                      'text' => array(VOIPCALL_VAL => "Hello world!"),
                );
+/****
    $script[] = array(VOIPCALL_CMDID => VOIPCALL_SAY,
-                     'text' => array(VOIPCALL_VAL => "My caller id is "),
+                     'text' => array(VOIPCALL_VAL => "Your number is "),
                );
    $script[] = array(VOIPCALL_CMDID => VOIPCALL_SAY,
-                     'text' => array(VOIPCALL_VAR => 'call_id'),
+                     'text' => array(VOIPCALL_VAR => 'caller_number'),
                );
+****/
    $script[] = array(VOIPCALL_CMDID => VOIPCALL_SAY,
-                     'text' => array(VOIPCALL_VAL => "Please leave a message after the beep.  When done, press the start key. "),
+                     'text' => array(VOIPCALL_VAL => "Please leave a message after the beep.  When done, press the star key. "),
                );
    $script[] = array(VOIPCALL_CMDID => VOIPCALL_RECORD,
                      'max_length' => array(VOIPCALL_VAL => '20'),
                      'end_key' => array(VOIPCALL_VAL => '*'),
                );
-   $script[] = array(VOIPCALL_CMDID => VOIPCALL_PLAY,
-                     'url' => array(VOIPCALL_VAL => "http://api.twilio.com/Cowbell.mp3"),
+   $script[] = array(VOIPCALL_CMDID => VOIPCALL_SAY,
+                     'text' => array(VOIPCALL_VAL => "You said "),
                );
-   $script[] = array(VOIPCALL_CMDID => VOIPCALL_HANGUP);
+   $script[] = array(VOIPCALL_CMDID => VOIPCALL_PLAY,
+                     'url' => array(VOIPCALL_VAR => 'recording_url'),
+               );
+//   $script[] = array(VOIPCALL_CMDID => VOIPCALL_PLAY,
+//                     'url' => array(VOIPCALL_VAL => "http://api.twilio.com/Cowbell.mp3"),
+//               );
+   $script[] = array(VOIPCALL_CMDID => VOIPCALL_SAY,
+                     'text' => array(VOIPCALL_VAL => "Bye bye."),
+               );
+//   $script[] = array(VOIPCALL_CMDID => VOIPCALL_HANGUP);
   }
  return $script;
 }
@@ -100,7 +96,7 @@ function voipcall_voipcall_load_script($voipcall, $script_name) {
 /**
  * Return the value of the given command parameter
  */
-function _voipcall_script_get_parameter_value($command, $param_name, $script_variables) {
+function voipcall_script_get_parameter_value($command, $param_name, $script_variables, $default=NULL) {
   $rc = NULL;
   $param = $command[$param_name];
   if($param){
@@ -117,6 +113,9 @@ function _voipcall_script_get_parameter_value($command, $param_name, $script_var
         $rc = call_user_func_array($function, $args);
         break;
     }
+  }
+  if(!$rc){
+    $rc = $default;
   }
   return $rc;
 }
@@ -150,7 +149,7 @@ function voipcall_load_script($voipcall, $script_name=NULL) {
   // now set the context for the script to run with
   $context = array();
 
-  $context['status'] = $voipcall['field_voipcall_status'][0]['value'];
+  $context['call_status'] = $voipcall['field_voipcall_status'][0]['value'];
 
   $context['script_name'] = $voipcall['field_voipcall_script_name'][0]['value'];
   $context['script_commands'] = $script_commands;
@@ -162,7 +161,7 @@ function voipcall_load_script($voipcall, $script_name=NULL) {
 
   $context['script_variables']['uid'] = $voipcall['uid'];
 
-  $context['script_variables']['status'] = $status;
+  $context['script_variables']['call_status'] = $voipcall['field_voipcall_status'][0]['value'];
 
   $context['script_variables']['call_id'] = $voipcall['field_voipcall_call_id'][0]['value'];
   $context['script_variables']['dest_number'] = $voipcall['field_voipcall_dest_number'][0]['value'];
@@ -192,33 +191,12 @@ function voipcall_load_script($voipcall, $script_name=NULL) {
  */
 function voipcall_save_script_context($voipcall, $context) {
 
-  $details = array();
+  $voipcall['script_name'] = $context['script_name'];
+  $voipcall['script_index'] = $context['script_index'];
+  $voipcall['script_variables'] = $context['script_variables'];
+  $voipcall['hangup_script'] = $context['hangup_script'];
 
-  $details['script_name'] = $context['script_name'];
-  $details['script_index'] = $context['script_index'];
-  $details['script_variables'] = $context['script_variables'];
-  $details['hangup_script'] = $context['hangup_script'];
-
-  // retrieve script variables
-
-  $details['uid'] = $context['script_variables']['uid'];
-
-  $details['status'] = $context['script_variables']['status'];
-
-  $details['call_id'] = $context['script_variables']['call_id'];
-  $details['dest_number'] = $context['script_variables']['dest_number'];
-  $details['caller_number'] = $context['script_variables']['caller_number'];
-  $details['caller_name'] = $context['script_variables']['caller_name'];
-
-  $details['source'] = $context['script_variables']['source'];
-
-  $details['start_time'] = $context['script_variables']['start_time'];
-  $details['end_time'] = $context['script_variables']['end_time'];
-  $details['duration'] = $context['script_variables']['duration'];
-
-  $details['error_message'] = $context['script_variables']['error_message'];
-
-  $call = voipcall_save($details);
+  $call = voipcall_save($voipcall);
   return $call;
 }
 

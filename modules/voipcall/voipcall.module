@@ -11,6 +11,25 @@ foreach (array('voipcall.features.inc', 'voipcall_script.inc') as $file) {
   require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . $file);
 }
 
+/**
+ * Constants
+ */
+
+/**
+ * Possible status of a call
+ */
+define('VOIPCALL_ERROR', 'processing error');
+define('VOIPCALL_NOT_CALLED', 'not called'); // the call has yet to be called
+define('VOIPCALL_DIALING', 'dialing'); // the call is being connected/requested
+define('VOIPCALL_NO_ANSWER', 'no answer');
+define('VOIPCALL_BUSY', 'busy');
+define('VOIPCALL_INVALID', 'invalid number');
+define('VOIPCALL_IN_PROGRESS', 'in progress'); // the call is in progress
+define('VOIPCALL_ANSWERED_MACHINE', 'answered by machine');
+define('VOIPCALL_ANSWERED_HUMAN', 'answered by human');
+define('VOIPCALL_MACHINE_HANGUP', 'machine hangup'); // call hangup due to machine pickup
+define('VOIPCALL_COMPLETED', 'completed');
+
 
 /**
  * Public functions
@@ -28,7 +47,7 @@ foreach (array('voipcall.features.inc', 'voipcall_script.inc') as $file) {
  *    'dest_number', the destination number for the phone call
  *    'caller_number', the caller number
  *    'caller_name', the caller name
- *    'status', the status of the call. Check constants.
+ *    'call_status', the status of the call. Check constants.
  *    'script_name', the name of the dialplan script to be executed
  *    'script_index', the index of the current command
  *    'script_variables', variables accessed and updated by the script
@@ -53,6 +72,9 @@ dsm($details);
   if(is_object($details)){
     $details = (array)$details;
   }
+
+$msg = 'In voipcall_save: ' . print_r($details,true);
+watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
 
   // if this is a new call node being created
   if(is_null($details['nid'])){
@@ -91,10 +113,16 @@ dsm($node);
 
   if(isset($details['call_id'])) $node->field_voipcall_call_id[0]['value'] = $details['call_id'];
   if(isset($details['dest_number'])) $node->field_voipcall_dest_number[0]['value'] = $details['dest_number'];
+$msg = "1. caller_number:: details: " . $details['caller_number'] . ", field: " . $node->field_voipcall_caller_number[0]['value'];
+watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
+
   if(isset($details['caller_number'])) $node->field_voipcall_caller_number[0]['value'] = $details['caller_number'];
+$msg = "2. caller_number:: details: " . $details['caller_number'] . ", field: " . $node->field_voipcall_caller_number[0]['value'];
+watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
+
   if(isset($details['caller_name'])) $node->field_voipcall_caller_name[0]['value'] = $details['caller_name'];
 
-  if(isset($details['status'])) $node->field_voipcall_status[0]['value'] = $details['status'];
+  if(isset($details['call_status'])) $node->field_voipcall_status[0]['value'] = $details['call_status'];
 
   if(isset($details['script_name'])) $node->field_voipcall_script_name[0]['value'] =  $details['script_name'];
   if(isset($details['script_index'])) $node->field_voipcall_script_index[0]['value'] =  $details['script_index'];
@@ -118,8 +146,12 @@ dsm($node);
   }
 
   // save the node
+$msg = 'before node_save: ' . print_r($node,true);
+watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
   node_save($node);
 
+$msg = 'Out voipcall_save: ' . print_r($node,true);
+watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
   return $node;
 }
 
@@ -267,7 +299,7 @@ function voipcall_processing_error($module, $voipcall, $msg, $params=array()){
   $msg_text = "($module) " . strtr($msg, $params);
   voip_error($msg_text);
   $voipcall['error_message'] = $msg_text;
-  $voipcall['status'] = VOIPCALL_ERROR;
+  $voipcall['call_status'] = VOIPCALL_ERROR;
   $n = voipcall_save($voipcall);
   return $n;
 }

@@ -23,8 +23,8 @@ foreach (array('twilio.php') as $file) {
  *
  * @param string $response_action set to the action to be executed in response
  *  to a previously issued request to Twilio.  Is only valid with $call_id
- *  is not NULL.  It can assume any of the following values: process_gather
- *  and process_record.
+ *  is not NULL.  It can assume any of the following values: process_dial,
+ *  process_gather, and process_record.
  *
  * @return void
  */
@@ -48,15 +48,18 @@ dsm($msg);
 
   // handle incoming call requests
   if(!$call_id) {
+dsm('no call_id.  initializing new voipcall node.');
     $call = array();
     $call_guid = $_REQUEST['CallGuid']; // unique identifier of the call, 34 char
     $call['call_id'] = $call_guid;
     $call['source'] = 'twilio';
-    $call['status'] = VOIPCALL_IN_PROGRESS;
+    $call['call_status'] = VOIPCALL_IN_PROGRESS;
     $call['start_time'] = time();
 
     // create a new node for the call
     $call = (array)voipcall_save($call);
+dsm("here is the newly created node:");
+dsm($call);
   }
   else {
     // load the variables already associated with the call, if any
@@ -65,9 +68,16 @@ dsm($msg);
   }
 
   // update common call variables
-  if(!isset($call['caller_number'])) $call['field_voipcall_caller_number'][0]['value'] = $_REQUEST['Caller'];
-  if(!isset($call['caller_name'])) $call['field_voipcall_caller_name'][0]['value'] = $_REQUEST['CallerName'];
-  if(!isset($call['dest_number'])) $call['field_voipcall_dest_number'][0]['value'] = $_REQUEST['Called'];
+  if(!isset($call['field_voipcall_caller_number'][0]['value'])) $call['caller_number'] = $_REQUEST['Caller'];
+  if(!isset($call['field_voipcall_caller_name'][0]['value'])) $call['caller_name'] = $_REQUEST['CallerName'];
+  if(!isset($call['field_voipcall_dest_number'][0]['value'])) $call['dest_number'] = $_REQUEST['Called'];
+dsm('updating caller and dest');
+dsm($call);
+
+  // extract contents from the script_variables field
+  // TODO: what to do about serialize/unserialize?
+  $variables = unserialize($call['field_voipcall_script_variables'][0]['value']); 
+  $call['script_variables'] = $variables;
 
   // store call location, if available
   $call_location = array();
@@ -80,10 +90,7 @@ dsm($msg);
   if(isset($_REQUEST['CalledZip'])) $call_location['calldr_zip'] = $_REQUEST['CalledZip'];
   if(isset($_REQUEST['CalledCountry'])) $call_location['called_country'] = $_REQUEST['CalledCountry'];
   if($call_location) {
-    // TODO: what to do about serialize/unserialize?
-    $variables = unserialize($call['field_voipcall_script_variables'][0]['value']); 
-    $variables['call_location'] = $call_location;
-    $call['script_variables'] = $variables;
+    $call['script_variables']['call_location'] = $call_location;
   }
 
   $hangup = FALSE;
@@ -104,22 +111,27 @@ dsm($msg);
       $hangup = TRUE;
       break;
     case 'in-progress':
-      $call['status'] = VOIPCALL_IN_PROGRESS;
+      $call['call_status'] = VOIPCALL_IN_PROGRESS;
       break;
     case 'completed':
-      $call['status'] = VOIPCALL_COMPLETED;
+      $call['call_status'] = VOIPCALL_COMPLETED;
       $hangup = TRUE;
       break;
     case 'busy':
-      $call['status'] = VOIPCALL_BUSY;
+      $call['call_status'] = VOIPCALL_BUSY;
       $hangup = TRUE;
       break;
     case 'no-answer':
-      $call['status'] = VOIPCALL_NO_ANSWER;
+      $call['call_status'] = VOIPCALL_NO_ANSWER;
       $hangup = TRUE;
       break;
   }
 
+dsm($call, 'about to process responses');
+dsm($response_action, 'response_action');
+dsm($hangup, 'hangup');
+$msg = "about to process responses: $response_action, hangup: $hangup, call: " . print_r($call, TRUE);
+watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
   // process responses to requests previously-issued by the call script
   if(!$hangup && $response_action) {
     switch($response_action) {
@@ -130,11 +142,10 @@ dsm($msg);
         return FALSE;
         break;
       case 'process_dial':
-        $variables = unserialize($call['field_voipcall_script_variables'][0]['value']); 
         $dial_status = $_REQUEST['DialStatus'];
         switch($dial_status) {
           default:
-            $call['status'] = VOIPCALL_ERROR;
+            $call['call_status'] = VOIPCALL_ERROR;
             $error_message = 'Invalid DialStatus for outbound dial request: ' . $dial_status;
             $call['error_message'] = $error_message;
             watchdog('voiptwilio', $error_msg, array(), WATCHDOG_ERROR);
@@ -142,44 +153,43 @@ dsm($msg);
             return FALSE;
             break;
           case 'failed':
-            $variables['dial_status'] = VOIPCALL_ERROR;
+            $call['script_variables']['dial_status'] = VOIPCALL_ERROR;
             break;
           case 'answered':
-            $variables['dial_status'] = VOIPCALL_IN_PROGRESS;
+            $call['script_variables']['dial_status'] = VOIPCALL_IN_PROGRESS;
             break;
           case 'busy':
-            $variables['dial_status'] = VOIPCALL_BUSY;
+            $call['script_variables']['dial_status'] = VOIPCALL_BUSY;
             break;
           case 'no-answer':
-            $variables['dial_status'] = VOIPCALL_NO_ANSWER;
+            $call['script_variables']['dial_status'] = VOIPCALL_NO_ANSWER;
             break;
           case 'answered-machine':
-            $variables['dial_status'] = VOIPCALL_ANSWERED_MACHINE;
+            $call['script_variables']['dial_status'] = VOIPCALL_ANSWERED_MACHINE;
             break;
           case 'answered-human':
-            $variables['dial_status'] = VOIPCALL_ANSWERED_HUMAN;
+            $call['script_variables']['dial_status'] = VOIPCALL_ANSWERED_HUMAN;
             break;
           case 'hangup-machine':
-            $variables['dial_status'] = VOIPCALL_MACHINE_HANGUP;
+            $call['script_variables']['dial_status'] = VOIPCALL_MACHINE_HANGUP;
             break;
         }
-        $call['script_variables'] = $variables;
         break;
       case 'process_gather':
-        $variables = unserialize($call['field_voipcall_script_variables'][0]['value']); 
-        $variables['gather_digits'] = $_REQUEST['Digits'];
-        $call['script_variables'] = $variables;
+        $call['script_variables']['gather_digits'] = $_REQUEST['Digits'];
         break;
       case 'process_record':
-        $variables = unserialize($call['field_voipcall_script_variables'][0]['value']); 
-        $variables['recording_url'] = $_REQUEST['RecordingUrl'];
-        $variables['recording_duration'] = $_REQUEST['Duration'];
-        $variables['recording_digits'] = $_REQUEST['Digits'];
-        $call['script_variables'] = $variables;
+        $call['script_variables']['recording_url'] = $_REQUEST['RecordingUrl'];
+        $call['script_variables']['recording_duration'] = $_REQUEST['Duration'];
+        $call['script_variables']['recording_file_size'] = $_REQUEST['RecordingFileSize'];
+        $call['script_variables']['recording_digits'] = $_REQUEST['Digits'];
+dsm($call, 'in process_record:');
         break;
     }
   }
 
+$msg = "post processing responses: $response_action, hangup: $hangup, call: " . print_r($call, TRUE);
+watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
   if($hangup) {
     // update core hangup variables
     $call['end_time'] = time();
@@ -192,9 +202,13 @@ dsm($msg);
     $call['duration'] = $duration;
   }
 
+dsm('About to save: ');
+dsm($call);
   // update the voipcall node with the new values
   $call = voipcall_save($call);
 
+dsm('About to call script handler: ');
+dsm($call);
   // process the call script
   $rc = _voiptwilio_script_handler($call);
 
@@ -212,6 +226,8 @@ dsm($msg);
 function _voiptwilio_script_handler($voipcall) {
 dsm('entering voiptwilio_script_handler()');
 dsm($voipcall);
+$msg = 'Entering script_handler with voipcall: ' . print_r($voipcall,true);
+watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
 
   if(is_object($voipcall)){
     $voipcall = (array)$voipcall;
@@ -234,10 +250,6 @@ dsm($voipcall);
 
   // retrieve script context
   $context = voipcall_load_script($voipcall, $script_name);
-
-dsm('context after load script: ' . $script_name);
-dsm($context);
-
   $name = $context['script_name'];
   $commands = $context['script_commands'];
   $index = $context['script_index'];
@@ -248,16 +260,21 @@ dsm($context);
   $response = '';
   while($processing) {
    
-    // process current command, if any
     if($index >= count($commands)) {
       // no more commands to be processed
+      // send a final hangup request 
+      $response .= '<Hangup/>';
+      $msg = 'Script @name ended without a "hangup" command.';
+      $params = array('@name' => $script_name);
+      watchdog('voiptwilio', $msg, $params, WATCHDOG_WARNING);
       $processing = FALSE;
     }
+
+    // process current command
     else {
 
       $command = $commands[$index];
       $cmd_id = $command[VOIPCALL_CMDID];
-dsm("cmd_id: $cmd_id");
    
       switch($cmd_id) {
         default:
@@ -269,18 +286,48 @@ dsm("cmd_id: $cmd_id");
           break;
 
         case VOIPCALL_SAY:
-          $text = _voipcall_script_get_parameter_value($command, 'text', $variables); 
+          $text = voipcall_script_get_parameter_value($command, 'text', $variables); 
           $response .= "<Say>$text</Say>";
           break;
 
         case VOIPCALL_PLAY:
-          $url = _voipcall_script_get_parameter_value($command, 'url', $variables); 
+          $url = voipcall_script_get_parameter_value($command, 'url', $variables); 
           $response .= "<Play>$url</Play>";
           break;
+
         case VOIPCALL_RECORD:
-          
+          $menu_path = 'voip/twilio/callhandler';
+          $call_id = $variables['call_id'];
+          $response_url = $menu_path . '/' . $call_id . '/process_record';
+          $action = url($response_url, array('absolute' => TRUE));
+          $method = 'POST';
+          $timeout = voipcall_script_get_parameter_value($command, 'timeout', $variables, 5); 
+          $end_key = voipcall_script_get_parameter_value($command, 'end_key', $variables, '#'); 
+          $max_length = voipcall_script_get_parameter_value($command, 'max_length', $variables, 3600); 
+          // TODO: implement the "transcribe" feature?"
+          $play_beep = voipcall_script_get_parameter_value($command, 'play_beep', $variables, 'true'); 
+          $response .= '<Record action="' . $action
+                            . '" method="' . $method
+                            . '" timeout="' . $timeout
+                            . '" finishOnKey="' . $end_key
+                            . '" maxLength="' . $max_length
+                            . '" playBeep="' . $play_beep
+                            . '" />';
+          $rc = TRUE;
+          $processing = FALSE;
           break;
+
         case VOIPCALL_HANGUP:
+/*****
+          // update hangup variables
+          $voipcall['call_status'] = VOIPCALL_COMPLETED;
+          $voipcall['end_time'] = time();
+          if(isset($voipcall['start_time'])) {
+            $duration  = $voipcall['end_time'] - $voipcall['start_time'];
+          }
+          $voipcall['duration'] = $duration;
+*****/
+          // send the hangup request and stop processing script commands
           $response .= '<Hangup/>';
           $processing = FALSE;
           break;
@@ -300,11 +347,19 @@ dsm("cmd_id: $cmd_id");
   }
 
   // store context for next script iteration
-// TODO: return variables -- index, variables, ...to context before saving it
-  voipcall_save_script_context($voipcall, $context);
+  $context['script_index'] = $index;
+  $context['script_variables'] = $variables;
+$msg = 'before save script context: ' . print_r($voipcall,true);
+watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
+
+  $voipcall = voipcall_save_script_context($voipcall, $context);
+
+$msg = 'Leaving script_handler with voipcall: ' . print_r($voipcall,true);
+watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
 
   // send response back to Twilio
   if($response) {
+$response .= '<!--' . "_REQUEST: " . print_r($_REQUEST,true) .  "\n" . '-->';
 $response .= '<!--' . "voipcall: " . print_r($voipcall,true) .  "\n" . '-->';
 $response .= '<!--' . "script_context: " . print_r($context, true) .  "\n" . '-->';
     _voiptwilio_send_response($response);
