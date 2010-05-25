@@ -48,7 +48,6 @@ dsm($msg);
 
   // handle incoming call requests
   if(!$call_id) {
-dsm('no call_id.  initializing new voipcall node.');
     $call = array();
     $call_guid = $_REQUEST['CallGuid']; // unique identifier of the call, 34 char
     $call['call_id'] = $call_guid;
@@ -58,8 +57,6 @@ dsm('no call_id.  initializing new voipcall node.');
 
     // create a new node for the call
     $call = (array)voipcall_save($call);
-dsm("here is the newly created node:");
-dsm($call);
   }
   else {
     // load the variables already associated with the call, if any
@@ -71,8 +68,6 @@ dsm($call);
   if(!isset($call['field_voipcall_caller_number'][0]['value'])) $call['caller_number'] = $_REQUEST['Caller'];
   if(!isset($call['field_voipcall_caller_name'][0]['value'])) $call['caller_name'] = $_REQUEST['CallerName'];
   if(!isset($call['field_voipcall_dest_number'][0]['value'])) $call['dest_number'] = $_REQUEST['Called'];
-dsm('updating caller and dest');
-dsm($call);
 
   // extract contents from the script_variables field
   // TODO: what to do about serialize/unserialize?
@@ -127,11 +122,6 @@ dsm($call);
       break;
   }
 
-dsm($call, 'about to process responses');
-dsm($response_action, 'response_action');
-dsm($hangup, 'hangup');
-$msg = "about to process responses: $response_action, hangup: $hangup, call: " . print_r($call, TRUE);
-watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
   // process responses to requests previously-issued by the call script
   if(!$hangup && $response_action) {
     switch($response_action) {
@@ -183,32 +173,28 @@ watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
         $call['script_variables']['recording_duration'] = $_REQUEST['Duration'];
         $call['script_variables']['recording_file_size'] = $_REQUEST['RecordingFileSize'];
         $call['script_variables']['recording_digits'] = $_REQUEST['Digits'];
-dsm($call, 'in process_record:');
         break;
     }
   }
 
-$msg = "post processing responses: $response_action, hangup: $hangup, call: " . print_r($call, TRUE);
-watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
   if($hangup) {
     // update core hangup variables
     $call['end_time'] = time();
-    $duration = isset($_REQUEST['Duration'])?$_REQUEST['Duration']:NULL;
     if(!$duration) {
-      if(isset($call['start_time'])) {
-        $duration  = $call['end_time'] - $call['start_time'];
+      $start_time = $call['field_voipcall_start_time'][0]['value'];
+      if($start_time) {
+        $duration  = $call['end_time'] - $start_time;
+      }
+      else {
+        $duration = isset($_REQUEST['Duration'])?$_REQUEST['Duration']:NULL;
       }
     }
     $call['duration'] = $duration;
   }
 
-dsm('About to save: ');
-dsm($call);
   // update the voipcall node with the new values
   $call = voipcall_save($call);
 
-dsm('About to call script handler: ');
-dsm($call);
   // process the call script
   $rc = _voiptwilio_script_handler($call);
 
