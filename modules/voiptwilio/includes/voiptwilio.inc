@@ -260,12 +260,12 @@ watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
     else {
 
       $command = $commands[$index];
-      $cmd_id = $command[VOIPCALL_CMDID];
+      $cmd_id = $command[VOIPCALL_CMD_ID];
    
       switch($cmd_id) {
         default:
-          $msg = "Invalid command id '@cmd_id' in '@script_name'";
-          $params = array('@cmd_id' => $cmd_id, '@script_name' => $script_name);
+          $msg = "Invalid command id '@cmd_id' in script '@script_name': @script";
+          $params = array('@cmd_id' => $cmd_id, '@script_name' => $script_name, '@script' => print_r($commands,true));
           voipcall_processing_error('voiptwilio', $voipcall, $msg, $params);
           $rc = FALSE;
           $processing = FALSE;
@@ -317,7 +317,7 @@ watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
           $action = url($response_url, array('absolute' => TRUE));
           $method = 'POST';
           $timeout = voipcall_script_get_parameter_value($command, 'timeout', $variables, 5); 
-          $end_key = voipcall_script_get_parameter_value($command, 'end_key', $variables, '#'); 
+          $end_key = voipcall_script_get_parameter_value($command, 'end_key', $variables, ''); 
           $num_digits = voipcall_script_get_parameter_value($command, 'num_digits', $variables); 
           $text = voipcall_script_get_parameter_value($command, 'text', $variables); 
           $response .= '<Gather action="' . $action
@@ -332,10 +332,6 @@ watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
           $processing = FALSE;
           break;
 
-        case VOIPCALL_LOAD:
-          break;
-        case VOIPCALL_SET;
-          break;
         case VOIPCALL_DIAL;
           $menu_path = 'voip/twilio/callhandler';
           $call_id = $variables['call_id'];
@@ -359,6 +355,82 @@ watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
           $rc = TRUE;
           $processing = FALSE;
           break;
+
+        case VOIPCALL_GOTO;
+          $label_name = voipcall_script_get_parameter_value($command, 'label_name', $variables, '');
+          $found = FALSE;
+          $i = 0;
+          $i_max = count($commands);
+          while(!$found) {
+            if($i >= $i_max) {
+              // label nor found
+              $msg = "Label '@label_name' not found in script '@script_name': @script";
+              $params = array('@label_name' => $label_name, '@script_name' => $script_name, '@script' => print_r($commands, true));
+              voipcall_processing_error('voiptwilio', $voipcall, $msg, $params);
+              $rc = FALSE;
+              $processing = FALSE;
+              $found = TRUE;
+              $response .= "<Say>Error: label $label_name not found in script $script_name</Say>";
+            }
+            else {
+              $cmd_tmp = $commands[$i];
+              $cmd_id_tmp = $cmd_tmp[VOIPCALL_CMD_ID];
+              $label_name_tmp = voipcall_script_get_parameter_value($cmd_tmp, 'label_name', $variables, '');
+              if(($cmd_id_tmp == VOIPCALL_LABEL) && ($label_name_tmp == $label_name)) {
+                $index = $i;
+                $found = TRUE;
+              }
+            }
+            // move to the next command in the script
+            $i++;
+          }
+          break;
+
+        case VOIPCALL_GOTOIF;
+          // evaluate expression
+          $expression = voipcall_script_get_parameter_value($command, 'expression', $variables, '');
+          if($expression) {
+            $label_name = voipcall_script_get_parameter_value($command, 'label_name', $variables, '');
+            $found = FALSE;
+            $i = 0;
+            $i_max = count($commands);
+            while(!$found) {
+              if($i >= $i_max) {
+                // label nor found
+                $msg = "Label '@label_name' not found in script '@script_name': @script";
+                $params = array('@label_name' => $label_name, '@script_name' => $script_name, '@script' => print_r($commands, true));
+                voipcall_processing_error('voiptwilio', $voipcall, $msg, $params);
+                $rc = FALSE;
+                $processing = FALSE;
+                $found = TRUE;
+                $response .= "<Say>Error: label $label_name not found in script $script_name</Say>";
+              }
+              else {
+                $cmd_tmp = $commands[$i];
+                $cmd_id_tmp = $cmd_tmp[VOIPCALL_CMD_ID];
+                $label_name_tmp = voipcall_script_get_parameter_value($cmd_tmp, 'label_name', $variables, '');
+                if(($cmd_id_tmp == VOIPCALL_LABEL) && ($label_name_tmp == $label_name)) {
+                  $index = $i;
+                  $found = TRUE;
+                }
+              }
+              // move to the next command in the script
+              $i++;
+            }
+          }
+          break;
+
+        case VOIPCALL_LABEL:
+          // don't do anything. Labels are just placeholders that mark a position within the script.
+          break;
+
+        case VOIPCALL_LOAD:
+// TODO: implement load
+          break;
+
+        case VOIPCALL_SET;
+          break;
+
       }
 
       // go to next command
@@ -489,9 +561,7 @@ dsm('In twilio dial_out');
       'Timeout' => 60 // TODO: Set to 15 in order to avoid answering machines?
     );
 
-//dsm("About to call client->request($twilio_path, 'POST', " . print_r($vars,true));
   $response = $client->request($twilio_path, "POST", $vars);
-//dsm($response, 'call response');
 
   // update call based on response
   if($response->IsError){
@@ -503,13 +573,7 @@ dsm('In twilio dial_out');
   else {
     // Note: call_status will be updated by call_handler
     $voipcall['start_time'] = time();
-dsm($voipcall,'before updating start time');
-$n = node_load($voipcall['nid']);
-dsm($n, 'after node_load');
     $voipcall = voipcall_save($voipcall);
-dsm($voipcall,'after updating start time');
-$n = node_load($voipcall->nid);
-dsm($n, 'after node_load');
     $rc = $call_id;
   }
  

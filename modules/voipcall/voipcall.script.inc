@@ -14,7 +14,8 @@
 /**
  * Script command types
  */
-define('VOIPCALL_CMDID', 'command id'); // 'command id' indicator
+define('VOIPCALL_CMD_ID', 'command id'); // 'command id' indicator
+define('VOIPCALL_CMD_BODY', 'command body'); // 'command id' indicator
 
 define('VOIPCALL_SAY', 'say'); // say a given text
 define('VOIPCALL_PLAY', 'play'); // play the specified audio file
@@ -57,80 +58,110 @@ function voipcall_get_default_script_name() {
 function voipcall_voipcall_load_script($voipcall, $script_name) {
   $script = NULL;
   if($script_name == 'voipcall_call_pickup') { 
-   $script = array();
-   $script[] = array(VOIPCALL_CMDID => VOIPCALL_SAY,
-                     'text' => array(VOIPCALL_VAL => "Hello world!"),
-               );
+    $script = array();
+    $script[] = array(
+      VOIPCALL_CMD_ID => VOIPCALL_LABEL,
+      VOIPCALL_CMD_BODY => array(
+        'label_name' => array(VOIPCALL_VAL => 'start'),
+      ),
+    );
+    $script[] = array(
+      VOIPCALL_CMD_ID => VOIPCALL_SAY,
+      VOIPCALL_CMD_BODY => array(
+        'text' => array(VOIPCALL_VAL => t("Welcome to the Voip Drupal platform!")),
+      ),
+    );
+    $script[] = array(
+      VOIPCALL_CMD_ID => VOIPCALL_GATHER,
+      VOIPCALL_CMD_BODY => array(
+        'text' => array(VOIPCALL_VAL => t("To connect with the system developers, press 1.  To hangup, press the pound key.")),
+        'num_digits' => array(VOIPCALL_VAL => 1),
+        'end_key' => array(VOIPCALL_VAL => ""),
+      ),
+    );
+    $script[] = array(
+      VOIPCALL_CMD_ID => VOIPCALL_SAY,
+      VOIPCALL_CMD_BODY => array(
+        'text' => array(VOIPCALL_VAL => "You pressed: "),
+      ),
+    );
+    $script[] = array(
+      VOIPCALL_CMD_ID => VOIPCALL_SAY,
+      VOIPCALL_CMD_BODY => array(
+        'text' => array(VOIPCALL_VAR => "gather_digits"),
+      ),
+    );
+    $script[] = array(
+      VOIPCALL_CMD_ID => VOIPCALL_GOTOIF,
+      VOIPCALL_CMD_BODY => array(
+        'label_name' => array(VOIPCALL_VAL => 'end call'),
+        // Note: variable names have to be enclosed in between '@<'and '>@'
+        'expression' => array(VOIPCALL_EVAL => "@<gather_digits>@ == '#'"),
+      ),
+    );
+    $script[] = array(
+      VOIPCALL_CMD_ID => VOIPCALL_SAY,
+      VOIPCALL_CMD_BODY => array(
+        'text' => array(VOIPCALL_VAL => "Dialing Leo's cellphone number "),
+      ),
+    );
 /****
-   $script[] = array(VOIPCALL_CMDID => VOIPCALL_SAY,
-                     'text' => array(VOIPCALL_VAL => "Your number is "),
-               );
-   $script[] = array(VOIPCALL_CMDID => VOIPCALL_SAY,
-                     'text' => array(VOIPCALL_VAR => 'caller_number'),
-               );
+    $script[] = array(
+      VOIPCALL_CMD_ID => VOIPCALL_DIAL,
+      VOIPCALL_CMD_BODY => array(
+        'number' => array(VOIPCALL_VAL => "6177920995"),
+      ),
+    );
 ****/
-   $script[] = array(VOIPCALL_CMDID => VOIPCALL_SAY,
-                     'text' => array(VOIPCALL_VAL => "Please leave a message after the beep.  When done, press the star key. "),
-               );
-   $script[] = array(VOIPCALL_CMDID => VOIPCALL_RECORD,
-                     'max_length' => array(VOIPCALL_VAL => '20'),
-                     'end_key' => array(VOIPCALL_VAL => '*'),
-               );
-   $script[] = array(VOIPCALL_CMDID => VOIPCALL_SAY,
-                     'text' => array(VOIPCALL_VAL => "You said "),
-               );
-   $script[] = array(VOIPCALL_CMDID => VOIPCALL_PLAY,
-                     'url' => array(VOIPCALL_VAR => 'recording_url'),
-               );
-//   $script[] = array(VOIPCALL_CMDID => VOIPCALL_PLAY,
-//                     'url' => array(VOIPCALL_VAL => "http://api.twilio.com/Cowbell.mp3"),
-//               );
-   $script[] = array(VOIPCALL_CMDID => VOIPCALL_GATHER,
-                     'text' => array(VOIPCALL_VAL => "Type your favorite number.  When done, press the pound key."),
-                     'end_key' => array(VOIPCALL_VAL => "#"),
-               );
-   $script[] = array(VOIPCALL_CMDID => VOIPCALL_SAY,
-                     'text' => array(VOIPCALL_VAL => "You pressed: "),
-               );
-   $script[] = array(VOIPCALL_CMDID => VOIPCALL_SAY,
-                     'text' => array(VOIPCALL_VAR => "gather_digits"),
-               );
-   $script[] = array(VOIPCALL_CMDID => VOIPCALL_SAY,
-                     'text' => array(VOIPCALL_VAL => "Dialing your cell number "),
-               );
-   $script[] = array(VOIPCALL_CMDID => VOIPCALL_DIAL,
-                     'number' => array(VOIPCALL_VAL => "6177920995"),
-               );
-   $script[] = array(VOIPCALL_CMDID => VOIPCALL_SAY,
-                     'text' => array(VOIPCALL_VAL => "Bye bye."),
-               );
-//   $script[] = array(VOIPCALL_CMDID => VOIPCALL_HANGUP);
+    $script[] = array(
+      VOIPCALL_CMD_ID => VOIPCALL_GOTO,
+      VOIPCALL_CMD_BODY => array(
+        'label_name' => array(VOIPCALL_VAL => 'start'),
+      ),
+    );
+    $script[] = array(
+      VOIPCALL_CMD_ID => VOIPCALL_LABEL,
+      VOIPCALL_CMD_BODY => array(
+        'label_name' => array(VOIPCALL_VAL => 'end call'),
+      ),
+    );
+    $script[] = array(
+      VOIPCALL_CMD_ID => VOIPCALL_SAY,
+      VOIPCALL_CMD_BODY => array(
+       'text' => array(VOIPCALL_VAL => "Bye bye."),
+       ),
+    );
+    $script[] = array(
+      VOIPCALL_CMD_ID => VOIPCALL_HANGUP
+    );
   }
- return $script;
+
+  return $script;
 }
 
 /**
  * Return the value of the given command parameter
  */
-function voipcall_script_get_parameter_value($command, $param_name, $script_variables, $default=NULL) {
+function voipcall_script_get_parameter_value($command, $param_name, $variables, $default=NULL) {
   $rc = NULL;
-  $param = $command[$param_name];
-  if($param){
-    if($param[VOIPCALL_VAL]) {
-      $rc = $param[VOIPCALL_VAL];
-    }
-    else if($param[VOIPCALL_VAR]) {
-      $var_name = $param[VOIPCALL_VAR];
-      $rc = $script_variables[$var_name];
-    }
-    else if($param[VOIPCALL_EXEC]) {
-        $function = $param[VOIPCALL_EXEC][0];
-        $args =($param[VOIPCALL_EXEC][1])?$param[VOIPCALL_EXEC][1]:array();
-        $rc = call_user_func_array($function, $args);
-        break;
-    }
+  $param = $command[VOIPCALL_CMD_BODY][$param_name];
+  if($param[VOIPCALL_VAL]) {
+    $rc = $param[VOIPCALL_VAL];
   }
-  if(!$rc){
+  else if($param[VOIPCALL_VAR]) {
+    $var_name = $param[VOIPCALL_VAR];
+    $rc = $variables[$var_name];
+  }
+  else if($param[VOIPCALL_EVAL]) {
+    // evaluate expression
+    $expression = $param[VOIPCALL_EVAL];
+    // replace placeholders by associated variable name
+    $params = array('@<' => '$variables[', '>@' => ']');
+    $expression_tmp = strtr($expression, $params);
+    $rc = eval("return ($expression_tmp);");
+watchdog('voipcal_script_get_param', "expression: $expression, expression_tmp: $expression_tmp, rc: $rc");
+  }
+  else {
     $rc = $default;
   }
   return $rc;

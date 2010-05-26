@@ -1,6 +1,6 @@
 ; $Id$
 name = Voip Test Module 
-description = Tests VOIP hooks
+description = Tests Voip Drupal hooks
 package = Voip Drupal
 core = 6.x
 

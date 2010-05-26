@@ -8,7 +8,7 @@
  */
 function voiptest_voipcall_load_script($voipcall, $script_name) {
   $script = NULL;
-  if($script_name == 'voipcall_call_pickup') {
+  if($script_name == 'voiptest_test') {
    $script = array();
    $script[] = array(VOIPCALL_CMDID => VOIPCALL_SAY,
                      'text' => array(VOIPCALL_VAL => "Hello world!"),
