@@ -66,7 +66,7 @@ define('VOIPCALL_COMPLETED', 'completed');
  *  $node, the newly saved voipcall node.
  */
 function voipcall_save($details=array()) {
-dsm($details, 'details');
+//dsm($details, 'details');
 
   if(is_object($details)){
     $details = (array)$details;
@@ -99,7 +99,7 @@ dsm($details, 'details');
 //TODO: Why does the following node_load requires resetting the node cache?
     $node = node_load($details['nid'], NULL, TRUE);
   }
-dsm($node, 'inside voipcall_save');
+//dsm($node, 'inside voipcall_save');
 
   // update node fields
   if(isset($details['dest_number'])) $node->title = check_plain($details['dest_number']);

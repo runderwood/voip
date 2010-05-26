@@ -33,7 +33,7 @@ function _voiptwilio_call_handler($call_id=NULL, $response_action=NULL) {
 $msg = "in voiptwilio_call_handler() with call_id: $call_id, response_action: $response_action, and _REQUEST: " . print_r($_REQUEST, TRUE);
 $vars = array();
 watchdog('voiptwilio', $msg, $vars, WATCHDOG_INFO);
-dsm($msg);
+//dsm($msg);
 
   // validate $_REQUEST['AccountSid'] to avoid hack attempts
   $server = voip_servers('server', 'twilio');
@@ -210,8 +210,8 @@ dsm($msg);
  * @return boolean.  TRUE on success or FALSE on failure.  Check voip_error() for processing failure.
  */
 function _voiptwilio_script_handler($voipcall) {
-dsm('entering voiptwilio_script_handler()');
-dsm($voipcall);
+//dsm('entering voiptwilio_script_handler()');
+//dsm($voipcall);
 $msg = 'Entering script_handler with voipcall: ' . print_r($voipcall,true);
 watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
 
@@ -516,7 +516,7 @@ function _voiptwilio_ping($server_config) {
  *   @return XXXXXX the call. Check voip_error() for processing errors.
  */
 function _voiptwilio_dial_out($server_config, $voipcall) {
-dsm('In twilio dial_out');
+//dsm('In twilio dial_out');
 //dsm($server_config, '$server_config');
 //dsm($voipcall, '$voipcall');
 
@@ -580,7 +580,7 @@ dsm('In twilio dial_out');
     $rc = $call_id;
   }
  
-dsm($voipcall, "Dial result");
+//dsm($voipcall, "Dial result");
 
   return $rc;
 }

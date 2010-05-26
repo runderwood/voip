@@ -50,11 +50,11 @@ function callblast_menu() {
  * Implementation of hook_cron().
  */
 function callblast_cron() {
-  // check for call blasts that have been scheduled but not sent
+  // Check for call blasts that have been scheduled but not sent.
   $sql = "SELECT n.nid, n.vid " 
         ."FROM {node} n " 
         ."JOIN {content_type_callblast} cb ON n.nid = cb.nid "
-        ."WHERE field_callblast_sent_value = 0";
+        ."WHERE field_blast_sent_value = 0";
         // TODO add AND where TIME_SCHEDULED < CURRENT_TIME
   $result = db_query($sql);
 
@@ -70,9 +70,7 @@ function callblast_cron() {
     $list = callblast_list($node);
     // Save call list. (Each number on list must
     // be stored as a voipcall node.)
-// CONTINUE HERE
-// CAN'T USE BATCH API TO SAVE THESE NODES
-    callblast_save_list($list, $node);
+    callblast_save_voipcalls($list, $node);
 
     // get list of voipcall nids 
     // voip.module gets the phone numbers from the voipcall node
@@ -87,26 +85,32 @@ function callblast_cron() {
       $request_id = 'voip_dial_out';
 
       // place outgoing call
-      voip_send_request($request_id, $voipcall_node);
+      //voip_send_request($request_id, $voipcall_node);
+      voiptwilio_send($request_id, $voipcall_node);
     }
     // Update node to indicate that blast has been sent.
     db_query("UPDATE {content_type_callblast} "
             ."SET field_blast_sent_value = 1 " 
             ."WHERE nid = %d " 
             ."AND vid = %d ",
-             $nid, $vid);
+             $callblast_nid, $callblast_vid);
+
     // Clear cache to reflect update.
-    cache_clear_all('content:'. $nid .':'. $vid, content_cache_tablename()); 
+    cache_clear_all('content:'. $callblast_nid .':'. $callblast_vid, content_cache_tablename()); 
+// TODO 
+// update call status here
  
     // Log call blast with watchdog
     $type = 'call blast';
-    $message = t("Call blast nid-$nid sent.");
+    $message = t("Call blast nid-$callblast_nid sent.");
     $severity = WATCHDOG_NOTICE;
     watchdog($type, $message);
   }
 }
 
 /**
+ * TODO delete? cruft.
+ * 
  * Batch call back operation: Save voipcall nodes.
  * 
  * @param
@@ -296,6 +300,8 @@ function callblast_list($node) {
 }
 
 /**
+ * TODO get rid of this? cruft. no longer in use.
+ * 
  * Save a callblast list. This function uses
  * Batch API to process a list of calls and selected
  * callblast options to generated voipcall nodes for
@@ -333,3 +339,40 @@ function callblast_save_list($list, $node) {
   batch_process($url);
 }
 
+/**
+ * @param
+ *  $list, an array of numbers to be called. 
+ * 
+ * @param
+ *  $node, object, a callblast node.
+ */
+function callblast_save_voipcalls($list, $node) {
+  // generic call details from callblast node
+  $details['script'] = $node->field_callblast_script[0]['nid'];
+  $details['caller number'] = $node->field_callblast_caller_number[0]['value'];
+  $details['caller name'] = $node->field_callblast_caller_name[0]['value'];
+  $details['parent node'] = $node->nid; // TODO delete?
+  $details['scheduled start'] = $node->field_callblast_scheduled_start[0]['value'];
+
+  // save up voipcall nodes from $list
+  $i = 0;
+  $count = count($list);
+  while ($i < $count) {
+    if ($list[$i]['destination']) {
+      $details['dest_number'] = $list[$i]['destination'];
+      // save voipcall node
+      voipcall_save($details);
+      // store callblast_nid / voipcall_nid pairs in  callblast_call table
+      $callblast_call->voipcall_nid = db_last_insert_id('node', 'nid');
+      $callblast_call->callblast_nid = $node->nid;
+      drupal_write_record('callblast_call', $callblast_call);
+    } else {
+      // no destination number
+      // TODO Add validation/error handling here. 
+      //   Right now we're just checking for something or nothing. 
+      //   But, for example, a 6 digit phone number should trigger an error too.
+      drupal_set_message(t('Invalid destination number on call list.'), 'warning');
+    }
+    $i++;
+  }
+}

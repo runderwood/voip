@@ -6,6 +6,56 @@
 function _callblast_content_default_fields() {
   $fields = array();
 
+  // Exported field: field_blast_sent
+  $fields[] = array(
+    'field_name' => 'field_blast_sent',
+    'type_name' => 'callblast',
+    'display_settings' => array(
+      'label' => array(
+        'format' => 'above',
+        'exclude' => 0,
+      ),
+      'teaser' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      'full' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      '4' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+    ),
+    'widget_active' => '1',
+    'type' => 'number_integer',
+    'required' => '0',
+    'multiple' => '0',
+    'module' => 'number',
+    'active' => '1',
+    'prefix' => '',
+    'suffix' => '',
+    'min' => '',
+    'max' => '',
+    'allowed_values' => '0|
+1|Blast sent',
+    'allowed_values_php' => '',
+    'widget' => array(
+      'default_value' => array(
+        '0' => array(
+          'value' => NULL,
+        ),
+      ),
+      'default_value_php' => NULL,
+      'label' => 'Blast sent',
+      'weight' => '4',
+      'description' => '',
+      'type' => 'optionwidgets_onoff',
+      'module' => 'optionwidgets',
+    ),
+  );
+
   // Exported field: field_callblast_caller_name
   $fields[] = array(
     'field_name' => 'field_callblast_caller_name',
@@ -49,7 +99,7 @@ function _callblast_content_default_fields() {
       ),
       'default_value_php' => NULL,
       'label' => 'Caller Name',
-      'weight' => '1',
+      'weight' => 0,
       'description' => '',
       'type' => 'text_textfield',
       'module' => 'text',
@@ -99,7 +149,7 @@ function _callblast_content_default_fields() {
       ),
       'default_value_php' => NULL,
       'label' => 'Caller Number',
-      'weight' => 0,
+      'weight' => '-1',
       'description' => '',
       'type' => 'text_textfield',
       'module' => 'text',
@@ -146,7 +196,7 @@ function _callblast_content_default_fields() {
       ),
       'default_value_php' => NULL,
       'label' => 'Call List',
-      'weight' => '-2',
+      'weight' => '-3',
       'description' => '',
       'type' => 'callblast_calllist',
       'module' => 'callblast',
@@ -264,7 +314,7 @@ function _callblast_content_default_fields() {
       'year_range' => '0:+1',
       'label_position' => 'above',
       'label' => 'Scheduled Start Time',
-      'weight' => '-1',
+      'weight' => '-2',
       'description' => '',
       'type' => 'date_select',
       'module' => 'date',
@@ -329,56 +379,6 @@ function _callblast_content_default_fields() {
     ),
   );
 
-  // Exported field: field_callblast_sent
-  $fields[] = array(
-    'field_name' => 'field_callblast_sent',
-    'type_name' => 'callblast',
-    'display_settings' => array(
-      'label' => array(
-        'format' => 'above',
-        'exclude' => 0,
-      ),
-      'teaser' => array(
-        'format' => 'default',
-        'exclude' => 0,
-      ),
-      'full' => array(
-        'format' => 'default',
-        'exclude' => 0,
-      ),
-      '4' => array(
-        'format' => 'default',
-        'exclude' => 0,
-      ),
-    ),
-    'widget_active' => '1',
-    'type' => 'number_integer',
-    'required' => '0',
-    'multiple' => '0',
-    'module' => 'number',
-    'active' => '1',
-    'prefix' => '',
-    'suffix' => '',
-    'min' => '',
-    'max' => '',
-    'allowed_values' => '0|
-1|Blast Sent',
-    'allowed_values_php' => '',
-    'widget' => array(
-      'default_value' => array(
-        '0' => array(
-          'value' => NULL,
-        ),
-      ),
-      'default_value_php' => NULL,
-      'label' => 'Blast Sent',
-      'weight' => '-3',
-      'description' => '',
-      'type' => 'optionwidgets_onoff',
-      'module' => 'optionwidgets',
-    ),
-  );
-
   // Exported field: field_test_approved
   $fields[] = array(
     'field_name' => 'field_test_approved',
@@ -422,7 +422,7 @@ function _callblast_content_default_fields() {
       ),
       'default_value_php' => NULL,
       'label' => 'Test approved',
-      'weight' => '4',
+      'weight' => '3',
       'description' => 'Approve the test. Once this box is checked, the blast is ready to go out.',
       'type' => 'optionwidgets_onoff',
       'module' => 'optionwidgets',
@@ -472,7 +472,7 @@ function _callblast_content_default_fields() {
       ),
       'default_value_php' => NULL,
       'label' => 'Test Phone Number',
-      'weight' => '2',
+      'weight' => '1',
       'description' => '',
       'type' => 'text_textfield',
       'module' => 'text',
@@ -522,7 +522,7 @@ function _callblast_content_default_fields() {
       ),
       'default_value_php' => NULL,
       'label' => 'Require Test Call',
-      'weight' => '3',
+      'weight' => '2',
       'description' => 'Require a \'test call\' before blasting the call to your list? If you chose this option, you will be prompted to pass/fail the test. Your blast will not be sent until the test passes. (Recommended)',
       'type' => 'optionwidgets_onoff',
       'module' => 'optionwidgets',
@@ -577,7 +577,7 @@ function _callblast_content_default_fields() {
 
   // Translatables
   array(
-    t('Blast Sent'),
+    t('Blast sent'),
     t('Call Blast Message'),
     t('Call List'),
     t('Caller Name'),
