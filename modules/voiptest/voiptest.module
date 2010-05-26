@@ -42,6 +42,25 @@ function voiptest_voipcall_load_script($voipcall, $script_name) {
       ),
     );
     $script[] = array(
+      VOIPCALL_CMD_ID => VOIPCALL_SET,
+      VOIPCALL_CMD_BODY => array(
+        'var_name' => array(VOIPCALL_VAL => "user input"),
+        'var_value' => array(VOIPCALL_VAR => "gather_digits"),
+      ),
+    );
+    $script[] = array(
+      VOIPCALL_CMD_ID => VOIPCALL_SAY,
+      VOIPCALL_CMD_BODY => array(
+        'text' => array(VOIPCALL_VAL => "The variable 'user input' is now set to "),
+      ),
+    );
+    $script[] = array(
+      VOIPCALL_CMD_ID => VOIPCALL_SAY,
+      VOIPCALL_CMD_BODY => array(
+        'text' => array(VOIPCALL_VAR => "user input"),
+      ),
+    );
+    $script[] = array(
       VOIPCALL_CMD_ID => VOIPCALL_GOTOIF,
       VOIPCALL_CMD_BODY => array(
         'label_name' => array(VOIPCALL_VAL => 'end call'),

@@ -429,7 +429,9 @@ watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
           break;
 
         case VOIPCALL_SET;
-// TODO: implement set
+          $var_name = voipcall_script_get_parameter_value($command, 'var_name', $variables);
+          $var_value = voipcall_script_get_parameter_value($command, 'var_value', $variables);
+          $variables[$var_name] = $var_value;
           break;
 
       }
