@@ -55,15 +55,7 @@ function _voip_asterisk_ami_log($message, $level=1)
  * Test the connection with the Asterisk server
  */
 function _voip_asterisk_ping($server_config) {
-dsm("ping() config is: " . print_r($server_config,true));
 
-/****
-  $ami_port = $server_config['ami_port'];
-  $ami_host = $server_config['ami_host'];
-  $ami_host = ($ami_port)? $ami_host.':'.$ami_port : $ami_host;
-  $ami_user = $server_config['ami_user'];
-  $ami_pass = $server_config['ami_password'];
-****/
   $ami_host = $server_config['voip_asterisk_host'];
   $ami_port = $server_config['voip_asterisk_port'];
   $ami_host = ($ami_port)? $ami_host.':'.$ami_port : $ami_host;
@@ -71,7 +63,6 @@ dsm("ping() config is: " . print_r($server_config,true));
   $ami_pass = $server_config['voip_asterisk_password'];
 
   voip_error_reset();
-dsm("about to call: connect($ami_host, $ami_user, $ami_pass);");
 
   $result = _voip_asterisk_manager()->connect($ami_host, $ami_user, $ami_pass);
   if(voip_error()) {
@@ -103,13 +94,6 @@ dsm("dial_out config is: " . print_r($server_config,true));
 
 //TODO: set start and end times
 
-/****
-  $ami_port = $server_config['ami_port'];
-  $ami_host = $server_config['ami_host'];
-  $ami_host = ($ami_port)? ($ami_host.':'.$ami_port) : $ami_host;
-  $ami_user = $server_config['ami_user'];
-  $ami_pass = $server_config['ami_password'];
-*****/
   $ami_host = $server_config['voip_asterisk_host'];
   $ami_port = $server_config['voip_asterisk_port'];
   $ami_host = ($ami_port)? $ami_host.':'.$ami_port : $ami_host;
@@ -143,7 +127,6 @@ dsm("dial_out config is: " . print_r($server_config,true));
   voip_error_reset();
 
   $ami = _voip_asterisk_manager();
-dsm("about to call: connect($ami_host, $ami_user, $ami_pass);");
   $result = $ami->connect($ami_host, $ami_user, $ami_pass);
   if(voip_error()) {
     voip_error("Connection to Asterisk manager failed: " . voip_error_message());

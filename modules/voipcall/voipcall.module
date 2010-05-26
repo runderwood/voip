@@ -1,30 +1,72 @@
 <?php
 
-include_once('voipcall.features.inc');
+// $Id$
+
+/**
+ * @file
+ * Implementation of core functionality associated with voip calls
+ */
+
+foreach (array('voipcall.features.inc', 'voipcall.script.inc') as $file) {
+  require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . $file);
+}
+
+/**
+ * Constants
+ */
+
+/**
+ * Possible status of a call
+ */
+define('VOIPCALL_ERROR', 'processing error');
+define('VOIPCALL_NOT_CALLED', 'not called'); // the call has yet to be called
+define('VOIPCALL_DIALING', 'dialing'); // the call is being connected/requested
+define('VOIPCALL_NO_ANSWER', 'no answer');
+define('VOIPCALL_BUSY', 'busy');
+define('VOIPCALL_INVALID', 'invalid number');
+define('VOIPCALL_IN_PROGRESS', 'in progress'); // the call is in progress
+define('VOIPCALL_ANSWERED_MACHINE', 'answered by machine');
+define('VOIPCALL_ANSWERED_HUMAN', 'answered by human');
+define('VOIPCALL_MACHINE_HANGUP', 'machine hangup'); // call hangup due to machine pickup
+define('VOIPCALL_COMPLETED', 'completed');
+
+
+/**
+ * Public functions
+ */
 
 /**
  * Save voipcall nodes. 
  * 
  * @param 
  *  $details = array with the following optional values:
- *    'nid', the nid of the voipcall node to be updated
+ *    'nid', the nid of the voipcall node to be updated. If not provided, a new
+ *       node will be created.
+ *    'call_id', the call unique_id.  If not provided, the function will
+ *       generate one for new nodes
  *    'dest_number', the destination number for the phone call
- *    'caller_number', the caller id number
- *    'caller_name', the caller id name
- *    'call_status', the status of the call. Possile values: 'processing error',
- *                   'not called', 'calling', 'answered', 'no answer', 'busy',
- *                   'invalid number'
- *    'script_name', the name of the dialplan script to be run when call is answered
+ *    'caller_number', the caller number
+ *    'caller_name', the caller name
+ *    'call_status', the status of the call. Check constants.
+ *    'script_name', the name of the dialplan script to be executed
+ *    'script_index', the index of the current command
+ *    'script_variables', variables accessed and updated by the script
+ *    'hangup_script', the name of the script to be invoked in case of hangup
+ *    'uid', the id of the user associated with the script
+ *    'source', the server that originated the call ('drupal', 'asterisk', etc.)
  *    'start_time', the start time of the call
  *    'end_time', the end time of the call
- *    'fields' array of 'field' => 'value' for other optional node fields to be
+ *    'duration', the final duration of the call in seconds
+ *    'error_message', an error message associated with the call, if any
+ *    'other' array of 'field' => 'value' for other optional node fields to be
  *        set, e.g. uid, sticky, moderate, promoted, title, etc.
  *  );
  * 
  * @return
  *  $node, the newly saved voipcall node.
  */
-function voipcall_save($details) {
+function voipcall_save($details=array()) {
+dsm($details, 'details');
 
   if(is_object($details)){
     $details = (array)$details;
@@ -39,33 +81,62 @@ function voipcall_save($details) {
     $node->type = 'voipcall';
 
     // define a unique identifier for the call
-    $node->field_voipcall_call_id[0]['value'] = uniqid();
+    $node->field_voipcall_call_id[0]['value'] = _voipcall_generate_guid();
 
     // all calls start as 'not called'
     $node->field_voipcall_status[0]['value'] = 'not called';
+
+    // initialize script-related fields with their default values
+    $script_name = voipcall_get_default_script_name();
+    $node->field_voipcall_script_name[0]['value'] = $script_name;
+    $node->field_voipcall_script_index[0]['value'] =  0;
+// todo: serialize variables
+    $node->field_voipcall_script_variables[0]['value'] =  serialize(array());
+
   }
   else {
     // load the node
-    $node = node_load($details['nid']);
+//TODO: Why does the following node_load requires resetting the node cache?
+    $node = node_load($details['nid'], NULL, TRUE);
   }
+dsm($node, 'inside voipcall_save');
 
-  // update selected fields
+  // update node fields
+  if(isset($details['dest_number'])) $node->title = check_plain($details['dest_number']);
+  if(isset($details['uid'])) $node->uid = $details['uid'];
 
-  global $user;
-  $node->uid = $user->uid;          // UID of content owner
+  // update voipcall-specific fields
 
-  if(!is_null($details['dest_number'])) $node->title = check_plain($details['dest_number']);
-  if(!is_null($details['dest_number'])) $node->field_voipcall_dest_number[0]['value'] = $details['dest_number'];
-  if(!is_null($details['caller_number'])) $node->field_voipcall_caller_number[0]['value'] = $details['caller_number'];
-  if(!is_null($details['caller_name'])) $node->field_voipcall_caller_name[0]['value'] = $details['caller_name'];
-  if(!is_null($details['call_status'])) $node->field_voipcall_status[0]['value'] = $details['call_status'];
-  if(!is_null($details['script_name'])) $node->field_voipcall_script_name[0]['value'] =  $details['script_name'];
-  if(!is_null($details['start_time'])) $node->field_voipcall_start_time[0]['value'] = $details['start_time'];
-  if(!is_null($details['end_time'])) $node->field_voipcall_end_time[0]['value'] = $details['end_time'];
+  if(isset($details['call_id'])) $node->field_voipcall_call_id[0]['value'] = $details['call_id'];
+  if(isset($details['dest_number'])) $node->field_voipcall_dest_number[0]['value'] = $details['dest_number'];
+$msg = "1. caller_number:: details: " . $details['caller_number'] . ", field: " . $node->field_voipcall_caller_number[0]['value'];
+watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
+
+  if(isset($details['caller_number'])) $node->field_voipcall_caller_number[0]['value'] = $details['caller_number'];
+$msg = "2. caller_number:: details: " . $details['caller_number'] . ", field: " . $node->field_voipcall_caller_number[0]['value'];
+watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
+
+  if(isset($details['caller_name'])) $node->field_voipcall_caller_name[0]['value'] = $details['caller_name'];
+
+  if(isset($details['call_status'])) $node->field_voipcall_status[0]['value'] = $details['call_status'];
+
+  if(isset($details['script_name'])) $node->field_voipcall_script_name[0]['value'] =  $details['script_name'];
+  if(isset($details['script_index'])) $node->field_voipcall_script_index[0]['value'] =  $details['script_index'];
+// todo: serialize variables
+  if(isset($details['script_variables'])) $node->field_voipcall_script_variables[0]['value'] =  serialize($details['script_variables']);
+  if(isset($details['hangup_script'])) $node->field_voipcall_hangup_script[0]['value'] =  $details['hangup_script'];
+
+  if(isset($details['source'])) $node->field_voipcall_source[0]['value'] =  $details['source'];
+
+  if(isset($details['start_time'])) $node->field_voipcall_start_time[0]['value'] = $details['start_time'];
+  if(isset($details['end_time'])) $node->field_voipcall_end_time[0]['value'] = $details['end_time'];
+  if(isset($details['duration'])) $node->field_voipcall_duration[0]['value'] = $details['duration'];
+
+  if(isset($details['error_message'])) $node->field_voipcall_error_message[0]['value'] = $details['error_message'];
 
   // set other optional node fields
-  if(!is_null($details['fields'])){
-    foreach($details['fields'] as $field => $value){
+  if(isset($details['other'])){
+    foreach($details['other'] as $field => $value){
       $node->$field = $value;
     }
   }
@@ -73,7 +144,6 @@ function voipcall_save($details) {
   // save the node
   node_save($node);
 
-dsm($node);
   return $node;
 }
 
@@ -89,4 +159,172 @@ function voipcall_get_nid_from_call_id($call_id){
   // fetch the desired voipcall node
   $nid = db_result(db_query("SELECT `nid` FROM `content_type_voipcall` WHERE `field_voipcall_call_id_value` = '%s'", $call_id));
   return $nid;
+}
+
+/**
+ * Implementation of hook_menu()
+ */
+function voipcall_menu() {
+  $items = array();
+
+  $items['admin/voip/call'] = array(
+    'title' => 'Default call configuration',
+    'description' => 'Defines default parameters used in Voip Drupal calls.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('voipcall_admin_form', NULL),
+    'access arguments' => array('administer voipcall setup')
+  );
+
+  return $items;
+}
+
+/**
+ * Implementation of hook_perm()
+ */
+function voipcall_perm() {
+ return array('administer voipcall setup');
+}
+
+/**
+ * Form implementation
+ */
+function voipcall_admin_form() {
+  $form['voipcall_cid_name'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Caller id name'),
+    '#description' => t('Caller id name to be used in Voip Drupal calls.'),
+    '#size' => 40,
+    '#maxlength' => 255,
+    '#default_value' => variable_get('voipcall_cid_name',''),
+  );
+
+  $form['voipcall_cid_number'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Caller id number'),
+    '#description' => t('Caller id number to be used in Voip Drupal calls.'),
+    '#size' => 40,
+    '#maxlength' => 255,
+    '#default_value' => variable_get('voipcall_cid_number',''),
+  );
+
+  $form['voipcall_pickup_script_name'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Pickup script name'),
+    '#description' => t('Name of the of the dialplan script to be called upon call pickup.'),
+    '#size' => 40,
+    '#maxlength' => 255,
+    '#default_value' => variable_get('voipcall_pickup_script_name', 'voipcall_call_pickup'),
+  );
+
+  $form['submit'] = array(
+    '#type' => 'submit', 
+    '#value' => t('Save'),
+  );
+
+  return $form;
+}
+
+
+/**
+ * Validates the submission of the configuration form.
+ */
+function voipcall_admin_form_validate($form, &$form_state) {
+  $values = $form_state['values'];
+//todo: make sure that default script name is not empty ''
+  return;
+}
+
+
+function voipcall_admin_form_submit($form, &$form_state) {
+  
+  // Remove unecessary values
+  unset($form_state['values']['op'], $form_state['values']['submit'], $form_state['values']['form_token'], $form_state['values']['form_id']);
+
+  // store values
+  variable_set('voipcall_cid_name', $form_state['values']['voipcall_cid_name']);
+  variable_set('voipcall_cid_number', $form_state['values']['voipcall_cid_number']);
+  variable_set('voipcall_pickup_script_name', $form_state['values']['voipcall_pickup_script_name']);
+
+  drupal_set_message(t('The default call settings have been saved.'));
+
+  $form_state['redirect'] = 'admin/voip';
+}
+
+
+/**
+ * Check if the call is in a hangup state
+ */
+function voipcall_is_hangup($voipcall) {
+  $rc = FALSE;
+  $status = $voipcall['field_voipcall_status'][0]['value'];
+  switch($status) {
+    case 'VOIPCALL_ERROR':
+    case 'VOIPCALL_NO_ANSWER':
+    case 'VOIPCALL_BUSY':
+    case 'VOIPCALL_INVALID':
+    case 'VOIPCALL_MACHINE_HANGUP':
+    case 'VOIPCALL_COMPLETED':
+      $rc = TRUE;
+      break;
+  }
+  return $rc;
+}
+
+/**
+ * Report a voipcall-related processing error
+ *
+ * @param string $module with the name of the module reporting the error
+ *
+ * @param array $voipcall with the information about the call
+ *
+ * @param string $msg with the error message with placeholders for the params
+ *
+ * @param array $params with pairs string->string that will replaced in $msg
+ *
+ * @return object containing the updated version of $voipcall
+ */
+function voipcall_processing_error($module, $voipcall, $msg, $params=array()){
+  if(is_object($voipcall)){
+    $voipcall = (array)$voipcall;
+  }
+  watchdog($module ,$msg, $params, WATCHDOG_ERROR);
+  $msg_text = "($module) " . strtr($msg, $params);
+  voip_error($msg_text);
+  $voipcall['error_message'] = $msg_text;
+  $voipcall['call_status'] = VOIPCALL_ERROR;
+  $n = voipcall_save($voipcall);
+  return $n;
+}
+
+
+/**
+ * Internal functions
+ */
+
+/**
+ * Generate a Global Unique IDentifier (GUID)
+ */
+
+function _voipcall_generate_guid() {
+  // Copied from http://php.net/manual/en/function.uniqid.php
+  return sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
+
+    // 32 bits for "time_low"
+    mt_rand(0, 0xffff), mt_rand(0, 0xffff),
+
+    // 16 bits for "time_mid"
+    mt_rand(0, 0xffff),
+
+    // 16 bits for "time_hi_and_version",
+    // four most significant bits holds version number 4
+    mt_rand(0, 0x0fff) | 0x4000,
+
+    // 16 bits, 8 bits for "clk_seq_hi_res",
+    // 8 bits for "clk_seq_low",
+    // two most significant bits holds zero and one for variant DCE1.1
+    mt_rand(0, 0x3fff) | 0x8000,
+
+    // 48 bits for "node"
+    mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
+  );
 }
