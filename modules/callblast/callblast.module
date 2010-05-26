@@ -52,8 +52,7 @@ function callblast_cron() {
   $sql = "SELECT n.nid, n.vid " 
         ."FROM {node} n " 
         ."JOIN {content_type_callblast} cb ON n.nid = cb.nid "
-        ."WHERE field_blast_sent_value = 0";
-        // TODO add AND where TIME_SCHEDULED < CURRENT_TIME
+        ."WHERE field_blast_sent_value = 0 ";
   $result = db_query($sql);
 
   // @todo these should be added to a queue. Lots of big lists could get messy.
@@ -61,49 +60,55 @@ function callblast_cron() {
   while ($row = db_fetch_object($result)) {
     $callblast_nid = $row->nid;
     $callblast_vid = $row->vid;
-
-    // create voipcall nodes for everyone on the call list
+  
+    // Check when call is scheduled to get sent. 
+    // Skip if it's scheduled for later.
     $node = node_load($callblast_nid);
-    // Get selected call list.
-    $list = callblast_list($node);
-    // Save call list. (Each number on list must
-    // be stored as a voipcall node.)
-    callblast_save_voipcalls($list, $node);
+    $start_time =  $node->field_callblast_scheduled_start[0]['value'];
+    // TODO Add timezone handling.
+    // $timezone = $node->field_callblast_scheduled_start[0]['timezone'];
+    $now = time();
+    if ($start_time <= $now) {
 
-    // get list of voipcall nids 
-    // voip.module gets the phone numbers from the voipcall node
-    $sql = 'SELECT voipcall_nid FROM {callblast_call} WHERE callblast_nid = %d'; 
-    $result2 = db_query($sql, $callblast_nid);
+      // Get selected call list.
+      $list = callblast_list($node);
+      // Save call list. (Each number on list must
+      // be stored as a voipcall node.)
+      callblast_save_voipcalls($list, $node);
 
-    // place phone calls to each number on the list, one-by-one
-    while ($voipcall_nid = db_result($result2)) { 
-      $voipcall_node = node_load($voipcall_nid);    
+      // get list of voipcall nids 
+      // voip.module gets the phone numbers from the voipcall node
+      $sql = 'SELECT voipcall_nid FROM {callblast_call} WHERE callblast_nid = %d'; 
+      $result2 = db_query($sql, $callblast_nid);
 
-      // $request_id, Type of call being requested.
-      $request_id = 'voip_dial_out';
+      // place phone calls to each number on the list, one-by-one
+      while ($voipcall_nid = db_result($result2)) { 
+        $voipcall_node = node_load($voipcall_nid);    
 
-      // place outgoing call
-      //voip_send_request($request_id, $voipcall_node);
-      voiptwilio_send($request_id, $voipcall_node);
-    }
-    // Update node to indicate that blast has been sent.
-    db_query("UPDATE {content_type_callblast} "
-            ."SET field_blast_sent_value = 1 " 
-            ."WHERE nid = %d " 
-            ."AND vid = %d ",
-             $callblast_nid, $callblast_vid);
+        // $request_id, Type of call being requested.
+        $request_id = 'voip_dial_out';
 
-    // Clear cache to reflect update.
-    cache_clear_all('content:'. $callblast_nid .':'. $callblast_vid, content_cache_tablename()); 
-// TODO 
-// update call status here
- 
-    // Log call blast with watchdog
-    $type = 'call blast';
-    $message = t("Call blast nid-$callblast_nid sent.");
-    $severity = WATCHDOG_NOTICE;
-    watchdog($type, $message);
-  }
+        // place outgoing call
+        //voip_send_request($request_id, $voipcall_node);
+        voiptwilio_send($request_id, $voipcall_node);
+      }
+      // Update node to indicate that blast has been sent.
+      db_query("UPDATE {content_type_callblast} "
+              ."SET field_blast_sent_value = 1 " 
+              ."WHERE nid = %d " 
+              ."AND vid = %d ",
+               $callblast_nid, $callblast_vid);
+
+      // Clear cache to reflect update.
+      cache_clear_all('content:'. $callblast_nid .':'. $callblast_vid, content_cache_tablename()); 
+
+      // Log call blast with watchdog
+      $type = 'call blast';
+      $message = t("Call blast nid-$callblast_nid sent.");
+      $severity = WATCHDOG_NOTICE;
+      watchdog($type, $message);
+    } // end if ($start_time <= $now)
+  } // end while
 }
 
 /**
