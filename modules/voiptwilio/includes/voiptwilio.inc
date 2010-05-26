@@ -271,42 +271,27 @@ watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
           $processing = FALSE;
           break;
 
-        case VOIPCALL_SAY:
-          $text = voipcall_script_get_parameter_value($command, 'text', $variables); 
-          $response .= "<Say>$text</Say>";
-          break;
-
-        case VOIPCALL_PLAY:
-          $url = voipcall_script_get_parameter_value($command, 'url', $variables); 
-          $response .= "<Play>$url</Play>";
-          break;
-
-        case VOIPCALL_RECORD:
+        case VOIPCALL_DIAL;
           $menu_path = 'voip/twilio/callhandler';
           $call_id = $variables['call_id'];
-          $response_url = $menu_path . '/' . $call_id . '/process_record';
+          $response_url = $menu_path . '/' . $call_id . '/process_dial';
           $action = url($response_url, array('absolute' => TRUE));
           $method = 'POST';
-          $timeout = voipcall_script_get_parameter_value($command, 'timeout', $variables, 5); 
-          $end_key = voipcall_script_get_parameter_value($command, 'end_key', $variables, '#'); 
-          $max_length = voipcall_script_get_parameter_value($command, 'max_length', $variables, 3600); 
-          // TODO: implement the "transcribe" feature?"
-          $play_beep = voipcall_script_get_parameter_value($command, 'play_beep', $variables, 'true'); 
-          $response .= '<Record action="' . $action
+          $number = voipcall_script_get_parameter_value($command, 'number', $variables); 
+          // TODO: implement the other features such as multi-dial, url and sendDigits?
+          $timeout = voipcall_script_get_parameter_value($command, 'timeout', $variables, 30); 
+          // TODO: implement the hangupOnStar feature?
+          $time_limit = voipcall_script_get_parameter_value($command, 'time_limit', $variables, '14400'); 
+          $caller_id = voipcall_script_get_parameter_value($command, 'caller_id', $variables, $variables['caller_number']); 
+          $response .= '<Dial action="' . $action
                             . '" method="' . $method
                             . '" timeout="' . $timeout
-                            . '" finishOnKey="' . $end_key
-                            . '" maxLength="' . $max_length
-                            . '" playBeep="' . $play_beep
-                            . '" />';
+                            . '" timeLimit="' . $time_limit
+                            . '" callerId="' . $caller_id
+                            . '" >';
+          $response .= '<Number>' . $number . '</Number>';
+          $response .= '</Dial>';
           $rc = TRUE;
-          $processing = FALSE;
-          break;
-
-        case VOIPCALL_HANGUP:
-          // send the hangup request and stop processing script commands
-          // Note: this will trigger a response from Twilio with CallStatus = complete
-          $response .= '<Hangup/>';
           $processing = FALSE;
           break;
 
@@ -332,27 +317,10 @@ watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
           $processing = FALSE;
           break;
 
-        case VOIPCALL_DIAL;
-          $menu_path = 'voip/twilio/callhandler';
-          $call_id = $variables['call_id'];
-          $response_url = $menu_path . '/' . $call_id . '/process_dial';
-          $action = url($response_url, array('absolute' => TRUE));
-          $method = 'POST';
-          $number = voipcall_script_get_parameter_value($command, 'number', $variables); 
-          // TODO: implement the other features such as multi-dial, url and sendDigits?
-          $timeout = voipcall_script_get_parameter_value($command, 'timeout', $variables, 30); 
-          // TODO: implement the hangupOnStar feature?
-          $time_limit = voipcall_script_get_parameter_value($command, 'time_limit', $variables, '14400'); 
-          $caller_id = voipcall_script_get_parameter_value($command, 'caller_id', $variables, $variables['caller_number']); 
-          $response .= '<Dial action="' . $action
-                            . '" method="' . $method
-                            . '" timeout="' . $timeout
-                            . '" timeLimit="' . $time_limit
-                            . '" callerId="' . $caller_id
-                            . '" >';
-          $response .= '<Number>' . $number . '</Number>';
-          $response .= '</Dial>';
-          $rc = TRUE;
+        case VOIPCALL_HANGUP:
+          // send the hangup request and stop processing script commands
+          // Note: this will trigger a response from Twilio with CallStatus = complete
+          $response .= '<Hangup/>';
           $processing = FALSE;
           break;
 
@@ -428,7 +396,40 @@ watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
 // TODO: implement load
           break;
 
+        case VOIPCALL_PLAY:
+          $url = voipcall_script_get_parameter_value($command, 'url', $variables); 
+          $response .= "<Play>$url</Play>";
+          break;
+
+        case VOIPCALL_RECORD:
+          $menu_path = 'voip/twilio/callhandler';
+          $call_id = $variables['call_id'];
+          $response_url = $menu_path . '/' . $call_id . '/process_record';
+          $action = url($response_url, array('absolute' => TRUE));
+          $method = 'POST';
+          $timeout = voipcall_script_get_parameter_value($command, 'timeout', $variables, 5); 
+          $end_key = voipcall_script_get_parameter_value($command, 'end_key', $variables, '#'); 
+          $max_length = voipcall_script_get_parameter_value($command, 'max_length', $variables, 3600); 
+          // TODO: implement the "transcribe" feature?"
+          $play_beep = voipcall_script_get_parameter_value($command, 'play_beep', $variables, 'true'); 
+          $response .= '<Record action="' . $action
+                            . '" method="' . $method
+                            . '" timeout="' . $timeout
+                            . '" finishOnKey="' . $end_key
+                            . '" maxLength="' . $max_length
+                            . '" playBeep="' . $play_beep
+                            . '" />';
+          $rc = TRUE;
+          $processing = FALSE;
+          break;
+
+        case VOIPCALL_SAY:
+          $text = voipcall_script_get_parameter_value($command, 'text', $variables); 
+          $response .= "<Say>$text</Say>";
+          break;
+
         case VOIPCALL_SET;
+// TODO: implement set
           break;
 
       }

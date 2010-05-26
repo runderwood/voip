@@ -134,6 +134,27 @@ function voipcall_voipcall_load_script($voipcall, $script_name) {
     $script[] = array(
       VOIPCALL_CMD_ID => VOIPCALL_HANGUP
     );
+/********
+    $script[] = array(
+      VOIPCALL_CMDID => VOIPCALL_RECORD,
+      VOIPCALL_CMD_BODY => array(
+                     'max_length' => array(VOIPCALL_VAL => '20'),
+                     'end_key' => array(VOIPCALL_VAL => '*'),
+      ),
+    );
+    $script[] = array(
+      VOIPCALL_CMDID => VOIPCALL_SAY,
+      VOIPCALL_CMD_BODY => array(
+                     'text' => array(VOIPCALL_VAL => "You said "),
+      ),
+    );
+    $script[] = array(
+      VOIPCALL_CMDID => VOIPCALL_PLAY,
+      VOIPCALL_CMD_BODY => array(
+                     'url' => array(VOIPCALL_VAR => 'recording_url'),
+      ),
+    );
+******/
   }
 
   return $script;
