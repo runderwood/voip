@@ -3,7 +3,8 @@
 include_once('callblast.features.inc');
 
 // Custom code and logic.
-include_once('callblast.inc');
+include_once('includes/callblast.inc');
+include_once('includes/callblast.script.inc');
 
 /**
  * @file callblast.module
@@ -32,7 +33,7 @@ function callblast_menu() {
     'page callback' => 'callblast_list_autocomplete',
     'access arguments' => array('edit extension'),
     'type' => MENU_CALLBACK,
-    'file' => 'callblast.inc',
+    'file' => 'includes/callblast.inc',
   );
   
   return $items;
@@ -356,6 +357,13 @@ function callblast_save_voipcalls($list, $node) {
   $details['caller name'] = $node->field_callblast_caller_name[0]['value'];
   $details['parent node'] = $node->nid; // TODO delete?
   $details['scheduled start'] = $node->field_callblast_scheduled_start[0]['value'];
+// TODO replace with real script name.
+  $details['script_name'] = 'callblast_message_test'; 
+// TODO finalize variables.
+  $message_path = $node->field_callblast_audio_file[0]['filepath'];
+  $message_url = url($message_path, array('absolute' => TRUE));
+dsm("mesage url: $message_url");
+  $details['script_variables'] = array('message_url' => $message_url);
 
   // save up voipcall nodes from $list
   $i = 0;
