@@ -7,13 +7,12 @@
 /**
  * Implementation of hook_voipcall_load_script()
  * 
- * TESTING: play recorded message.
- * 
  */
 function callblast_voipcall_load_script($voipcall, $script_name) {
   switch ($script_name) {
     case 'callblast_message':
       // play message attached to callblast node
+      // message 0
       $script = array();
       $script[] = array(
         VOIPCALL_CMD_ID => VOIPCALL_LABEL,
@@ -28,6 +27,68 @@ function callblast_voipcall_load_script($voipcall, $script_name) {
         ),
       );
 
+      // play options
+      $script[] = array(
+        VOIPCALL_CMD_ID => VOIPCALL_GATHER,
+        VOIPCALL_CMD_BODY => array(
+          // TODO Get voice recording of options.
+          'text' => array(VOIPCALL_VAL => t("To replay this message, press star. To speak with the operator, press 0.  To hangup, press the pound key.")),
+          'num_digits' => array(VOIPCALL_VAL => 1),
+          'end_key' => array(VOIPCALL_VAL => ""),
+        ),
+      );
+
+      /*
+      // testing
+      $script[] = array(
+        VOIPCALL_CMD_ID => VOIPCALL_SAY,
+        VOIPCALL_CMD_BODY => array(
+          'text' => array(VOIPCALL_VAL => "You pressed: "),
+        ),
+      );
+      $script[] = array(
+        VOIPCALL_CMD_ID => VOIPCALL_SAY,
+        VOIPCALL_CMD_BODY => array(
+          'text' => array(VOIPCALL_VAR => "gather_digits"),
+        ),
+      );
+      // */
+
+      // Go to user's selected option.
+      // * replay message 
+      $script[] = array(
+        VOIPCALL_CMD_ID => VOIPCALL_GOTOIF,
+        VOIPCALL_CMD_BODY => array(
+          'label_name' => array(VOIPCALL_VAL => 'start'),
+          // Note: variable names have to be enclosed in between '@<'and '>@'
+          'expression' => array(VOIPCALL_EVAL => "@<gather_digits>@ == '*'"),
+        ),
+      );
+      // # end call
+      $script[] = array(
+        VOIPCALL_CMD_ID => VOIPCALL_GOTOIF,
+        VOIPCALL_CMD_BODY => array(
+          'label_name' => array(VOIPCALL_VAL => 'end call'),
+          // Note: variable names have to be enclosed in between '@<'and '>@'
+          'expression' => array(VOIPCALL_EVAL => "@<gather_digits>@ == '#'"),
+        ),
+      );
+      // 0, call forwarding
+      $script[] = array(
+        VOIPCALL_CMD_ID => VOIPCALL_SAY,
+        VOIPCALL_CMD_BODY => array(
+          'text' => array(VOIPCALL_VAL => "Dialing. Please wait."),
+        ),  
+      );
+      $script[] = array(
+        VOIPCALL_CMD_ID => VOIPCALL_DIAL,
+        VOIPCALL_CMD_BODY => array(
+          'number' => array(VOIPCALL_VAR => 'forward_to_number'),
+        ),
+      );
+
+      // TODO Add if statement. Check for additional messages. Include those script[]s here.
+     
       $script[] = array(
         VOIPCALL_CMD_ID => VOIPCALL_LABEL,
         VOIPCALL_CMD_BODY => array(

@@ -366,7 +366,13 @@ function callblast_save_voipcalls($list, $node) {
   $message_url = $message_path; // TODO Figure out why Twilio prepends our domain to the relative URL.
   $message_url = check_url($message_url);
   $message_url = drupal_urlencode($message_url);
-  $details['script_variables'] = array('message_url' => $message_url);
+  // call forwarding number
+  $forward_to_number = $node->field_callblast_call_forward[0]['value']; 
+  // store voipcall variables
+  $details['script_variables'] = array(
+    'message_url' => $message_url, 
+    'forward_to_number' => $forward_to_number,
+  );
 
   // save up voipcall nodes from $list
   $i = 0;

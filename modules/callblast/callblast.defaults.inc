@@ -50,7 +50,7 @@ function _callblast_content_default_fields() {
       ),
       'default_value_php' => NULL,
       'label' => 'Blast sent',
-      'weight' => '-1',
+      'weight' => '1',
       'description' => '',
       'type' => 'optionwidgets_onoff',
       'module' => 'optionwidgets',
@@ -96,10 +96,60 @@ function _callblast_content_default_fields() {
       'max_filesize_per_file' => '',
       'max_filesize_per_node' => '',
       'label' => 'Message',
-      'weight' => 0,
+      'weight' => '-2',
       'description' => '',
       'type' => 'filefield_widget',
       'module' => 'filefield',
+    ),
+  );
+
+  // Exported field: field_callblast_call_forward
+  $fields[] = array(
+    'field_name' => 'field_callblast_call_forward',
+    'type_name' => 'callblast',
+    'display_settings' => array(
+      'label' => array(
+        'format' => 'above',
+        'exclude' => 0,
+      ),
+      'teaser' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      'full' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      '4' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+    ),
+    'widget_active' => '1',
+    'type' => 'text',
+    'required' => '0',
+    'multiple' => '0',
+    'module' => 'text',
+    'active' => '1',
+    'text_processing' => '0',
+    'max_length' => '',
+    'allowed_values' => '',
+    'allowed_values_php' => '',
+    'widget' => array(
+      'rows' => 5,
+      'size' => '60',
+      'default_value' => array(
+        '0' => array(
+          'value' => '',
+          '_error_element' => 'default_value_widget][field_callblast_call_forward][0][value',
+        ),
+      ),
+      'default_value_php' => NULL,
+      'label' => 'Forward Call To',
+      'weight' => '-1',
+      'description' => 'Enter a number for call forwarding. This is the number callers will be directed to when they press "0". (E.g. Press "0" to be connected with your state senator; press "0" to be connected with a staff person who can assist you with X; press "0" to speak with an operator.) ',
+      'type' => 'text_textfield',
+      'module' => 'text',
     ),
   );
 
@@ -205,7 +255,7 @@ function _callblast_content_default_fields() {
       'year_range' => '0:+1',
       'label_position' => 'above',
       'label' => 'Scheduled Start Time',
-      'weight' => '-2',
+      'weight' => '-3',
       'description' => '',
       'type' => 'date_select',
       'module' => 'date',
@@ -322,6 +372,7 @@ function _callblast_content_default_fields() {
     t('Blast sent'),
     t('Call Blast Message'),
     t('Call List'),
+    t('Forward Call To'),
     t('Message'),
     t('Scheduled Start Time'),
     t('Script'),
@@ -344,12 +395,11 @@ function _callblast_fieldgroup_default_groups() {
     'label' => 'Advanced Settings',
     'settings' => array(
       'form' => array(
-        'style' => 'fieldset',
+        'style' => 'fieldset_collapsed',
         'description' => '',
       ),
       'display' => array(
         'description' => '',
-        'label' => 'above',
         'teaser' => array(
           'format' => 'fieldset',
           'exclude' => 0,
@@ -362,9 +412,10 @@ function _callblast_fieldgroup_default_groups() {
           'format' => 'fieldset',
           'exclude' => 0,
         ),
+        'label' => 'above',
       ),
     ),
-    'weight' => '1',
+    'weight' => '0',
     'fields' => array(
       '0' => 'field_callblast_script',
     ),
