@@ -398,7 +398,8 @@ watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
 
         case VOIPCALL_PLAY:
           $url = voipcall_script_get_parameter_value($command, 'url', $variables); 
-          $response .= "<Play>$url</Play>";
+          $loop = voipcall_script_get_parameter_value($command, 'loop', $variables, 1); 
+          $response .= '<Play loop="' . $loop . '" >' . $url . '</Play>';
           break;
 
         case VOIPCALL_RECORD:
