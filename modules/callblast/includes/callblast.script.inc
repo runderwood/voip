@@ -21,8 +21,6 @@ function callblast_voipcall_load_script($voipcall, $script_name) {
           'label_name' => array(VOIPCALL_VAL => 'start'),
         ),
       );
-$callblast_message = variable_get('callblast_message', null);
-dsm('called from script, message url: $callblast_message');
       $script[] = array(
         VOIPCALL_CMD_ID => VOIPCALL_PLAY,
         VOIPCALL_CMD_BODY => array(
