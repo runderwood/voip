@@ -91,6 +91,7 @@ function callblast_cron() {
 
         // place outgoing call
         //voip_send_request($request_id, $voipcall_node);
+        // TODO We probably shouldn't call voiptwilo_send directly here. 
         voiptwilio_send($request_id, $voipcall_node);
       }
       // Update node to indicate that blast has been sent.
@@ -357,9 +358,8 @@ function callblast_save_voipcalls($list, $node) {
   $details['caller name'] = $node->field_callblast_caller_name[0]['value'];
   $details['parent node'] = $node->nid; // TODO delete?
   $details['scheduled start'] = $node->field_callblast_scheduled_start[0]['value'];
-// TODO replace with real script name.
-  $details['script_name'] = 'callblast_message_test'; 
-// TODO finalize variables.
+  $details['script_name'] = 'callblast_message'; 
+  // store URL to audio message in script_variable
   $message_path = $node->field_callblast_audio_file[0]['filepath'];
   global $base_url;
   $message_url = $base_url .'/'. $message_path;

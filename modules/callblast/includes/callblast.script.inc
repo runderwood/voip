@@ -12,7 +12,7 @@
  */
 function callblast_voipcall_load_script($voipcall, $script_name) {
   switch ($script_name) {
-    case 'callblast_message_test':
+    case 'callblast_message':
       // play message attached to callblast node
       $script = array();
       $script[] = array(
@@ -37,7 +37,7 @@ function callblast_voipcall_load_script($voipcall, $script_name) {
       $script[] = array(
         VOIPCALL_CMD_ID => VOIPCALL_SAY,
         VOIPCALL_CMD_BODY => array(
-         'text' => array(VOIPCALL_VAL => "Bye bye bye bye bye bye bye bye."),
+         'text' => array(VOIPCALL_VAL => "Bye bye."),
          ),
       );
       $script[] = array(
