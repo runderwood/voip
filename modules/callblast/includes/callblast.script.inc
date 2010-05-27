@@ -26,9 +26,7 @@ dsm('called from script, message url: $callblast_message');
       $script[] = array(
         VOIPCALL_CMD_ID => VOIPCALL_PLAY,
         VOIPCALL_CMD_BODY => array(
-   //                    'url' => array(VOIPCALL_VAR => $callblast_message),
                        'url' => array(VOIPCALL_VAR => 'message_url'),
-//                       'url' => array('http://whatsupserver.media.mit.edu/bhirsch/sites/default/files/voipdrupal-test1.aac__0.mp3'),
         ),
       );
 
@@ -41,7 +39,7 @@ dsm('called from script, message url: $callblast_message');
       $script[] = array(
         VOIPCALL_CMD_ID => VOIPCALL_SAY,
         VOIPCALL_CMD_BODY => array(
-         'text' => array(VOIPCALL_VAL => "Bye bye."),
+         'text' => array(VOIPCALL_VAL => "Bye bye bye bye bye bye bye bye."),
          ),
       );
       $script[] = array(

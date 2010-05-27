@@ -361,11 +361,8 @@ function callblast_save_voipcalls($list, $node) {
   $details['script_name'] = 'callblast_message_test'; 
 // TODO finalize variables.
   $message_path = $node->field_callblast_audio_file[0]['filepath'];
-  //$message_url = url($message_path, array('absolute' => TRUE));
   global $base_url;
   $message_url = $base_url .'/'. $message_path;
-//dsm("mesage url: $message_url");
-//variable_set('callblast_message', $message_url);
   $details['script_variables'] = array('message_url' => $message_url);
 
   // save up voipcall nodes from $list
