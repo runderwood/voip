@@ -358,11 +358,12 @@ function callblast_save_voipcalls($list, $node) {
   $details['caller name'] = $node->field_callblast_caller_name[0]['value'];
   $details['parent node'] = $node->nid; // TODO delete?
   $details['scheduled start'] = $node->field_callblast_scheduled_start[0]['value'];
-  $details['script_name'] = 'callblast_message'; 
+  $details['script_name'] = 'callblast_message_bh_test'; 
   // store URL to audio message in script_variable
   $message_path = $node->field_callblast_audio_file[0]['filepath'];
-  global $base_url;
-  $message_url = $base_url .'/'. $message_path;
+//  global $base_url;
+ // $message_url = $base_url .'/'. $message_path;
+  $message_url = $message_path;
   $details['script_variables'] = array('message_url' => $message_url);
 
   // save up voipcall nodes from $list
