@@ -24,10 +24,7 @@ function callblast_voipcall_load_script($voipcall, $script_name) {
       $script[] = array(
         VOIPCALL_CMD_ID => VOIPCALL_PLAY,
         VOIPCALL_CMD_BODY => array(
-//                       'url' => array(VOIPCALL_VAR => 'message_url'),
-//                       'url' => array(VOIPCALL_VAL => 'http://demo.twilio.com/hellomonkey/monkey.mp3'),
-//                       'url' => array(VOIPCALL_VAL => 'http:/whatsupserver.media.mit.edu/bhirsch/sites/default/files/robo%20call%20demo_9.mp3'),
-                       'url' => array(VOIPCALL_VAL => 'sites/default/files/robo%20call%20demo_9.mp3'),
+                       'url' => array(VOIPCALL_VAR => 'message_url'),
         ),
       );
 
@@ -36,12 +33,6 @@ function callblast_voipcall_load_script($voipcall, $script_name) {
         VOIPCALL_CMD_BODY => array(
           'label_name' => array(VOIPCALL_VAL => 'end call'),
         ),
-      );
-      $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_SAY,
-        VOIPCALL_CMD_BODY => array(
-         'text' => array(VOIPCALL_VAL => "Bye bye."),
-         ),
       );
       $script[] = array(
         VOIPCALL_CMD_ID => VOIPCALL_HANGUP
