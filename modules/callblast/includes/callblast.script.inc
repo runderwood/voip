@@ -48,38 +48,6 @@ function callblast_voipcall_load_script($voipcall, $script_name) {
       );
     break;
 
-    case 'callblast_message_bh_test':
-      // play message attached to callblast node
-      $script = array();
-      $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_LABEL,
-        VOIPCALL_CMD_BODY => array(
-          'label_name' => array(VOIPCALL_VAL => 'start'),
-        ),
-      );
-      $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_PLAY,
-        VOIPCALL_CMD_BODY => array(
-                       'url' => array(VOIPCALL_VAR => 'message_url'),
-        ),
-      );
-
-      $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_LABEL,
-        VOIPCALL_CMD_BODY => array(
-          'label_name' => array(VOIPCALL_VAL => 'end call'),
-        ),
-      );
-      $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_SAY,
-        VOIPCALL_CMD_BODY => array(
-         'text' => array(VOIPCALL_VAL => "Bye bye."),
-         ),
-      );
-      $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_HANGUP
-      );
-    break;
     default: 
       // copied from voiptest module. sample script.
       $script = array();

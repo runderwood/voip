@@ -399,12 +399,6 @@ watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
         case VOIPCALL_PLAY:
           $url = voipcall_script_get_parameter_value($command, 'url', $variables); 
           $response .= "<Play>$url</Play>";
-
-//TODO REMOVE TEMP
-$type = 'voiptwilio debug';
-$message = '#1 response:'. check_plain($response);
-watchdog($type, $message, $variables, WATCHDOG_DEBUG);
-
           break;
 
         case VOIPCALL_RECORD:
@@ -464,12 +458,6 @@ $response .= '<!--' . "_REQUEST: " . print_r($_REQUEST,true) .  "\n" . '-->';
 $response .= '<!--' . "voipcall: " . print_r($voipcall,true) .  "\n" . '-->';
 $response .= '<!--' . "script_context: " . print_r($context, true) .  "\n" . '-->';
     _voiptwilio_send_response($response);
-
-//TODO REMOVE TEMP
-$type = 'voiptwilio debug';
-$message = '#2 response: '. check_plain($response);
-watchdog($type, $message, $variables, WATCHDOG_DEBUG);
-
   }
 
   return $rc;
