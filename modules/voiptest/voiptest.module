@@ -172,6 +172,12 @@ function voiptest_voipcall_load_script($voipcall, $script_name) {
       ),
     );
     $script[] = array(
+      VOIPCALL_CMD_ID => VOIPCALL_LABEL,
+      VOIPCALL_CMD_BODY => array(
+        'label_name' => array(VOIPCALL_VAL => 'accept menu'),
+      ),
+    );
+    $script[] = array(
       VOIPCALL_CMD_ID => VOIPCALL_GATHER,
       VOIPCALL_CMD_BODY => array(
         'text' => array(VOIPCALL_VAL => t("To accept this recording, press 1.  To record it once again, press 2. To hangup, press the pound key.")),
@@ -212,7 +218,7 @@ function voiptest_voipcall_load_script($voipcall, $script_name) {
     $script[] = array(
       VOIPCALL_CMD_ID => VOIPCALL_GOTO,
       VOIPCALL_CMD_BODY => array(
-        'label_name' => array(VOIPCALL_VAL => 'start'),
+        'label_name' => array(VOIPCALL_VAL => 'accept menu'),
       ),
     );
     $script[] = array(

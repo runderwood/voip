@@ -169,6 +169,7 @@ dsm($msg);
         $call['script_variables']['gather_digits'] = $_REQUEST['Digits'];
         break;
       case 'process_record':
+        // Note: I'm adding an '.mp3' at the end of the url to make sure we use the mp3 file (check http://www.twilio.com/docs/demos/voicerecorder)
         $call['script_variables']['recording_url'] = $_REQUEST['RecordingUrl'] . '.mp3';
         $call['script_variables']['recording_duration'] = $_REQUEST['Duration'];
         $call['script_variables']['recording_file_size'] = $_REQUEST['RecordingFileSize'];
