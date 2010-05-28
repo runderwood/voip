@@ -445,9 +445,6 @@ watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
   // store context for next script iteration
   $context['script_index'] = $index;
   $context['script_variables'] = $variables;
-$msg = 'before save script context: ' . print_r($voipcall,true);
-watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
-
   $voipcall = voipcall_save_script_context($voipcall, $context);
 
 $msg = 'Leaving script_handler with voipcall: ' . print_r($voipcall,true);

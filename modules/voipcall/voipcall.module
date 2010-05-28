@@ -109,13 +109,7 @@ dsm($node, 'inside voipcall_save');
 
   if(isset($details['call_id'])) $node->field_voipcall_call_id[0]['value'] = $details['call_id'];
   if(isset($details['dest_number'])) $node->field_voipcall_dest_number[0]['value'] = $details['dest_number'];
-$msg = "1. caller_number:: details: " . $details['caller_number'] . ", field: " . $node->field_voipcall_caller_number[0]['value'];
-watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
-
   if(isset($details['caller_number'])) $node->field_voipcall_caller_number[0]['value'] = $details['caller_number'];
-$msg = "2. caller_number:: details: " . $details['caller_number'] . ", field: " . $node->field_voipcall_caller_number[0]['value'];
-watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
-
   if(isset($details['caller_name'])) $node->field_voipcall_caller_name[0]['value'] = $details['caller_name'];
 
   if(isset($details['call_status'])) $node->field_voipcall_status[0]['value'] = $details['call_status'];
