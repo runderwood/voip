@@ -14,8 +14,8 @@
 /**
  * Script command types
  */
-define('VOIPCALL_CMD_ID', 'command id'); // 'command id' indicator
-define('VOIPCALL_CMD_BODY', 'command body'); // 'command id' indicator
+define('VOIPCALL_CMD_ID', 'command_id'); // 'command id' indicator
+define('VOIPCALL_CMD_BODY', 'command_body'); // 'command id' indicator
 
 define('VOIPCALL_SAY', 'say'); // say a given text
 define('VOIPCALL_PLAY', 'play'); // play the specified audio file
@@ -24,12 +24,12 @@ define('VOIPCALL_HANGUP', 'hangup'); // hangup the call
 define('VOIPCALL_GATHER', 'menu'); // present an audio menu with options
 define('VOIPCALL_DIAL', 'dial'); // dial the specified number
 
-define('VOIPCALL_LOAD', 'get script'); // load the specified script
+define('VOIPCALL_LOAD', 'get_script'); // load the specified script
 
 define('VOIPCALL_SET', 'set'); // set the specified script variable
 define('VOIPCALL_LABEL', 'label'); // Define a label within the script
 define('VOIPCALL_GOTO', 'goto'); // goto a predefined label in the script
-define('VOIPCALL_GOTOIF', 'goto if'); // goto label if condition is TRUE
+define('VOIPCALL_GOTOIF', 'goto_if'); // goto label if condition is TRUE
 
 /**
  * Script parameter types. Depending on the operation, script commands might
@@ -38,6 +38,11 @@ define('VOIPCALL_GOTOIF', 'goto if'); // goto label if condition is TRUE
 define('VOIPCALL_VAL', 'value');  // A value
 define('VOIPCALL_VAR', 'variable'); // The name of a script variable containing the value
 define('VOIPVALL_EXEC', 'exec'); // An expression that will result in the value
+
+/**
+ * Other script-related constants
+ */
+define('VOIPCALL_NO_INPUT', 'no_input'); // Used to report timeouts and empty inputs
 
 
 /**

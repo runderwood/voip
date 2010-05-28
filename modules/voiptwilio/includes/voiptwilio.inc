@@ -313,6 +313,11 @@ watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
                             . '" >';
           $response .= '<Say>' . $text . '</Say>';
           $response .= '</Gather>';
+          // in case of timeout or empty input, set Digits to VOIPCALL_NO_INPUT
+          $action_timeout = $action . '?Digits=' . VOIPCALL_NO_INPUT;
+          $response .= '<Redirect method="GET">'
+                         . $action_timeout
+                         . '</Redirect>';
           $rc = TRUE;
           $processing = FALSE;
           break;
@@ -447,7 +452,7 @@ watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
   $context['script_variables'] = $variables;
   $voipcall = voipcall_save_script_context($voipcall, $context);
 
-$msg = 'Leaving script_handler with voipcall: ' . print_r($voipcall,true);
+$msg = 'Leaving script_handler with voipcall: ' . print_r($voipcall,true) . ", and response: $response";
 watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
 
   // send response back to Twilio
