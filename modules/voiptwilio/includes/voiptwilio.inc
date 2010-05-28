@@ -264,8 +264,8 @@ watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
    
       switch($cmd_id) {
         default:
-          $msg = "Invalid command id '@cmd_id' in script '@script_name': @script";
-          $params = array('@cmd_id' => $cmd_id, '@script_name' => $script_name, '@script' => print_r($commands,true));
+          $msg = "Invalid command id '@cmd_id' (index: @index) in script '@script_name': @script";
+          $params = array('@cmd_id' => $cmd_id, '@index' => $index, '@script_name' => $script_name, '@script' => print_r($commands,true));
           voipcall_processing_error('voiptwilio', $voipcall, $msg, $params);
           $rc = FALSE;
           $processing = FALSE;
