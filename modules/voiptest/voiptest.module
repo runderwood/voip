@@ -31,8 +31,8 @@ function voiptest_voipcall_load_script($voipcall, $script_name) {
       VOIPCALL_CMD_ID => VOIPCALL_GATHER,
       VOIPCALL_CMD_BODY => array(
         'text' => array(VOIPCALL_VAL => t("To connect with the system developers, press 1.  To hangup, press the pound key.")),
-        'num_digits' => array(VOIPCALL_VAL => 3),
-        'end_key' => array(VOIPCALL_VAL => "*"),
+        'num_digits' => array(VOIPCALL_VAL => 1),
+        'end_key' => array(VOIPCALL_VAL => ""),
       ),
     );
     $script[] = array(
