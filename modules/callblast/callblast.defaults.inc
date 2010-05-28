@@ -11,7 +11,7 @@ function _callblast_content_default_fields() {
     'field_name' => 'field_blast_sent',
     'type_name' => 'callblast',
     'display_settings' => array(
-      'weight' => '4',
+      'weight' => '2',
       'parent' => '',
       'label' => array(
         'format' => 'above',
@@ -50,7 +50,7 @@ function _callblast_content_default_fields() {
       ),
       'default_value_php' => NULL,
       'label' => 'Blast sent',
-      'weight' => '1',
+      'weight' => '2',
       'description' => '',
       'type' => 'optionwidgets_onoff',
       'module' => 'optionwidgets',
@@ -62,8 +62,54 @@ function _callblast_content_default_fields() {
     'field_name' => 'field_callblast_audio_file',
     'type_name' => 'callblast',
     'display_settings' => array(
-      'weight' => '6',
+      'weight' => '-2',
       'parent' => '',
+      'label' => array(
+        'format' => 'above',
+      ),
+      'teaser' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      'full' => array(
+        'format' => 'swftools_no_file',
+        'exclude' => 0,
+      ),
+      '4' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+    ),
+    'widget_active' => '1',
+    'type' => 'filefield',
+    'required' => '1',
+    'multiple' => '0',
+    'module' => 'filefield',
+    'active' => '1',
+    'list_field' => '0',
+    'list_default' => 1,
+    'description_field' => '0',
+    'widget' => array(
+      'file_extensions' => 'txt mp3 wav',
+      'file_path' => '',
+      'progress_indicator' => 'bar',
+      'max_filesize_per_file' => '',
+      'max_filesize_per_node' => '',
+      'label' => 'Main Message',
+      'weight' => '-2',
+      'description' => '',
+      'type' => 'filefield_widget',
+      'module' => 'filefield',
+    ),
+  );
+
+  // Exported field: field_callblast_audio_five
+  $fields[] = array(
+    'field_name' => 'field_callblast_audio_five',
+    'type_name' => 'callblast',
+    'display_settings' => array(
+      'weight' => '11',
+      'parent' => 'group_options',
       'label' => array(
         'format' => 'above',
       ),
@@ -95,8 +141,238 @@ function _callblast_content_default_fields() {
       'progress_indicator' => 'bar',
       'max_filesize_per_file' => '',
       'max_filesize_per_node' => '',
-      'label' => 'Message',
-      'weight' => '-2',
+      'label' => 'Message Five',
+      'weight' => '11',
+      'description' => '',
+      'type' => 'filefield_widget',
+      'module' => 'filefield',
+    ),
+  );
+
+  // Exported field: field_callblast_audio_four
+  $fields[] = array(
+    'field_name' => 'field_callblast_audio_four',
+    'type_name' => 'callblast',
+    'display_settings' => array(
+      'weight' => '10',
+      'parent' => 'group_options',
+      'label' => array(
+        'format' => 'above',
+      ),
+      'teaser' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      'full' => array(
+        'format' => 'swftools_no_file',
+        'exclude' => 0,
+      ),
+      '4' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+    ),
+    'widget_active' => '1',
+    'type' => 'filefield',
+    'required' => '0',
+    'multiple' => '0',
+    'module' => 'filefield',
+    'active' => '1',
+    'list_field' => '0',
+    'list_default' => 1,
+    'description_field' => '0',
+    'widget' => array(
+      'file_extensions' => 'txt mp3 wav',
+      'file_path' => '',
+      'progress_indicator' => 'bar',
+      'max_filesize_per_file' => '',
+      'max_filesize_per_node' => '',
+      'label' => 'Message Four',
+      'weight' => '10',
+      'description' => '',
+      'type' => 'filefield_widget',
+      'module' => 'filefield',
+    ),
+  );
+
+  // Exported field: field_callblast_audio_one
+  $fields[] = array(
+    'field_name' => 'field_callblast_audio_one',
+    'type_name' => 'callblast',
+    'display_settings' => array(
+      'weight' => '7',
+      'parent' => 'group_options',
+      'label' => array(
+        'format' => 'above',
+      ),
+      'teaser' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      'full' => array(
+        'format' => 'swftools_no_file',
+        'exclude' => 0,
+      ),
+      '4' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+    ),
+    'widget_active' => '1',
+    'type' => 'filefield',
+    'required' => '0',
+    'multiple' => '0',
+    'module' => 'filefield',
+    'active' => '1',
+    'list_field' => '0',
+    'list_default' => 1,
+    'description_field' => '0',
+    'widget' => array(
+      'file_extensions' => 'txt mp3 wav',
+      'file_path' => '',
+      'progress_indicator' => 'bar',
+      'max_filesize_per_file' => '',
+      'max_filesize_per_node' => '',
+      'label' => 'Message One',
+      'weight' => '7',
+      'description' => '',
+      'type' => 'filefield_widget',
+      'module' => 'filefield',
+    ),
+  );
+
+  // Exported field: field_callblast_audio_options
+  $fields[] = array(
+    'field_name' => 'field_callblast_audio_options',
+    'type_name' => 'callblast',
+    'display_settings' => array(
+      'weight' => '6',
+      'parent' => 'group_options',
+      'label' => array(
+        'format' => 'above',
+      ),
+      'teaser' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      'full' => array(
+        'format' => 'swftools_no_file',
+        'exclude' => 0,
+      ),
+      '4' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+    ),
+    'widget_active' => '1',
+    'type' => 'filefield',
+    'required' => '0',
+    'multiple' => '0',
+    'module' => 'filefield',
+    'active' => '1',
+    'list_field' => '0',
+    'list_default' => 1,
+    'description_field' => '0',
+    'widget' => array(
+      'file_extensions' => 'txt mp3 wav',
+      'file_path' => '',
+      'progress_indicator' => 'bar',
+      'max_filesize_per_file' => '',
+      'max_filesize_per_node' => '',
+      'label' => 'Options Message',
+      'weight' => '6',
+      'description' => 'Include in your message, "To replay this recording press *, to speak with someone in person press 0 and to disconnect press #."',
+      'type' => 'filefield_widget',
+      'module' => 'filefield',
+    ),
+  );
+
+  // Exported field: field_callblast_audio_three
+  $fields[] = array(
+    'field_name' => 'field_callblast_audio_three',
+    'type_name' => 'callblast',
+    'display_settings' => array(
+      'weight' => '9',
+      'parent' => 'group_options',
+      'label' => array(
+        'format' => 'above',
+      ),
+      'teaser' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      'full' => array(
+        'format' => 'swftools_no_file',
+        'exclude' => 0,
+      ),
+      '4' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+    ),
+    'widget_active' => '1',
+    'type' => 'filefield',
+    'required' => '0',
+    'multiple' => '0',
+    'module' => 'filefield',
+    'active' => '1',
+    'list_field' => '0',
+    'list_default' => 1,
+    'description_field' => '0',
+    'widget' => array(
+      'file_extensions' => 'txt mp3 wav',
+      'file_path' => '',
+      'progress_indicator' => 'bar',
+      'max_filesize_per_file' => '',
+      'max_filesize_per_node' => '',
+      'label' => 'Message Three',
+      'weight' => '9',
+      'description' => '',
+      'type' => 'filefield_widget',
+      'module' => 'filefield',
+    ),
+  );
+
+  // Exported field: field_callblast_audio_two
+  $fields[] = array(
+    'field_name' => 'field_callblast_audio_two',
+    'type_name' => 'callblast',
+    'display_settings' => array(
+      'weight' => '8',
+      'parent' => 'group_options',
+      'label' => array(
+        'format' => 'above',
+      ),
+      'teaser' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      'full' => array(
+        'format' => 'swftools_no_file',
+        'exclude' => 0,
+      ),
+      '4' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+    ),
+    'widget_active' => '1',
+    'type' => 'filefield',
+    'required' => '0',
+    'multiple' => '0',
+    'module' => 'filefield',
+    'active' => '1',
+    'list_field' => '0',
+    'list_default' => 1,
+    'description_field' => '0',
+    'widget' => array(
+      'file_extensions' => 'txt mp3 wav',
+      'file_path' => '',
+      'progress_indicator' => 'bar',
+      'max_filesize_per_file' => '',
+      'max_filesize_per_node' => '',
+      'label' => 'Message Two',
+      'weight' => '8',
       'description' => '',
       'type' => 'filefield_widget',
       'module' => 'filefield',
@@ -108,9 +384,10 @@ function _callblast_content_default_fields() {
     'field_name' => 'field_callblast_call_forward',
     'type_name' => 'callblast',
     'display_settings' => array(
+      'weight' => '-1',
+      'parent' => '',
       'label' => array(
         'format' => 'above',
-        'exclude' => 0,
       ),
       'teaser' => array(
         'format' => 'default',
@@ -206,7 +483,7 @@ function _callblast_content_default_fields() {
     'field_name' => 'field_callblast_scheduled_start',
     'type_name' => 'callblast',
     'display_settings' => array(
-      'weight' => '-2',
+      'weight' => '-3',
       'parent' => '',
       'label' => array(
         'format' => 'above',
@@ -267,8 +544,8 @@ function _callblast_content_default_fields() {
     'field_name' => 'field_callblast_script',
     'type_name' => 'callblast',
     'display_settings' => array(
-      'weight' => '5',
-      'parent' => '',
+      'weight' => '12',
+      'parent' => 'group_advanced',
       'label' => array(
         'format' => 'above',
       ),
@@ -286,38 +563,30 @@ function _callblast_content_default_fields() {
       ),
     ),
     'widget_active' => '1',
-    'type' => 'nodereference',
+    'type' => 'text',
     'required' => '0',
     'multiple' => '0',
-    'module' => 'nodereference',
+    'module' => 'text',
     'active' => '1',
-    'referenceable_types' => array(
-      'voip_script' => 'voip_script',
-      'callblast' => 0,
-      'callblast_message' => 0,
-      'calllist' => 0,
-      'page' => 0,
-      'story' => 0,
-      'voipcall' => 0,
-      'voipext' => 0,
-    ),
-    'advanced_view' => '--',
-    'advanced_view_args' => '',
+    'text_processing' => '0',
+    'max_length' => '',
+    'allowed_values' => '',
+    'allowed_values_php' => '',
     'widget' => array(
-      'autocomplete_match' => 'contains',
-      'size' => '60',
+      'rows' => '5',
+      'size' => 60,
       'default_value' => array(
         '0' => array(
-          'nid' => NULL,
-          '_error_element' => 'default_value_widget][field_callblast_script][0][nid][nid',
+          'value' => '',
+          '_error_element' => 'default_value_widget][field_callblast_script][0][value',
         ),
       ),
       'default_value_php' => NULL,
       'label' => 'Script',
-      'weight' => '2',
+      'weight' => '12',
       'description' => '',
-      'type' => 'nodereference_autocomplete',
-      'module' => 'nodereference',
+      'type' => 'text_textarea',
+      'module' => 'text',
     ),
   );
 
@@ -373,7 +642,13 @@ function _callblast_content_default_fields() {
     t('Call Blast Message'),
     t('Call List'),
     t('Forward Call To'),
-    t('Message'),
+    t('Main Message'),
+    t('Message Five'),
+    t('Message Four'),
+    t('Message One'),
+    t('Message Three'),
+    t('Message Two'),
+    t('Options Message'),
     t('Scheduled Start Time'),
     t('Script'),
   );
@@ -399,7 +674,8 @@ function _callblast_fieldgroup_default_groups() {
         'description' => '',
       ),
       'display' => array(
-        'description' => '',
+        'weight' => '1',
+        'label' => 'above',
         'teaser' => array(
           'format' => 'fieldset',
           'exclude' => 0,
@@ -408,22 +684,63 @@ function _callblast_fieldgroup_default_groups() {
           'format' => 'fieldset',
           'exclude' => 0,
         ),
+        'description' => '',
         '4' => array(
           'format' => 'fieldset',
           'exclude' => 0,
         ),
+      ),
+    ),
+    'weight' => '1',
+    'fields' => array(
+      '0' => 'field_callblast_script',
+    ),
+  );
+
+  // Exported group: group_options
+  $groups[] = array(
+    'group_type' => 'standard',
+    'type_name' => 'callblast',
+    'group_name' => 'group_options',
+    'label' => 'Options',
+    'settings' => array(
+      'form' => array(
+        'style' => 'fieldset_collapsed',
+        'description' => '',
+      ),
+      'display' => array(
+        'weight' => '0',
         'label' => 'above',
+        'teaser' => array(
+          'format' => 'fieldset',
+          'exclude' => 0,
+        ),
+        'full' => array(
+          'format' => 'fieldset',
+          'exclude' => 0,
+        ),
+        'description' => '',
+        '4' => array(
+          'format' => 'fieldset',
+          'exclude' => 0,
+        ),
       ),
     ),
     'weight' => '0',
     'fields' => array(
-      '0' => 'field_callblast_script',
+      '0' => 'field_callblast_audio_options',
+      '1' => 'field_callblast_audio_one',
+      '2' => 'field_callblast_audio_two',
+      '3' => 'field_callblast_audio_three',
+      '4' => 'field_callblast_audio_four',
+      '5' => 'field_callblast_audio_five',
     ),
   );
 
   // Translatables
   array(
     t('Advanced Settings'),
+    t('Options'),
   );
 
   return $groups;
