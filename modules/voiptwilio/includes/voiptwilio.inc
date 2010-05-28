@@ -305,13 +305,19 @@ watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
           $end_key = voipcall_script_get_parameter_value($command, 'end_key', $variables, ''); 
           $num_digits = voipcall_script_get_parameter_value($command, 'num_digits', $variables); 
           $text = voipcall_script_get_parameter_value($command, 'text', $variables); 
+          $url = voipcall_script_get_parameter_value($command, 'url', $variables); 
           $response .= '<Gather action="' . $action
                             . '" method="' . $method
                             . '" timeout="' . $timeout
                             . '" finishOnKey="' . $end_key
                             . '" numDigits="' . $num_digits
                             . '" >';
-          $response .= '<Say>' . $text . '</Say>';
+// TODO This always evaluates to true. I don't totally understand what's going on here. Fix this. Users should be able to record message, but fall back to text-to-speech
+          if ($url) {
+            $response .= "<Play>$url</Play>";
+          } else {
+            $response .= '<Say>' . $text . '</Say>';
+          }
           $response .= '</Gather>';
           $rc = TRUE;
           $processing = FALSE;
