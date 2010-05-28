@@ -306,13 +306,19 @@ watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
           $end_key = voipcall_script_get_parameter_value($command, 'end_key', $variables, ''); 
           $num_digits = voipcall_script_get_parameter_value($command, 'num_digits', $variables); 
           $text = voipcall_script_get_parameter_value($command, 'text', $variables); 
+          $url = voipcall_script_get_parameter_value($command, 'url', $variables); 
           $response .= '<Gather action="' . $action
                             . '" method="' . $method
                             . '" timeout="' . $timeout
                             . '" finishOnKey="' . $end_key
                             . '" numDigits="' . $num_digits
                             . '" >';
-          $response .= '<Say>' . $text . '</Say>';
+          if($text) {
+            $response .= '<Say>' . $text . '</Say>';
+          }
+          else if ($url) {
+            $response .= '<Play>' . $url . '</Play>';
+          }
           $response .= '</Gather>';
           // in case of timeout or empty input, set Digits to VOIPCALL_NO_INPUT
           $action_timeout = $action . '?Digits=' . VOIPCALL_NO_INPUT;
