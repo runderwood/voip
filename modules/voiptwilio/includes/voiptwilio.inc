@@ -169,7 +169,7 @@ dsm($msg);
         $call['script_variables']['gather_digits'] = $_REQUEST['Digits'];
         break;
       case 'process_record':
-        $call['script_variables']['recording_url'] = $_REQUEST['RecordingUrl'];
+        $call['script_variables']['recording_url'] = $_REQUEST['RecordingUrl'] . '.mp3';
         $call['script_variables']['recording_duration'] = $_REQUEST['Duration'];
         $call['script_variables']['recording_file_size'] = $_REQUEST['RecordingFileSize'];
         $call['script_variables']['recording_digits'] = $_REQUEST['Digits'];

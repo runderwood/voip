@@ -224,9 +224,30 @@ function voiptest_voipcall_load_script($voipcall, $script_name) {
     $script[] = array(
       VOIPCALL_CMD_ID => VOIPCALL_SAY,
       VOIPCALL_CMD_BODY => array(
-        'text' => array(VOIPCALL_VAL => "This is where accept recording should be."),
+        'text' => array(VOIPCALL_VAL => "About to start processing the recorded file."),
       ),
     );
+    $script[] = array(
+      VOIPCALL_CMD_ID => VOIPCALL_SET,
+      VOIPCALL_CMD_BODY => array(
+        'var_name' => array(VOIPCALL_VAL => "callback result"),
+        // NOTE: Do not add a ';' at the end of the function call.  That will result in a runtime error.
+        'var_value' => array(VOIPCALL_EVAL => "voiptest_record_callback(@<call_id>@, @<recording_url>@, @<recording_duration>@)"),
+      ),
+    );
+    $script[] = array(
+      VOIPCALL_CMD_ID => VOIPCALL_SAY,
+      VOIPCALL_CMD_BODY => array(
+        'text' => array(VOIPCALL_VAL => "The callback returned: "),
+      ),
+    );
+    $script[] = array(
+      VOIPCALL_CMD_ID => VOIPCALL_SAY,
+      VOIPCALL_CMD_BODY => array(
+        'text' => array(VOIPCALL_VAR => "callback result"),
+      ),
+    );
+
     $script[] = array(
       VOIPCALL_CMD_ID => VOIPCALL_HANGUP,
     );
@@ -270,9 +291,19 @@ function voiptest_voipcall_load_script($voipcall, $script_name) {
 }
 
 
+/**
+ * Callback function associated with the script voiptest_record.  It is called whenever that script records a new entry from the user.
+ */
+function voiptest_record_callback($call_id, $recording_url, $recording_duration=NULL) {
+watchdog('voiptest', "in voiptest_record_callback($call_id, $recording_url, $recording_duration)");
+
+  return TRUE;
+}
 
 /**
  * Implementation of hook_voip_process_request().
+ *
+ * TODO: The following function has already been deprecated.  It's only here until we update the voip_asterisk module.
  */
 function voiptest_voip_process_request($request_id, $options) {
   $response = NULL;
