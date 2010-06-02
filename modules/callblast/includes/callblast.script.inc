@@ -24,7 +24,7 @@ function callblast_voipcall_load_script($voipcall, $script_name) {
         VOIPCALL_CMD_ID => VOIPCALL_SET,
         VOIPCALL_CMD_BODY => array(
           'var_name' => array(VOIPCALL_VAL => "previous"),
-          'var_value' => array(VOIPCALL_VAR => "start"),
+          'var_value' => array(VOIPCALL_VAL => "start"),
         ),
       );
       $script[] = array(
@@ -93,7 +93,7 @@ function callblast_voipcall_load_script($voipcall, $script_name) {
         VOIPCALL_CMD_ID => VOIPCALL_SET,
         VOIPCALL_CMD_BODY => array(
           'var_name' => array(VOIPCALL_VAL => "previous"),
-          'var_value' => array(VOIPCALL_VAR => "one"),
+          'var_value' => array(VOIPCALL_VAL => "one"),
         ),
       );
       // go to two 
