@@ -119,9 +119,11 @@ watchdog('voipcal_script_get_param', "expression: $expression, expression_tmp: $
  *
  * @param string $script_name. If NULL, the function will use the call's current script name.
  *
+ * @param boolean $reset_index. If TRUE, set the index of the new script to 0.
+ *
  * @return array with the new context. Check voip_error() for processing errors.
  */
-function voipcall_load_script($voipcall, $script_name=NULL) {
+function voipcall_load_script($voipcall, $script_name=NULL, $reset_index=FALSE) {
 
   if(!$script_name) {
     $script_name = $voipcall['field_voipcall_script_name'][0]['value'];
@@ -145,7 +147,12 @@ function voipcall_load_script($voipcall, $script_name=NULL) {
 
   $context['script_name'] = $voipcall['field_voipcall_script_name'][0]['value'];
   $context['script_commands'] = $script_commands;
-  $context['script_index'] = $voipcall['field_voipcall_script_index'][0]['value'];
+  if($reset_index) {
+    $context['script_index'] = 0;
+  }
+  else {
+    $context['script_index'] = $voipcall['field_voipcall_script_index'][0]['value'];
+  }
   $context['script_variables'] = unserialize($voipcall['field_voipcall_script_variables'][0]['value']);
   $context['hangup_script'] = $voipcall['field_voipcall_hangup_script'][0]['value'];
 
