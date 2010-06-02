@@ -226,6 +226,7 @@ watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
   $hangup = voipcall_is_hangup($voipcall);
   if($hangup) {
     $script_name = $voipcall['field_voipcall_hangup_script'][0]['value'];
+    $reset_index = TRUE;
     // Stop processing if no hangup_script defined
     if(!$script_name) {
       return(TRUE);
@@ -233,10 +234,11 @@ watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
   }
   else {
     $script_name = $voipcall['field_voipcall_script_name'][0]['value'];
+    $reset_index = FALSE;
   }
 
   // retrieve script context
-  $context = voipcall_load_script($voipcall, $script_name);
+  $context = voipcall_load_script($voipcall, $script_name, $reset_index);
   $name = $context['script_name'];
   $commands = $context['script_commands'];
   $index = $context['script_index'];
