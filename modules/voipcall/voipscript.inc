@@ -14,12 +14,12 @@
 /**
  * Script command types
  */
-define('VOIPCMD_SAY', 'say'); // say a given text
+define('VOIPCMD_DIAL', 'dial'); // dial the specified number
+define('VOIPCMD_GATHER', 'menu'); // present an audio menu with options
+define('VOIPCMD_HANGUP', 'hangup'); // hangup the call
 define('VOIPCMD_PLAY', 'play'); // play the specified audio file
 define('VOIPCMD_RECORD', 'record');
-define('VOIPCMD_HANGUP', 'hangup'); // hangup the call
-define('VOIPCMD_GATHER', 'menu'); // present an audio menu with options
-define('VOIPCMD_DIAL', 'dial'); // dial the specified number
+define('VOIPCMD_SAY', 'say'); // say a given text
 
 define('VOIPCMD_LOAD', 'get_script'); // load the specified script
 
@@ -40,8 +40,7 @@ define('VOIPCMD_RETURN', 'return'); // return from subroutine
         
 class VoipScript {
   private $name;
-  private $cmd_ids;
-  private $cmd_params;
+  private $commands;
   private $variables;
   private $index;
             
@@ -52,7 +51,7 @@ class VoipScript {
     $this->index = 0;
   }
         
-  private function addCommand($command) {
+  function addCommand($command) {
     $self->commands[] = $command;
   }
 
@@ -75,6 +74,7 @@ class VoipScript {
   }
 }
 
+
 class VoipCommand {
   private $id;
   private $params;
@@ -95,6 +95,42 @@ class VoipCommand {
 
   function setParam($name, $value) {
     $this->params[$name] = $value;
+  }
+
+  /*
+   * Convenience functions
+   */
+
+  function addHangup() {
+    $self->commands[] = new VoipCmdHangup();
+  }
+
+  function addLoad($script_name) {
+    $self->commands[] = new VoipCmdLoad($script_name);
+  }
+
+  function addSet($var_name, $value) {
+    $self->commands[] = new VoipCmdSet($var_name, $value);
+  }
+
+  function addLabel($label_name) {
+    $self->commands[] = new VoipCmdLabel($label_name);
+  }
+
+  function addGoto($label_name) {
+    $self->commands[] = new VoipCmdGoto($label_name);
+  }
+
+  function addGotoIf($label_name, $condition) {
+    $self->commands[] = new VoipCmdGotoIf($label_name, $condition);
+  }
+
+  function addGosub($script_name) {
+    $self->commands[] = new VoipCmdGosub($script_name);
+  }
+
+  function addReturn() {
+    $self->commands[] = new VoipCmdReturn();
   }
 
 }
@@ -146,6 +182,17 @@ class VoipCmdDial extends VoipCommand {
   }
 
 }
+class VoipCmdGather extends VoipCommand {
+
+  function __construct($timeout=5, $end_key='#', $num_digits=NULL){
+    $params['timeout'] = $timeout;
+    $params['end_key'] = $end_key;
+    $params['num_digits'] = $num_digits;
+    parent::__construct(VOIPCMD_GATHER, $params);
+  }
+
+}
+
 
 class VoipCmdHangup extends VoipCommand {
 
@@ -156,13 +203,75 @@ class VoipCmdHangup extends VoipCommand {
 
 }
 
-class VoipCmdGather extends VoipCommand {
 
-  function __construct($timeout=5, $end_key='#', $num_digits=NULL){
-    $params['timeout'] = $timeout;
-    $params['end_key'] = $end_key;
-    $params['num_digits'] = $num_digits;
-    parent::__construct(VOIPCMD_GATHER, $params);
+
+class VoipCmdLoad extends VoipCommand {
+
+  function __construct($script_name) {
+    $params['script_name'] = $script_name;
+    parent::__construct(VOIPCMD_LOAD, $params);
+  }
+
+}
+
+
+class VoipCmdSet extends VoipCommand {
+
+  function __construct($var_name, $value) {
+    $params['var_name'] = $var_name;
+    $params['value'] = $value;
+    parent::__construct(VOIPCMD_SET, $params);
+  }
+
+}
+
+
+class VoipCmdLabel extends VoipCommand {
+
+  function __construct($label_name) {
+    $params['label_name'] = $label_name;
+    parent::__construct(VOIPCMD_LABEL, $params);
+  }
+
+}
+
+
+class VoipCmdGoto extends VoipCommand {
+
+  function __construct($label_name) {
+    $params['label_name'] = $label_name;
+    parent::__construct(VOIPCMD_GOTO, $params);
+  }
+
+}
+
+
+class VoipCmdGotoIf extends VoipCommand {
+
+  function __construct($label_name, $condition) {
+    $params['label_name'] = $label_name;
+    $params['condition'] = $condition;
+    parent::__construct(VOIPCMD_GOTOIF, $params);
+  }
+
+}
+
+
+class VoipCmdGosub extends VoipCommand {
+
+  function __construct($script_name) {
+    $params['script_name'] = $script_name;
+    parent::__construct(VOIPCMD_GOSUB, $params);
+  }
+
+}
+
+
+class VoipCmdReturn extends VoipCommand {
+
+  function __construct($) {
+    $params = array();
+    parent::__construct(VOIPCMD_RETURN, $params);
   }
 
 }
