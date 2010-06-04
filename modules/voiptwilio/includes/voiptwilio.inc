@@ -169,7 +169,8 @@ watchdog('voiptwilio', $msg, $vars, WATCHDOG_INFO);
         $call['script_variables']['gather_digits'] = $_REQUEST['Digits'];
         break;
       case 'process_record':
-        $call['script_variables']['recording_url'] = $_REQUEST['RecordingUrl'];
+        // Note: I'm adding an '.mp3' at the end of the url to make sure we use the mp3 file (check http://www.twilio.com/docs/demos/voicerecorder)
+        $call['script_variables']['recording_url'] = $_REQUEST['RecordingUrl'] . '.mp3';
         $call['script_variables']['recording_duration'] = $_REQUEST['Duration'];
         $call['script_variables']['recording_file_size'] = $_REQUEST['RecordingFileSize'];
         $call['script_variables']['recording_digits'] = $_REQUEST['Digits'];
@@ -264,8 +265,8 @@ watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
    
       switch($cmd_id) {
         default:
-          $msg = "Invalid command id '@cmd_id' in script '@script_name': @script";
-          $params = array('@cmd_id' => $cmd_id, '@script_name' => $script_name, '@script' => print_r($commands,true));
+          $msg = "Invalid command id '@cmd_id' (index: @index) in script '@script_name': @script";
+          $params = array('@cmd_id' => $cmd_id, '@index' => $index, '@script_name' => $script_name, '@script' => print_r($commands,true));
           voipcall_processing_error('voiptwilio', $voipcall, $msg, $params);
           $rc = FALSE;
           $processing = FALSE;
@@ -312,13 +313,18 @@ watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
                             . '" finishOnKey="' . $end_key
                             . '" numDigits="' . $num_digits
                             . '" >';
-// TODO This always evaluates to true. I don't totally understand what's going on here. Fix this. Users should be able to record message, but fall back to text-to-speech
-          if ($url) {
-            $response .= "<Play>$url</Play>";
-          } else {
+          if($text) {
             $response .= '<Say>' . $text . '</Say>';
           }
+          else if ($url) {
+            $response .= '<Play>' . $url . '</Play>';
+          }
           $response .= '</Gather>';
+          // in case of timeout or empty input, set Digits to VOIPCALL_NO_INPUT
+          $action_timeout = $action . '?Digits=' . VOIPCALL_NO_INPUT;
+          $response .= '<Redirect method="GET">'
+                         . $action_timeout
+                         . '</Redirect>';
           $rc = TRUE;
           $processing = FALSE;
           break;
@@ -404,7 +410,8 @@ watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
 
         case VOIPCALL_PLAY:
           $url = voipcall_script_get_parameter_value($command, 'url', $variables); 
-          $response .= "<Play>$url</Play>";
+          $loop = voipcall_script_get_parameter_value($command, 'loop', $variables, 1); 
+          $response .= '<Play loop="' . $loop . '" >' . $url . '</Play>';
           break;
 
         case VOIPCALL_RECORD:
@@ -450,12 +457,9 @@ watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
   // store context for next script iteration
   $context['script_index'] = $index;
   $context['script_variables'] = $variables;
-$msg = 'before save script context: ' . print_r($voipcall,true);
-watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
-
   $voipcall = voipcall_save_script_context($voipcall, $context);
 
-$msg = 'Leaving script_handler with voipcall: ' . print_r($voipcall,true);
+$msg = 'Leaving script_handler with voipcall: ' . print_r($voipcall,true) . ", and response: $response";
 watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
 
   // send response back to Twilio
