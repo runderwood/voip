@@ -283,15 +283,9 @@ function callblast_widget(&$form, &$form_state, $field, $items, $delta = 0) {
   return $element;
 }
 
-/**
- * Implementation of hook_form_ater().
- */
-function callblast_form_alter(&$form, &$form_state, $form_id) {
-  if ($form_id == 'callblast_node_form') {
-    dsm($form);
-  }
-}
-
+//=============//
+// End Widget
+//=============//
 
 /**
  * Invoke hook_callblast_get_list to get 
@@ -361,7 +355,6 @@ function callblast_save_list($list, $node) {
  */
 function callblast_save_voipcalls($list, $node) {
   // generic call details from callblast node
-  $details['script'] = $node->field_callblast_script[0]['nid'];
   $details['caller number'] = $node->field_callblast_caller_number[0]['value'];
   $details['caller name'] = $node->field_callblast_caller_name[0]['value'];
   $details['parent node'] = $node->nid; // TODO delete?
