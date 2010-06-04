@@ -368,7 +368,6 @@ function callblast_save_voipcalls($list, $node) {
   $details['scheduled start'] = $node->field_callblast_scheduled_start[0]['value'];
   $details['script_name'] = 'callblast_message'; 
 
-  // TODO Figure out why Twilio prepends our domain to the relative URL. Fix in relevant URLs below.
   // store URL to audio message in script_variable
   $message_path = $node->field_callblast_audio_file[0]['filepath'];
   //  global $base_url;
