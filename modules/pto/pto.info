@@ -1,0 +1,6 @@
+; $Id$
+name = PTO Test Module 
+description = Test module to test Voip Drupal with a local PTO organization
+package = Voip Drupal
+core = 6.x
+

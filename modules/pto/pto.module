@@ -1,0 +1,234 @@
+<?php
+/**
+ * @file Test Voip Drupal with a local PTO organization
+ */ 
+
+/**
+ * Implementation of hook_voipcall_load_script()
+ */
+function pto_voipcall_load_script($voipcall, $script_name) {
+  if($script_name == 'pto_test') {
+    $base_url = 'http://whatsupserver.media.mit.edu/public/pto/';
+    $announcement_url = $base_url . '5thGradeMeeting.mp3';
+    $choice1_url = $base_url . '5thGradeChoice1.mp3';
+    $choice2_url = $base_url . '5thGradeChoice2.mp3';
+
+    $script = array();
+    $script[] = array(
+      VOIPCALL_CMD_ID => VOIPCALL_SET,
+      VOIPCALL_CMD_BODY => array(
+        'var_name' => array(VOIPCALL_VAL => "user input"),
+        'var_value' => array(VOIPCALL_VAR => NULL),
+      ),
+    );
+    $script[] = array(
+      VOIPCALL_CMD_ID => VOIPCALL_LABEL,
+      VOIPCALL_CMD_BODY => array(
+        'label_name' => array(VOIPCALL_VAL => 'start'),
+      ),
+    );
+    // TODO: play the announcement here
+/**
+    $script[] = array(
+      VOIPCALL_CMD_ID => VOIPCALL_PLAY,
+      VOIPCALL_CMD_BODY => array(
+        'url' => array(VOIPCALL_VAL => $announcement_url),
+      ),
+    );
+**/
+    $script[] = array(
+      VOIPCALL_CMD_ID => VOIPCALL_LABEL,
+      VOIPCALL_CMD_BODY => array(
+        'label_name' => array(VOIPCALL_VAL => 'gather'),
+      ),
+    );
+    $script[] = array(
+      VOIPCALL_CMD_ID => VOIPCALL_GATHER,
+      VOIPCALL_CMD_BODY => array(
+        'url' => array(VOIPCALL_VAL => $announcement_url),
+        'num_digits' => array(VOIPCALL_VAL => 1),
+      ),
+    );
+    $script[] = array(
+      VOIPCALL_CMD_ID => VOIPCALL_SAY,
+      VOIPCALL_CMD_BODY => array(
+        'text' => array(VOIPCALL_VAL => "You pressed: "),
+      ),
+    );
+    $script[] = array(
+      VOIPCALL_CMD_ID => VOIPCALL_SAY,
+      VOIPCALL_CMD_BODY => array(
+        'text' => array(VOIPCALL_VAR => "gather_digits"),
+      ),
+    );
+    $script[] = array(
+      VOIPCALL_CMD_ID => VOIPCALL_GOTOIF,
+      VOIPCALL_CMD_BODY => array(
+        'label_name' => array(VOIPCALL_VAL => 'choice 1'),
+        // Note: variable names have to be enclosed in between '@<'and '>@'
+        'expression' => array(VOIPCALL_EVAL => "@<gather_digits>@ == '1'"),
+      ),
+    );
+    $script[] = array(
+      VOIPCALL_CMD_ID => VOIPCALL_GOTOIF,
+      VOIPCALL_CMD_BODY => array(
+        'label_name' => array(VOIPCALL_VAL => 'choice 2'),
+        // Note: variable names have to be enclosed in between '@<'and '>@'
+        'expression' => array(VOIPCALL_EVAL => "@<gather_digits>@ == '2'"),
+      ),
+    );
+    $script[] = array(
+      VOIPCALL_CMD_ID => VOIPCALL_GOTOIF,
+      VOIPCALL_CMD_BODY => array(
+        'label_name' => array(VOIPCALL_VAL => 'end call'),
+        // Note: variable names have to be enclosed in between '@<'and '>@'
+        'expression' => array(VOIPCALL_EVAL => "@<gather_digits>@ == '#'"),
+      ),
+    );
+    $script[] = array(
+      VOIPCALL_CMD_ID => VOIPCALL_GOTOIF,
+      VOIPCALL_CMD_BODY => array(
+        'label_name' => array(VOIPCALL_VAL => 'no input received'),
+        // Note: variable names have to be enclosed in between '@<'and '>@'
+        'expression' => array(VOIPCALL_EVAL => "@<gather_digits>@ == " . VOIPCALL_NO_INPUT),
+      ),
+    );
+    // By default, go back to start
+    $script[] = array(
+      VOIPCALL_CMD_ID => VOIPCALL_GOTO,
+      VOIPCALL_CMD_BODY => array(
+        'label_name' => array(VOIPCALL_VAL => 'start'),
+      ),
+    );
+
+    // Choice 1 --------
+    $script[] = array(
+      VOIPCALL_CMD_ID => VOIPCALL_LABEL,
+      VOIPCALL_CMD_BODY => array(
+        'label_name' => array(VOIPCALL_VAL => 'choice 1'),
+      ),
+    );
+    $script[] = array(
+      VOIPCALL_CMD_ID => VOIPCALL_SET,
+      VOIPCALL_CMD_BODY => array(
+        'var_name' => array(VOIPCALL_VAL => "user input"),
+        'var_value' => array(VOIPCALL_VAR => "gather_digits"),
+      ),
+    );
+    $script[] = array(
+      VOIPCALL_CMD_ID => VOIPCALL_SAY,
+      VOIPCALL_CMD_BODY => array(
+        'text' => array(VOIPCALL_VAL => "The variable 'user input' is now set to "),
+      ),
+    );
+    $script[] = array(
+      VOIPCALL_CMD_ID => VOIPCALL_SAY,
+      VOIPCALL_CMD_BODY => array(
+        'text' => array(VOIPCALL_VAR => "user input"),
+      ),
+    );
+    $script[] = array(
+      VOIPCALL_CMD_ID => VOIPCALL_PLAY,
+      VOIPCALL_CMD_BODY => array(
+        'url' => array(VOIPCALL_VAL => $choice1_url),
+      ),
+    );
+    $script[] = array(
+      VOIPCALL_CMD_ID => VOIPCALL_GOTO,
+      VOIPCALL_CMD_BODY => array(
+        'label_name' => array(VOIPCALL_VAL => 'end call'),
+      ),
+    );
+
+    // Choice 2 --------
+    $script[] = array(
+      VOIPCALL_CMD_ID => VOIPCALL_LABEL,
+      VOIPCALL_CMD_BODY => array(
+        'label_name' => array(VOIPCALL_VAL => 'choice 2'),
+      ),
+    );
+    $script[] = array(
+      VOIPCALL_CMD_ID => VOIPCALL_SET,
+      VOIPCALL_CMD_BODY => array(
+        'var_name' => array(VOIPCALL_VAL => "user input"),
+        'var_value' => array(VOIPCALL_VAR => "gather_digits"),
+      ),
+    );
+    $script[] = array(
+      VOIPCALL_CMD_ID => VOIPCALL_SAY,
+      VOIPCALL_CMD_BODY => array(
+        'text' => array(VOIPCALL_VAL => "The variable 'user input' is now set to "),
+      ),
+    );
+    $script[] = array(
+      VOIPCALL_CMD_ID => VOIPCALL_SAY,
+      VOIPCALL_CMD_BODY => array(
+        'text' => array(VOIPCALL_VAR => "user input"),
+      ),
+    );
+    $script[] = array(
+      VOIPCALL_CMD_ID => VOIPCALL_PLAY,
+      VOIPCALL_CMD_BODY => array(
+        'url' => array(VOIPCALL_VAL => $choice2_url),
+      ),
+    );
+    $script[] = array(
+      VOIPCALL_CMD_ID => VOIPCALL_GOTO,
+      VOIPCALL_CMD_BODY => array(
+        'label_name' => array(VOIPCALL_VAL => 'end call'),
+      ),
+    );
+
+    // No user input received --------
+    $script[] = array(
+      VOIPCALL_CMD_ID => VOIPCALL_LABEL,
+      VOIPCALL_CMD_BODY => array(
+        'label_name' => array(VOIPCALL_VAL => 'no input received'),
+      ),
+    );
+    $script[] = array(
+      VOIPCALL_CMD_ID => VOIPCALL_SAY,
+      VOIPCALL_CMD_BODY => array(
+        'text' => array(VOIPCALL_VAL => "No input received. Please try again."),
+      ),
+    );
+    $script[] = array(
+      VOIPCALL_CMD_ID => VOIPCALL_GOTO,
+      VOIPCALL_CMD_BODY => array(
+        'label_name' => array(VOIPCALL_VAL => 'gather'),
+      ),
+    );
+
+    // End call --------
+    $script[] = array(
+      VOIPCALL_CMD_ID => VOIPCALL_LABEL,
+      VOIPCALL_CMD_BODY => array(
+        'label_name' => array(VOIPCALL_VAL => 'end call'),
+      ),
+    );
+/***
+    $script[] = array(
+      VOIPCALL_CMD_ID => VOIPCALL_SAY,
+      VOIPCALL_CMD_BODY => array(
+       'text' => array(VOIPCALL_VAL => "Thank you for your time. Bye bye."),
+       ),
+    );
+***/
+    $script[] = array(
+      VOIPCALL_CMD_ID => VOIPCALL_HANGUP
+    );
+  }
+
+  return $script;
+}
+
+
+/**
+ * Callback function associated with the script pto_record.  It is called whenever that script records a new entry from the user.
+ */
+function pto_record_callback($call_id, $recording_url, $recording_duration=NULL) {
+watchdog('pto', "in pto_record_callback($call_id, $recording_url, $recording_duration)");
+
+  return TRUE;
+}
+
