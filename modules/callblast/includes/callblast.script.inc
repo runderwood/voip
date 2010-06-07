@@ -21,13 +21,6 @@ function callblast_voipcall_load_script($voipcall, $script_name) {
         ),
       );
       $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_SET,
-        VOIPCALL_CMD_BODY => array(
-          'var_name' => array(VOIPCALL_VAL => "previous"),
-          'var_value' => array(VOIPCALL_VAL => "start"),
-        ),
-      );
-      $script[] = array(
         VOIPCALL_CMD_ID => VOIPCALL_PLAY,
         VOIPCALL_CMD_BODY => array(
                        'url' => array(VOIPCALL_VAR => 'message_url'),
@@ -55,13 +48,13 @@ function callblast_voipcall_load_script($voipcall, $script_name) {
       $script[] = array(
         VOIPCALL_CMD_ID => VOIPCALL_GOTOIF,
         VOIPCALL_CMD_BODY => array(
-          'label_name' => array(VOIPCALL_VAR => 'previous'), // TODO Why doesn't this work?
-                                                             // TODO Once fixed, add this to two, three, etc.
+          'label_name' => array(VOIPCALL_VAL => 'start'),
           // Note: variable names have to be enclosed in between '@<'and '>@'
           'expression' => array(VOIPCALL_EVAL => "@<gather_digits>@ == '*'"),
         ),
       );
-      // # end call
+
+      // #, end call
       $script[] = array(
         VOIPCALL_CMD_ID => VOIPCALL_GOTOIF,
         VOIPCALL_CMD_BODY => array(
@@ -70,13 +63,14 @@ function callblast_voipcall_load_script($voipcall, $script_name) {
           'expression' => array(VOIPCALL_EVAL => "@<gather_digits>@ == '#'"),
         ),
       );
+
       // 0, go to call forwarding
       $script[] = array(
         VOIPCALL_CMD_ID => VOIPCALL_GOTOIF,
         VOIPCALL_CMD_BODY => array(
           'label_name' => array(VOIPCALL_VAL => 'forward'),
           // Note: variable names have to be enclosed in between '@<'and '>@'
-          'expression' => array(VOIPCALL_EVAL => "@<gather_digits>@ == '0'"),
+          'expression' => array(VOIPCALL_EVAL => "(@<gather_digits>@ == '0') && @<forward_to_number>@"),
         ),
       );
 
@@ -86,43 +80,40 @@ function callblast_voipcall_load_script($voipcall, $script_name) {
         VOIPCALL_CMD_BODY => array(
           'label_name' => array(VOIPCALL_VAL => 'one'),
           // Note: variable names have to be enclosed in between '@<'and '>@'
-          'expression' => array(VOIPCALL_EVAL => "@<gather_digits>@ == '1'"),
+          'expression' => array(VOIPCALL_EVAL => "(@<gather_digits>@ == '1') && @<one_url>@"),
         ),
       );
-      $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_SET,
-        VOIPCALL_CMD_BODY => array(
-          'var_name' => array(VOIPCALL_VAL => "previous"),
-          'var_value' => array(VOIPCALL_VAL => "one"),
-        ),
-      );
+
       // go to two 
       $script[] = array(
         VOIPCALL_CMD_ID => VOIPCALL_GOTOIF,
         VOIPCALL_CMD_BODY => array(
           'label_name' => array(VOIPCALL_VAL => 'two'),
           // Note: variable names have to be enclosed in between '@<'and '>@'
-          'expression' => array(VOIPCALL_EVAL => "@<gather_digits>@ == '2'"),
+          'expression' => array(VOIPCALL_EVAL => "(@<gather_digits>@ == '2') && @<two_url>@"),
         ),
       );
+
       // go to three 
       $script[] = array(
         VOIPCALL_CMD_ID => VOIPCALL_GOTOIF,
         VOIPCALL_CMD_BODY => array(
           'label_name' => array(VOIPCALL_VAL => 'three'),
           // Note: variable names have to be enclosed in between '@<'and '>@'
-          'expression' => array(VOIPCALL_EVAL => "@<gather_digits>@ == '3'"),
+          'expression' => array(VOIPCALL_EVAL => "(@<gather_digits>@ == '3') && @<three_url>@"),
         ),
       );
+
       // go to four
       $script[] = array(
         VOIPCALL_CMD_ID => VOIPCALL_GOTOIF,
         VOIPCALL_CMD_BODY => array(
           'label_name' => array(VOIPCALL_VAL => 'four'),
           // Note: variable names have to be enclosed in between '@<'and '>@'
-          'expression' => array(VOIPCALL_EVAL => "@<gather_digits>@ == '4'"),
+          'expression' => array(VOIPCALL_EVAL => "(@<gather_digits>@ == '4') && @<four_url>@"),
         ),
       );
+
       // go to five
       $script[] = array(
         VOIPCALL_CMD_ID => VOIPCALL_GOTOIF,
@@ -130,9 +121,26 @@ function callblast_voipcall_load_script($voipcall, $script_name) {
           'label_name' => array(VOIPCALL_VAL => 'five'),
           // Note: variable names have to be enclosed in between '@<'and '>@'
           'expression' => array(VOIPCALL_EVAL => "@<gather_digits>@ == '5'"),
+          'expression' => array(VOIPCALL_EVAL => "(@<gather_digits>@ == '5') && @<five_url>@"),
         ),
       );
       
+// TODO: add options for buttons 6-9?
+
+      // If invalid option selected, go back to the options menu
+      $script[] = array(
+        VOIPCALL_CMD_ID => VOIPCALL_SAY,
+        VOIPCALL_CMD_BODY => array(
+          'text' => array(VOIPCALL_VAL => "Invalid option selected."),
+        ),
+      );
+      $script[] = array(
+        VOIPCALL_CMD_ID => VOIPCALL_GOTO,
+        VOIPCALL_CMD_BODY => array(
+          'label_name' => array(VOIPCALL_VAL => 'options'),
+        ),
+      );
+
       // 0, forward call
       $script[] = array(
         VOIPCALL_CMD_ID => VOIPCALL_LABEL,
@@ -169,7 +177,7 @@ function callblast_voipcall_load_script($voipcall, $script_name) {
       $script[] = array(
         VOIPCALL_CMD_ID => VOIPCALL_GOTO,
         VOIPCALL_CMD_BODY => array(
-          'label_name' => array(VOIPCALL_VAL => 'options'),
+          'label_name' => array(VOIPCALL_VAL => 'end call'),
         ),
       ); 
 
@@ -189,7 +197,7 @@ function callblast_voipcall_load_script($voipcall, $script_name) {
       $script[] = array(
         VOIPCALL_CMD_ID => VOIPCALL_GOTO,
         VOIPCALL_CMD_BODY => array(
-          'label_name' => array(VOIPCALL_VAL => 'options'),
+          'label_name' => array(VOIPCALL_VAL => 'end call'),
         ),
       ); 
 
@@ -209,7 +217,7 @@ function callblast_voipcall_load_script($voipcall, $script_name) {
       $script[] = array(
         VOIPCALL_CMD_ID => VOIPCALL_GOTO,
         VOIPCALL_CMD_BODY => array(
-          'label_name' => array(VOIPCALL_VAL => 'options'),
+          'label_name' => array(VOIPCALL_VAL => 'end call'),
         ),
       ); 
 
@@ -229,7 +237,7 @@ function callblast_voipcall_load_script($voipcall, $script_name) {
       $script[] = array(
         VOIPCALL_CMD_ID => VOIPCALL_GOTO,
         VOIPCALL_CMD_BODY => array(
-          'label_name' => array(VOIPCALL_VAL => 'options'),
+          'label_name' => array(VOIPCALL_VAL => 'end call'),
         ),
       ); 
 
@@ -249,10 +257,10 @@ function callblast_voipcall_load_script($voipcall, $script_name) {
       $script[] = array(
         VOIPCALL_CMD_ID => VOIPCALL_GOTO,
         VOIPCALL_CMD_BODY => array(
-          'label_name' => array(VOIPCALL_VAL => 'options'),
+          'label_name' => array(VOIPCALL_VAL => 'end call'),
         ),
       ); 
-
+// TODO: add options for buttons 6-9?
       // end call (hang up)
       $script[] = array(
         VOIPCALL_CMD_ID => VOIPCALL_LABEL,
@@ -263,126 +271,7 @@ function callblast_voipcall_load_script($voipcall, $script_name) {
       $script[] = array(
         VOIPCALL_CMD_ID => VOIPCALL_HANGUP
       );
-    break;
 
-    default: 
-      // copied from voiptest module. sample script.
-      $script = array();
-      $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_LABEL,
-        VOIPCALL_CMD_BODY => array(
-          'label_name' => array(VOIPCALL_VAL => 'start'),
-        ),
-      );
-      $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_SAY,
-        VOIPCALL_CMD_BODY => array(
-          'text' => array(VOIPCALL_VAL => t("Welcome to the Voip Drupal platform!")),
-        ),
-      );
-      $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_GATHER,
-        VOIPCALL_CMD_BODY => array(
-          'text' => array(VOIPCALL_VAL => t("To connect with the system developers, press 1.  To hangup, press the pound key.")),
-          'num_digits' => array(VOIPCALL_VAL => 1),
-          'end_key' => array(VOIPCALL_VAL => ""),
-        ),
-      );
-      $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_SAY,
-        VOIPCALL_CMD_BODY => array(
-          'text' => array(VOIPCALL_VAL => "You pressed: "),
-        ),
-      );
-      $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_SAY,
-        VOIPCALL_CMD_BODY => array(
-          'text' => array(VOIPCALL_VAR => "gather_digits"),
-        ),
-      );
-      $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_SET,
-        VOIPCALL_CMD_BODY => array(
-          'var_name' => array(VOIPCALL_VAL => "user input"),
-          'var_value' => array(VOIPCALL_VAR => "gather_digits"),
-        ),
-      );
-      $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_SAY,
-        VOIPCALL_CMD_BODY => array(
-          'text' => array(VOIPCALL_VAL => "The variable 'user input' is now set to "),
-        ),
-      );
-      $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_SAY,
-        VOIPCALL_CMD_BODY => array(
-          'text' => array(VOIPCALL_VAR => "user input"),
-        ),
-      );
-      $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_GOTOIF,
-        VOIPCALL_CMD_BODY => array(
-          'label_name' => array(VOIPCALL_VAL => 'end call'),
-          // Note: variable names have to be enclosed in between '@<'and '>@'
-          'expression' => array(VOIPCALL_EVAL => "@<gather_digits>@ == '#'"),
-        ),
-      );
-      $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_SAY,
-        VOIPCALL_CMD_BODY => array(
-          'text' => array(VOIPCALL_VAL => "Dialing Leo's cellphone number "),
-        ),  
-      );
-  /****
-      $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_DIAL,
-        VOIPCALL_CMD_BODY => array(
-          'number' => array(VOIPCALL_VAL => "6177920995"),
-        ),
-      );
-  ****/
-      $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_GOTO,
-        VOIPCALL_CMD_BODY => array(
-          'label_name' => array(VOIPCALL_VAL => 'start'),
-        ),
-      ); 
-      $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_LABEL,
-        VOIPCALL_CMD_BODY => array(
-          'label_name' => array(VOIPCALL_VAL => 'end call'),
-        ),
-      );
-      $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_SAY,
-        VOIPCALL_CMD_BODY => array(
-         'text' => array(VOIPCALL_VAL => "Bye bye."),
-         ),
-      );
-      $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_HANGUP
-      );
-  /********
-      $script[] = array(
-        VOIPCALL_CMDID => VOIPCALL_RECORD,
-        VOIPCALL_CMD_BODY => array(
-                       'max_length' => array(VOIPCALL_VAL => '20'),
-                       'end_key' => array(VOIPCALL_VAL => '*'),
-        ),
-      );
-      $script[] = array(
-        VOIPCALL_CMDID => VOIPCALL_SAY,
-        VOIPCALL_CMD_BODY => array(
-                       'text' => array(VOIPCALL_VAL => "You said "),
-        ),
-      );
-      $script[] = array(
-        VOIPCALL_CMDID => VOIPCALL_PLAY,
-        VOIPCALL_CMD_BODY => array(
-                       'url' => array(VOIPCALL_VAR => 'recording_url'),
-        ),
-      );
-  ******/
     break;
   }
 
