@@ -50,7 +50,7 @@ function _callblast_content_default_fields() {
       ),
       'default_value_php' => NULL,
       'label' => 'Blast sent',
-      'weight' => '2',
+      'weight' => '3',
       'description' => '',
       'type' => 'optionwidgets_onoff',
       'module' => 'optionwidgets',
@@ -379,6 +379,56 @@ function _callblast_content_default_fields() {
     ),
   );
 
+  // Exported field: field_callblast_audio_url
+  $fields[] = array(
+    'field_name' => 'field_callblast_audio_url',
+    'type_name' => 'callblast',
+    'display_settings' => array(
+      'label' => array(
+        'format' => 'above',
+        'exclude' => 0,
+      ),
+      'teaser' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      'full' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      '4' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+    ),
+    'widget_active' => '1',
+    'type' => 'text',
+    'required' => '0',
+    'multiple' => '0',
+    'module' => 'text',
+    'active' => '1',
+    'text_processing' => '0',
+    'max_length' => '',
+    'allowed_values' => '',
+    'allowed_values_php' => '',
+    'widget' => array(
+      'rows' => 5,
+      'size' => '60',
+      'default_value' => array(
+        '0' => array(
+          'value' => '',
+          '_error_element' => 'default_value_widget][field_callblast_audio_url][0][value',
+        ),
+      ),
+      'default_value_php' => NULL,
+      'label' => 'Main Message URL',
+      'weight' => '-1',
+      'description' => '',
+      'type' => 'text_textfield',
+      'module' => 'text',
+    ),
+  );
+
   // Exported field: field_callblast_call_forward
   $fields[] = array(
     'field_name' => 'field_callblast_call_forward',
@@ -423,7 +473,7 @@ function _callblast_content_default_fields() {
       ),
       'default_value_php' => NULL,
       'label' => 'Forward Call To',
-      'weight' => '-1',
+      'weight' => 0,
       'description' => 'Enter a number for call forwarding. This is the number callers will be directed to when they press "0". (E.g. Press "0" to be connected with your state senator; press "0" to be connected with a staff person who can assist you with X; press "0" to speak with an operator.) ',
       'type' => 'text_textfield',
       'module' => 'text',
@@ -643,6 +693,7 @@ function _callblast_content_default_fields() {
     t('Call List'),
     t('Forward Call To'),
     t('Main Message'),
+    t('Main Message URL'),
     t('Message Five'),
     t('Message Four'),
     t('Message One'),
@@ -691,7 +742,7 @@ function _callblast_fieldgroup_default_groups() {
         ),
       ),
     ),
-    'weight' => '1',
+    'weight' => '2',
     'fields' => array(
       '0' => 'field_callblast_script',
     ),
@@ -726,7 +777,7 @@ function _callblast_fieldgroup_default_groups() {
         ),
       ),
     ),
-    'weight' => '0',
+    'weight' => '1',
     'fields' => array(
       '0' => 'field_callblast_audio_options',
       '1' => 'field_callblast_audio_one',
