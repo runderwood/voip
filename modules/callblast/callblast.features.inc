@@ -10,6 +10,15 @@ function callblast_content_default_fields() {
 }
 
 /**
+ * Implementation of hook_fieldgroup_default_groups().
+ */
+function callblast_fieldgroup_default_groups() {
+  module_load_include('inc', 'callblast', 'callblast.defaults');
+  $args = func_get_args();
+  return call_user_func_array('_callblast_fieldgroup_default_groups', $args);
+}
+
+/**
  * Implementation of hook_node_info().
  */
 function callblast_node_info() {

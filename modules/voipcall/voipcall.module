@@ -66,14 +66,18 @@ define('VOIPCALL_COMPLETED', 'completed');
  *  $node, the newly saved voipcall node.
  */
 function voipcall_save($details=array()) {
-dsm($details, 'details');
+//dsm($details, 'details');
 
   if(is_object($details)){
     $details = (array)$details;
   }
-
+//dsm('details:');
+//dsm($details);
   // if this is a new call node being created
   if(is_null($details['nid'])){
+//dsm('testing. if this prints, voipcall_save thinks its a new node.');
+// TODO Why does this get called so many times when a call goes out? 
+// TODO Why doesn't this save new nodes every time a call blast goes out, e.g. unchecking blast sent ?
 
     $node = new stdClass();
 
@@ -99,7 +103,7 @@ dsm($details, 'details');
 //TODO: Why does the following node_load requires resetting the node cache?
     $node = node_load($details['nid'], NULL, TRUE);
   }
-dsm($node, 'inside voipcall_save');
+//dsm($node, 'inside voipcall_save');
 
   // update node fields
   if(isset($details['dest_number'])) $node->title = check_plain($details['dest_number']);
