@@ -14,6 +14,32 @@ function callblast_voipcall_load_script($voipcall, $script_name) {
       // play message attached to callblast node
       // message 0
       $script = array();
+///------------
+    $script[] = array(
+      VOIPCALL_CMD_ID => VOIPCALL_SAY,
+      VOIPCALL_CMD_BODY => array(
+        'text' => array(VOIPCALL_VAL => "The variable 'call_status' is now set to "),
+      ),
+    );
+    $script[] = array(
+      VOIPCALL_CMD_ID => VOIPCALL_SAY,
+      VOIPCALL_CMD_BODY => array(
+        'text' => array(VOIPCALL_VAR => "call_status"),
+      ),
+    );
+    $script[] = array(
+      VOIPCALL_CMD_ID => VOIPCALL_SAY,
+      VOIPCALL_CMD_BODY => array(
+        'text' => array(VOIPCALL_VAL => "The variable 'dial_status' is now set to "),
+      ),
+    );
+    $script[] = array(
+      VOIPCALL_CMD_ID => VOIPCALL_SAY,
+      VOIPCALL_CMD_BODY => array(
+        'text' => array(VOIPCALL_VAR => "dial_status"),
+      ),
+    );
+///------------
       $script[] = array(
         VOIPCALL_CMD_ID => VOIPCALL_LABEL,
         VOIPCALL_CMD_BODY => array(
@@ -24,6 +50,16 @@ function callblast_voipcall_load_script($voipcall, $script_name) {
         VOIPCALL_CMD_ID => VOIPCALL_PLAY,
         VOIPCALL_CMD_BODY => array(
                        'url' => array(VOIPCALL_VAR => 'message_url'),
+        ),
+      );
+
+      // If the call has been answered by a machine, skip the options and hangup
+      $script[] = array(
+        VOIPCALL_CMD_ID => VOIPCALL_GOTOIF,
+        VOIPCALL_CMD_BODY => array(
+          'label_name' => array(VOIPCALL_VAL => 'end call'),
+          // Note: variable names have to be enclosed in between '@<'and '>@'
+          'expression' => array(VOIPCALL_EVAL => "@<dial_status>@ == '" . VOIPCALL_ANSWERED_MACHINE . "'"),
         ),
       );
 
@@ -131,7 +167,7 @@ function callblast_voipcall_load_script($voipcall, $script_name) {
       $script[] = array(
         VOIPCALL_CMD_ID => VOIPCALL_SAY,
         VOIPCALL_CMD_BODY => array(
-          'text' => array(VOIPCALL_VAL => "Invalid option selected."),
+          'text' => array(VOIPCALL_VAL => "Invalid option selected. Please try again."),
         ),
       );
       $script[] = array(
