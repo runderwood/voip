@@ -14,7 +14,7 @@ function callblast_voipcall_load_script($voipcall, $script_name) {
       // play message attached to callblast node
       // message 0
       $script = array();
-///------------
+/********
     $script[] = array(
       VOIPCALL_CMD_ID => VOIPCALL_SAY,
       VOIPCALL_CMD_BODY => array(
@@ -39,7 +39,7 @@ function callblast_voipcall_load_script($voipcall, $script_name) {
         'text' => array(VOIPCALL_VAR => "dial_status"),
       ),
     );
-///------------
+****/
       $script[] = array(
         VOIPCALL_CMD_ID => VOIPCALL_LABEL,
         VOIPCALL_CMD_BODY => array(
