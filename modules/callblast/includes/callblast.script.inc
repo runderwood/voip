@@ -53,6 +53,16 @@ function callblast_voipcall_load_script($voipcall, $script_name) {
         ),
       );
 
+      // If no options message provided, hangup
+      $script[] = array(
+        VOIPCALL_CMD_ID => VOIPCALL_GOTOIF,
+        VOIPCALL_CMD_BODY => array(
+          'label_name' => array(VOIPCALL_VAL => 'end call'),
+          // Note: variable names have to be enclosed in between '@<'and '>@'
+          'expression' => array(VOIPCALL_EVAL => "!@<options_url>@"),
+        ),
+      );
+
       // If the call has been answered by a machine, skip the options and hangup
       $script[] = array(
         VOIPCALL_CMD_ID => VOIPCALL_GOTOIF,
