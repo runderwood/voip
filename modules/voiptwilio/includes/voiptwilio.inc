@@ -331,7 +331,7 @@ watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
           }
           $response .= '</Gather>';
           // in case of timeout or empty input, set Digits to VOIPCALL_NO_INPUT
-          $action_timeout = $action . '?Digits=' . VOIPCALL_NO_INPUT;
+          $action_timeout = $action . '&amp;Digits=' . VOIPCALL_NO_INPUT;
           $response .= '<Redirect method="GET">'
                          . $action_timeout
                          . '</Redirect>';
