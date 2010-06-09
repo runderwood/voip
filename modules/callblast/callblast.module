@@ -31,7 +31,7 @@ function callblast_menu() {
   $items['callblast/list/autocomplete'] = array(
     'title' => 'Call Blast Autocomplete List',
     'page callback' => 'callblast_list_autocomplete',
-    'access arguments' => array('edit extension'),
+    'access arguments' => array('access content'),
     'type' => MENU_CALLBACK,
     'file' => 'includes/callblast.inc',
   );

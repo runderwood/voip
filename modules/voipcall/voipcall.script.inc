@@ -104,7 +104,7 @@ function voipcall_script_get_parameter_value($command, $param_name, $variables, 
     $params = array('@<' => '$variables[', '>@' => ']');
     $expression_tmp = strtr($expression, $params);
     $rc = eval("return ($expression_tmp);");
-watchdog('voipcal_script_get_param', "expression: $expression, expression_tmp: $expression_tmp, rc: $rc");
+watchdog('voipcal_script_get_param', "expression: $expression, expression_tmp: $expression_tmp, rc: $rc, variables: " . print_r($variables,true));
   }
   else {
     $rc = $default;
