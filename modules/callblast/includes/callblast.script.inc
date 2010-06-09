@@ -61,7 +61,6 @@ function callblast_voipcall_load_script($voipcall, $script_name) {
         VOIPCALL_CMD_BODY => array(
           'url' => array(VOIPCALL_VAR => 'message_url'),
           'num_digits' => array(VOIPCALL_VAL => 1),
-          'end_key' => array(VOIPCALL_VAL => ""),
           'timeout' => array(VOIPCALL_VAL => 1),
         ),
       );
@@ -72,7 +71,7 @@ function callblast_voipcall_load_script($voipcall, $script_name) {
         VOIPCALL_CMD_BODY => array(
           'label_name' => array(VOIPCALL_VAL => 'process_options'),
           // Note: variable names have to be enclosed in between '@<'and '>@'
-          'expression' => array(VOIPCALL_EVAL => "@<gather_digits>@"),
+          'expression' => array(VOIPCALL_EVAL => "@<gather_digits>@ != '" . VOIPCALL_NO_INPUT . "'"),
         ),
       );
 
