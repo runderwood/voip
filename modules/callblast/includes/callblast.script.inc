@@ -46,12 +46,37 @@ function callblast_voipcall_load_script($voipcall, $script_name) {
           'label_name' => array(VOIPCALL_VAL => 'start'),
         ),
       );
+/****
       $script[] = array(
         VOIPCALL_CMD_ID => VOIPCALL_PLAY,
         VOIPCALL_CMD_BODY => array(
                        'url' => array(VOIPCALL_VAR => 'message_url'),
         ),
       );
+****/
+//-----------
+     // play the main message/announcement
+      $script[] = array(
+        VOIPCALL_CMD_ID => VOIPCALL_GATHER,
+        VOIPCALL_CMD_BODY => array(
+          'url' => array(VOIPCALL_VAR => 'message_url'),
+          'num_digits' => array(VOIPCALL_VAL => 1),
+          'end_key' => array(VOIPCALL_VAL => ""),
+          'timeout' => array(VOIPCALL_VAL => 1),
+        ),
+      );
+
+      // If user presses a button during the main message, handle the options
+      $script[] = array(
+        VOIPCALL_CMD_ID => VOIPCALL_GOTOIF,
+        VOIPCALL_CMD_BODY => array(
+          'label_name' => array(VOIPCALL_VAL => 'process_options'),
+          // Note: variable names have to be enclosed in between '@<'and '>@'
+          'expression' => array(VOIPCALL_EVAL => "@<gather_digits>@"),
+        ),
+      );
+
+//-----------
 
       // If no options message provided, hangup
       $script[] = array(
@@ -86,6 +111,14 @@ function callblast_voipcall_load_script($voipcall, $script_name) {
           'url' => array(VOIPCALL_VAR => 'options_url'),
           'num_digits' => array(VOIPCALL_VAL => 1),
           'end_key' => array(VOIPCALL_VAL => ""),
+        ),
+      );
+
+      // process options
+      $script[] = array(
+        VOIPCALL_CMD_ID => VOIPCALL_LABEL,
+        VOIPCALL_CMD_BODY => array(
+          'label_name' => array(VOIPCALL_VAL => 'process_options'),
         ),
       );
 
