@@ -42,7 +42,58 @@ function callblast_menu() {
 /**
  * Implementation of hook_block().
  */
+function callblast_block($op = 'list', $delta = 0, $edit = array()) {
+  if ($op == 'list') {
+    $blocks[0]['info'] = t('Call Blast Status');
+    return $blocks;
+  }
+  else if ($op == 'view') {
+    switch($delta) {
+      case 0: 
+        $block['subject'] = t('Call Blast Status');
+        $block['content'] = theme('callblast_block'); 
+      break;
+    }
+    return $block; 
+  }
+}
 
+/**
+ * Implementation of hook_theme().
+ */
+function callblast_theme() {
+  return array(
+    'callblast_block' => array(
+      'arguments' => array(),
+    ),
+  );
+}
+
+/**
+ * Callback for theme_callblast_block().
+ * 
+ * Create a block with links to views included
+ * in callblast feature module.
+ * 
+ * @return
+ *  $output, html, content of block
+ */
+function theme_callblast_block() {
+  $output = '<div class="callblast">';
+
+  // link to call blast page View
+  $txt = t('Call Blasts');
+  $path = 'callblast';
+  $output .= '<h4>'. l($txt, $path) .'</h4>';
+
+  $txt = t('Calls');
+  $path = 'callstatus';
+  $output .= '<h4>'. l($txt, $path) .'</h4>';
+  
+  $output .= '</div>';
+
+  return $output;
+}
 
 /**
  * Implementation of hook_views_data().
