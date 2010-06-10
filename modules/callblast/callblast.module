@@ -194,6 +194,23 @@ function callblast_views_data() {
 }
 
 /**
+ * Implementation of hook_form_alter().
+ * 
+ * TODO Delete this is we don't end up using voipfield.
+ */
+function callblast_form_alter(&$form, &$form_state, $form_id){
+  if ($form_id == 'callblast_node_form') {
+    /**
+     * If voipfield module is NOT enabled
+     * hide the Main Message URL field. 
+     */
+    if(!function_exists('voipfield_form_alter')) {
+      $form['field_callblast_audio_url']['#type'] = 'hidden';
+    }
+  }
+}
+
+/**
  * On cron, run call blasts.
  * 
  * TODO Add test call before running call blast.
