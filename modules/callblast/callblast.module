@@ -40,6 +40,104 @@ function callblast_menu() {
 }
 
 /**
+ * Implementation of hook_views_data().
+ * 
+ * Expose callblast_call table to views, so voipcall
+ * nodes can be filtered in Views based on the callblast that 
+ * created them.
+ */
+function callblast_views_data() {
+  $data = array();
+
+  // callblast_call table
+  $data['callblast_call']['table']['group'] = t('Node');
+
+  // link callblast_call table to node table, join on callblast_nid
+  $data['callblast_call']['table']['join']['node'] = array(
+// TODO verify left_field v. field is correct here
+    'left_field' => 'nid',
+    'field' => 'callblast_nid',
+  );
+
+  // link callblast_call table to node table, join on voipcall_nid
+  $data['callblast_call']['table']['join']['node'] = array(
+    'left_field' => 'nid',
+    'field' => 'voipcall_nid',
+  );
+
+  // callblast_call.callblast_nid field
+  $data['callblast_call']['callblast_nid'] = array( 
+    'group' => t('Node'),
+    'title' => t('Call Blast Nid'),
+    'help' => t('The node ID of the Call Blast node.'),
+    'argument' => array(
+      // todo? 'handler' => '',
+      'name field' => 'title', // the field to display in the summary.
+      'numeric' => TRUE,
+      'validate type' => 'nid',
+    ),
+    'field' => array(
+      'handler' => 'views_handler_field',
+      'click sortable' => TRUE,
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_numeric',
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort',
+    ),
+  );
+
+  // Call Blast Name field
+  $data['callblast_call']['callblast_name'] = array( 
+    'group' => t('Node'),
+    'title' => t('Call Blast Name'),
+    'help' => t('The node ID of the Call Blast node.'),
+    'argument' => array(
+      // todo? 'handler' => '',
+      'name field' => 'title', // the field to display in the summary.
+      'numeric' => TRUE,
+      'validate type' => 'nid',
+    ),
+    'field' => array(
+      'handler' => 'views_handler_field',
+      'click sortable' => TRUE,
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_numeric',
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort',
+    ),
+  );
+
+  // callblast_call.voipcall_nid field
+  $data['callblast_call']['voipcall_nid'] = array(
+    'group' => t('Node'),
+    'title' => t('Voip Call Nid'),
+    'help' => t('The node ID of the Voip Call node.'),
+    'argument' => array(
+      // todo? 'handler' => '',
+      'name field' => 'title', // the field to display in the summary.
+      'numeric' => TRUE,
+      'validate type' => 'nid',
+    ),
+    'field' => array(
+      'handler' => 'views_handler_field',
+      'click sortable' => TRUE,
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_numeric',
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort',
+    ),
+  );
+
+  return $data;
+}
+
+/**
  * On cron, run call blasts.
  * 
  * TODO Add test call before running call blast.
