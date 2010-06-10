@@ -113,9 +113,35 @@ class VoipCommand {
     return $this->id;
   }
 
-  // return the value associated with the given parameter
-  function getParam($param_name, $script_variables) {
-// TODO:    $val = ;
+  // calculate the value associated with the given parameter
+  // Notes regarding the way values are handled: 
+  // * placeholders for script variables start with '%'
+  // * param values that start with '!' are treated as expressions to be
+  //   evaluated
+  // * when defining expressions that include string variables, make sure the
+  //   variable placeholder is enclosed in " or '.  For instance,
+  //      Correct form:   "!echo('The content is ' . '%msg');"
+  //      Incorrect form: "!echo('The content is ' . %msg);"
+  //   The incorrect form will produce a parser errors if the variable msg
+  //   contains characters such as a space, math sign, etc...
+  function calculateParamValue($param_name, $script_variables) {
+    $str = $this->params[$param_name];
+
+    // replace placeholders by the contents of the associated variable name
+    // since variables might refer to other variables, run the loop until all
+    // replacements are done.
+    $pattern = "/%(\w+)/e";
+    $replacement = '$script_variables[\'$1\']';
+    do {
+      $val = preg_replace($pattern, $replacement, $str, -1, $count);
+      $str = $val;
+    } while ($count);
+
+    //check if $val contains a function or expression to be processed
+    if($val[0] == '!') {
+      $expression = substr($val,1);
+      $val = eval("return ($expression);");
+    }
     return $val;
   }
 
@@ -182,6 +208,7 @@ class VoipCmdDial extends VoipCommand {
   }
 
 }
+
 class VoipCmdGather extends VoipCommand {
 
   function __construct($timeout=5, $end_key='#', $num_digits=NULL){
@@ -202,7 +229,7 @@ class VoipCmdHangup extends VoipCommand {
   }
 
   function process(&$processing, &$script_variables=array(), &$script_stack=array()) {
-    $processing = TRUE;
+    $processing = FALSE;
     return parent::process($processing, $script_variables, $script_stack);
   }
 }
@@ -233,7 +260,10 @@ class VoipCmdSet extends VoipCommand {
 
   function process(&$processing, &$script_variables=array(), &$script_stack=array()) {
 // TODO: implement set
-    return parent::process($processing, $script_variables, $script_stack);
+    $var_name = $this->calculateParamValue('var_name', $script_variables);
+    $value = $this->calculateParamValue('value', $script_variables);
+    $script_variables[$var_name] = $value;
+    return;
   }
 
 }
@@ -371,11 +401,4 @@ class VoipScriptHandler {
 
   }
 
-  private function setVar($name, $value) {
-    $this-variables[$name] = $value;
-  }
-
-  private function getVar($name) {
-    return $this->variables['name'];
-  }
 }
