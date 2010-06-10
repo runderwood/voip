@@ -90,7 +90,7 @@ function _callblast_content_default_fields() {
     'list_default' => 1,
     'description_field' => '0',
     'widget' => array(
-      'file_extensions' => 'txt mp3 wav',
+      'file_extensions' => 'mp3',
       'file_path' => '',
       'progress_indicator' => 'bar',
       'max_filesize_per_file' => '',
@@ -136,7 +136,7 @@ function _callblast_content_default_fields() {
     'list_default' => 1,
     'description_field' => '0',
     'widget' => array(
-      'file_extensions' => 'txt mp3 wav',
+      'file_extensions' => 'mp3',
       'file_path' => '',
       'progress_indicator' => 'bar',
       'max_filesize_per_file' => '',
@@ -182,7 +182,7 @@ function _callblast_content_default_fields() {
     'list_default' => 1,
     'description_field' => '0',
     'widget' => array(
-      'file_extensions' => 'txt mp3 wav',
+      'file_extensions' => 'mp3',
       'file_path' => '',
       'progress_indicator' => 'bar',
       'max_filesize_per_file' => '',
@@ -228,7 +228,7 @@ function _callblast_content_default_fields() {
     'list_default' => 1,
     'description_field' => '0',
     'widget' => array(
-      'file_extensions' => 'txt mp3 wav',
+      'file_extensions' => 'mp3',
       'file_path' => '',
       'progress_indicator' => 'bar',
       'max_filesize_per_file' => '',
@@ -274,7 +274,7 @@ function _callblast_content_default_fields() {
     'list_default' => 1,
     'description_field' => '0',
     'widget' => array(
-      'file_extensions' => 'txt mp3 wav',
+      'file_extensions' => 'mp3',
       'file_path' => '',
       'progress_indicator' => 'bar',
       'max_filesize_per_file' => '',
@@ -320,7 +320,7 @@ function _callblast_content_default_fields() {
     'list_default' => 1,
     'description_field' => '0',
     'widget' => array(
-      'file_extensions' => 'txt mp3 wav',
+      'file_extensions' => 'mp3',
       'file_path' => '',
       'progress_indicator' => 'bar',
       'max_filesize_per_file' => '',
@@ -366,7 +366,7 @@ function _callblast_content_default_fields() {
     'list_default' => 1,
     'description_field' => '0',
     'widget' => array(
-      'file_extensions' => 'txt mp3 wav',
+      'file_extensions' => 'mp3',
       'file_path' => '',
       'progress_indicator' => 'bar',
       'max_filesize_per_file' => '',
