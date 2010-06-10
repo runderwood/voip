@@ -371,7 +371,7 @@ function _callblast_views_default_views() {
   $handler = $view->new_display('page', 'Page: Call Blast', 'page_1');
   $handler->override_option('path', 'callblast');
   $handler->override_option('menu', array(
-    'type' => 'normal',
+    'type' => 'none',
     'title' => 'Call Blast Status',
     'description' => '',
     'weight' => '0',

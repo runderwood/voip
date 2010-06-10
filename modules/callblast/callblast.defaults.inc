@@ -505,7 +505,7 @@ function _callblast_content_default_fields() {
     ),
     'widget_active' => '1',
     'type' => 'text',
-    'required' => '0',
+    'required' => '1',
     'multiple' => '0',
     'module' => 'text',
     'active' => '1',
@@ -516,6 +516,7 @@ function _callblast_content_default_fields() {
     'widget' => array(
       'default_value' => array(
         '0' => array(
+          'value' => '',
           '_error_element' => 'value',
         ),
       ),
@@ -718,15 +719,14 @@ function _callblast_fieldgroup_default_groups() {
     'group_type' => 'standard',
     'type_name' => 'callblast',
     'group_name' => 'group_advanced',
-    'label' => 'Advanced Settings',
+    'label' => 'Advanced Call Blast Settings',
     'settings' => array(
       'form' => array(
         'style' => 'fieldset_collapsed',
         'description' => '',
       ),
       'display' => array(
-        'weight' => '1',
-        'label' => 'above',
+        'description' => '',
         'teaser' => array(
           'format' => 'fieldset',
           'exclude' => 0,
@@ -735,11 +735,11 @@ function _callblast_fieldgroup_default_groups() {
           'format' => 'fieldset',
           'exclude' => 0,
         ),
-        'description' => '',
         '4' => array(
           'format' => 'fieldset',
           'exclude' => 0,
         ),
+        'label' => 'above',
       ),
     ),
     'weight' => '2',
@@ -753,15 +753,14 @@ function _callblast_fieldgroup_default_groups() {
     'group_type' => 'standard',
     'type_name' => 'callblast',
     'group_name' => 'group_options',
-    'label' => 'Options',
+    'label' => 'Additional Voice Message Options',
     'settings' => array(
       'form' => array(
         'style' => 'fieldset_collapsed',
         'description' => '',
       ),
       'display' => array(
-        'weight' => '0',
-        'label' => 'above',
+        'description' => '',
         'teaser' => array(
           'format' => 'fieldset',
           'exclude' => 0,
@@ -770,11 +769,11 @@ function _callblast_fieldgroup_default_groups() {
           'format' => 'fieldset',
           'exclude' => 0,
         ),
-        'description' => '',
         '4' => array(
           'format' => 'fieldset',
           'exclude' => 0,
         ),
+        'label' => 'above',
       ),
     ),
     'weight' => '1',
@@ -790,8 +789,8 @@ function _callblast_fieldgroup_default_groups() {
 
   // Translatables
   array(
-    t('Advanced Settings'),
-    t('Options'),
+    t('Additional Voice Message Options'),
+    t('Advanced Call Blast Settings'),
   );
 
   return $groups;

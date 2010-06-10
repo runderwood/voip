@@ -40,6 +40,11 @@ function callblast_menu() {
 }
 
 /**
+ * Implementation of hook_block().
+ */
+
+
+/**
  * Implementation of hook_views_data().
  * 
  * Expose callblast_call table to views, so voipcall

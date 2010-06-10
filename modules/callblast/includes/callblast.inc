@@ -17,6 +17,7 @@
 function callblast_list_autocomplete() {
   $items = array();
   $items = module_invoke_all('callblast_list');
+  asort($items);
   print drupal_to_js($items);
   exit();
 }
