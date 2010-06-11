@@ -229,6 +229,7 @@ function voipcall_admin_form() {
 function voipcall_admin_form_validate($form, &$form_state) {
   $values = $form_state['values'];
 //todo: make sure that default script name is not empty ''
+// todo: make sure the default script name actually points to a non-empty array
   return;
 }
 

@@ -261,8 +261,8 @@ watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
       // no more commands to be processed
       // send a final hangup request 
       $response .= '<Hangup/>';
-      $msg = 'Script @name ended without a "hangup" command.';
-      $params = array('@name' => $script_name);
+      $msg = 'Script @name ended without a "hangup" command. Current commands: @commands';
+      $params = array('@name' => $script_name, '@commands' => print_r($commands, TRUE));
       watchdog('voiptwilio', $msg, $params, WATCHDOG_WARNING);
       $processing = FALSE;
     }

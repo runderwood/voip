@@ -525,6 +525,8 @@ function callblast_save_list($list, $node) {
  *  $node, object, a callblast node.
  */
 function callblast_save_voipcalls($list, $node) {
+  global $base_url;
+
   // generic call details from callblast node
   $details['caller number'] = $node->field_callblast_caller_number[0]['value'];
   $details['caller name'] = $node->field_callblast_caller_name[0]['value'];
@@ -533,27 +535,36 @@ function callblast_save_voipcalls($list, $node) {
   $details['script_name'] = 'callblast_message'; 
 
   // store URL to audio message in script_variable
-  $message_path = $node->field_callblast_audio_file[0]['filepath'];
-  //  global $base_url;
-  // $message_url = $base_url .'/'. $message_path;
-  $message_url = $message_path;
-  $message_url = check_url($message_url);
-  $message_url = drupal_urlencode($message_url);
+  $url_tmp = $node->field_callblast_audio_file[0]['filepath'];
+  $message_url = ($url_tmp)? $base_url.'/'.drupal_urlencode(check_url($url_tmp)) : NULL;
+
   // call forwarding number
   $forward_to_number = $node->field_callblast_call_forward[0]['value']; 
 
   // options
-  $options_url = drupal_urlencode(check_url($node->field_callblast_audio_options[0]['filepath']));
+  $url_tmp = $node->field_callblast_audio_options[0]['filepath'];
+  $options_url = ($url_tmp)? $base_url.'/'.drupal_urlencode(check_url($url_tmp)) : NULL;
+
   // message one
-  $one_url = drupal_urlencode(check_url($node->field_callblast_audio_one[0]['filepath']));
+  $url_tmp = $node->field_callblast_audio_one[0]['filepath'];
+  $one_url = ($url_tmp)? $base_url.'/'.drupal_urlencode(check_url($url_tmp)) : NULL;
+
   // message two
-  $two_url = drupal_urlencode(check_url($node->field_callblast_audio_two[0]['filepath']));
+  $url_tmp = $node->field_callblast_audio_two[0]['filepath'];
+  $two_url = ($url_tmp)? $base_url.'/'.drupal_urlencode(check_url($url_tmp)) : NULL;
+
   // message three
-  $three_url = drupal_urlencode(check_url($node->field_callblast_audio_three[0]['filepath']));
+  $url_tmp = $node->field_callblast_audio_three[0]['filepath'];
+  $three_url = ($url_tmp)? $base_url.'/'.drupal_urlencode(check_url($url_tmp)) : NULL;
+
   // message four
-  $four_url = drupal_urlencode(check_url($node->field_callblast_audio_four[0]['filepath']));
+  $url_tmp = $node->field_callblast_audio_four[0]['filepath'];
+  $four_url = ($url_tmp)? $base_url.'/'.drupal_urlencode(check_url($url_tmp)) : NULL;
+
   // message five
-  $five_url = drupal_urlencode(check_url($node->field_callblast_audio_five[0]['filepath']));
+  $url_tmp = $node->field_callblast_audio_five[0]['filepath'];
+  $five_url = ($url_tmp)? $base_url.'/'.drupal_urlencode(check_url($url_tmp)) : NULL;
+
 
   // store voipcall variables
   $details['script_variables'] = array(
