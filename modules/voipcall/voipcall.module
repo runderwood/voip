@@ -256,12 +256,12 @@ function voipcall_is_hangup($voipcall) {
   $rc = FALSE;
   $status = $voipcall['field_voipcall_status'][0]['value'];
   switch($status) {
-    case 'VOIPCALL_ERROR':
-    case 'VOIPCALL_NO_ANSWER':
-    case 'VOIPCALL_BUSY':
-    case 'VOIPCALL_INVALID':
-    case 'VOIPCALL_MACHINE_HANGUP':
-    case 'VOIPCALL_COMPLETED':
+    case VOIPCALL_ERROR:
+    case VOIPCALL_NO_ANSWER:
+    case VOIPCALL_BUSY:
+    case VOIPCALL_INVALID:
+    case VOIPCALL_MACHINE_HANGUP:
+    case VOIPCALL_COMPLETED:
       $rc = TRUE;
       break;
   }
