@@ -33,7 +33,7 @@ function _voiptwilio_call_handler($call_id=NULL, $response_action=NULL) {
 $msg = "in voiptwilio_call_handler() with call_id: $call_id, response_action: $response_action, and _REQUEST: " . print_r($_REQUEST, TRUE);
 $vars = array();
 watchdog('voiptwilio', $msg, $vars, WATCHDOG_INFO);
-dsm($msg);
+//dsm($msg);
 
   // validate $_REQUEST['AccountSid'] to avoid hack attempts
   $server = voip_servers('server', 'twilio');
@@ -122,6 +122,46 @@ dsm($msg);
       break;
   }
 
+  // update dial status, if available
+  // Note: dial status is only available in case of a previously made
+  //        outbound call request
+  $dial_status = $_REQUEST['DialStatus'];
+  if($dial_status) {
+    switch($dial_status) {
+      default:
+        $call['call_status'] = VOIPCALL_ERROR;
+        $error_message = 'Invalid DialStatus for outbound dial request: ' . $dial_status;
+        $call['error_message'] = $error_message;
+        watchdog('voiptwilio', $error_msg, array(), WATCHDOG_ERROR);
+        voipcall_save($call);
+        return FALSE;
+        break;
+      case 'fail': // From: REST API - making calls
+      case 'failed': // From: TwiML Reference - Dial verb
+        $call['script_variables']['dial_status'] = VOIPCALL_ERROR;
+        break;
+      case 'answered':
+        $call['script_variables']['dial_status'] = VOIPCALL_IN_PROGRESS;
+        break;
+      case 'busy':
+        $call['script_variables']['dial_status'] = VOIPCALL_BUSY;
+        break;
+      case 'no-answer':
+        $call['script_variables']['dial_status'] = VOIPCALL_NO_ANSWER;
+        break;
+      // NOTE: apparently, Twilio does not detect answering machines with the TwiML Dial verb.  The following error codes are only valid for making calls via REST API
+      case 'answered-machine':
+        $call['script_variables']['dial_status'] = VOIPCALL_ANSWERED_MACHINE;
+        break;
+      case 'answered-human':
+        $call['script_variables']['dial_status'] = VOIPCALL_ANSWERED_HUMAN;
+        break;
+      case 'hangup-machine':
+        $call['script_variables']['dial_status'] = VOIPCALL_MACHINE_HANGUP;
+        break;
+    }
+  }
+
   // process responses to requests previously-issued by the call script
   if(!$hangup && $response_action) {
     switch($response_action) {
@@ -132,38 +172,8 @@ dsm($msg);
         return FALSE;
         break;
       case 'process_dial':
-        $dial_status = $_REQUEST['DialStatus'];
-        switch($dial_status) {
-          default:
-            $call['call_status'] = VOIPCALL_ERROR;
-            $error_message = 'Invalid DialStatus for outbound dial request: ' . $dial_status;
-            $call['error_message'] = $error_message;
-            watchdog('voiptwilio', $error_msg, array(), WATCHDOG_ERROR);
-            voipcall_save($call);
-            return FALSE;
-            break;
-          case 'failed':
-            $call['script_variables']['dial_status'] = VOIPCALL_ERROR;
-            break;
-          case 'answered':
-            $call['script_variables']['dial_status'] = VOIPCALL_IN_PROGRESS;
-            break;
-          case 'busy':
-            $call['script_variables']['dial_status'] = VOIPCALL_BUSY;
-            break;
-          case 'no-answer':
-            $call['script_variables']['dial_status'] = VOIPCALL_NO_ANSWER;
-            break;
-          case 'answered-machine':
-            $call['script_variables']['dial_status'] = VOIPCALL_ANSWERED_MACHINE;
-            break;
-          case 'answered-human':
-            $call['script_variables']['dial_status'] = VOIPCALL_ANSWERED_HUMAN;
-            break;
-          case 'hangup-machine':
-            $call['script_variables']['dial_status'] = VOIPCALL_MACHINE_HANGUP;
-            break;
-        }
+        // nothing special to be done here. dial_status has already been 
+        // updated a few lines above
         break;
       case 'process_gather':
         $call['script_variables']['gather_digits'] = $_REQUEST['Digits'];
@@ -211,8 +221,8 @@ dsm($msg);
  * @return boolean.  TRUE on success or FALSE on failure.  Check voip_error() for processing failure.
  */
 function _voiptwilio_script_handler($voipcall) {
-dsm('entering voiptwilio_script_handler()');
-dsm($voipcall);
+//dsm('entering voiptwilio_script_handler()');
+//dsm($voipcall);
 $msg = 'Entering script_handler with voipcall: ' . print_r($voipcall,true);
 watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
 
@@ -253,8 +263,8 @@ watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
       // no more commands to be processed
       // send a final hangup request 
       $response .= '<Hangup/>';
-      $msg = 'Script @name ended without a "hangup" command.';
-      $params = array('@name' => $script_name);
+      $msg = 'Script @name ended without a "hangup" command. Current commands: @commands';
+      $params = array('@name' => $script_name, '@commands' => print_r($commands, TRUE));
       watchdog('voiptwilio', $msg, $params, WATCHDOG_WARNING);
       $processing = FALSE;
     }
@@ -323,7 +333,7 @@ watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
           }
           $response .= '</Gather>';
           // in case of timeout or empty input, set Digits to VOIPCALL_NO_INPUT
-          $action_timeout = $action . '?Digits=' . VOIPCALL_NO_INPUT;
+          $action_timeout = $action . '&amp;Digits=' . VOIPCALL_NO_INPUT;
           $response .= '<Redirect method="GET">'
                          . $action_timeout
                          . '</Redirect>';
@@ -528,7 +538,7 @@ function _voiptwilio_ping($server_config) {
  *   @return XXXXXX the call. Check voip_error() for processing errors.
  */
 function _voiptwilio_dial_out($server_config, $voipcall) {
-dsm('In twilio dial_out');
+//dsm('In twilio dial_out');
 //dsm($server_config, '$server_config');
 //dsm($voipcall, '$voipcall');
 
@@ -571,8 +581,8 @@ dsm('In twilio dial_out');
       "Url" => $call_handler_url,
       'Method' => 'POST',
       'SendDigits' => '',  // TODO: shall we encode extra digits with dest_number?
-      'IfMachine' => NULL, // Note: adding any value in here -- even 'Continue' -- adds a 5 sec delay to the call
-          // TODO: include machine recognition in the call variables?
+// TODO: ideally, IfMachine should be set via field 'check_machine' with options such as 'do not check', 'continue' and 'hangup'
+      'IfMachine' => 'Continue', // Note: adding any value in here -- even 'Continue' -- adds a 5 sec delay to the call. To prevent that, use NULL
       'Timeout' => 60 // TODO: Set to 15 in order to avoid answering machines?
     );
 
@@ -592,7 +602,7 @@ dsm('In twilio dial_out');
     $rc = $call_id;
   }
  
-dsm($voipcall, "Dial result");
+//dsm($voipcall, "Dial result");
 
   return $rc;
 }

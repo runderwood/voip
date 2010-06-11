@@ -66,14 +66,18 @@ define('VOIPCALL_COMPLETED', 'completed');
  *  $node, the newly saved voipcall node.
  */
 function voipcall_save($details=array()) {
-dsm($details, 'details');
+//dsm($details, 'details');
 
   if(is_object($details)){
     $details = (array)$details;
   }
-
+//dsm('details:');
+//dsm($details);
   // if this is a new call node being created
   if(is_null($details['nid'])){
+//dsm('testing. if this prints, voipcall_save thinks its a new node.');
+// TODO Why does this get called so many times when a call goes out? 
+// TODO Why doesn't this save new nodes every time a call blast goes out, e.g. unchecking blast sent ?
 
     $node = new stdClass();
 
@@ -99,7 +103,7 @@ dsm($details, 'details');
 //TODO: Why does the following node_load requires resetting the node cache?
     $node = node_load($details['nid'], NULL, TRUE);
   }
-dsm($node, 'inside voipcall_save');
+//dsm($node, 'inside voipcall_save');
 
   // update node fields
   if(isset($details['dest_number'])) $node->title = check_plain($details['dest_number']);
@@ -225,6 +229,7 @@ function voipcall_admin_form() {
 function voipcall_admin_form_validate($form, &$form_state) {
   $values = $form_state['values'];
 //todo: make sure that default script name is not empty ''
+// todo: make sure the default script name actually points to a non-empty array
   return;
 }
 
@@ -252,12 +257,12 @@ function voipcall_is_hangup($voipcall) {
   $rc = FALSE;
   $status = $voipcall['field_voipcall_status'][0]['value'];
   switch($status) {
-    case 'VOIPCALL_ERROR':
-    case 'VOIPCALL_NO_ANSWER':
-    case 'VOIPCALL_BUSY':
-    case 'VOIPCALL_INVALID':
-    case 'VOIPCALL_MACHINE_HANGUP':
-    case 'VOIPCALL_COMPLETED':
+    case VOIPCALL_ERROR:
+    case VOIPCALL_NO_ANSWER:
+    case VOIPCALL_BUSY:
+    case VOIPCALL_INVALID:
+    case VOIPCALL_MACHINE_HANGUP:
+    case VOIPCALL_COMPLETED:
       $rc = TRUE;
       break;
   }

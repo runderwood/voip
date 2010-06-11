@@ -77,7 +77,7 @@ function voiptwilio_send($request_id, $options) {
  * Sends a request to Twilio
  */
 function voiptwilio_send_request($server_config, $request_id, $options) {
-dsm("in send_request config is: " . print_r($server_config,true));
+//dsm("in send_request config is: " . print_r($server_config,true));
 
 
   switch($request_id) {
