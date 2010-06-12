@@ -11,7 +11,7 @@ function _callblast_content_default_fields() {
     'field_name' => 'field_blast_sent',
     'type_name' => 'callblast',
     'display_settings' => array(
-      'weight' => '2',
+      'weight' => '3',
       'parent' => '',
       'label' => array(
         'format' => 'above',
@@ -384,9 +384,10 @@ function _callblast_content_default_fields() {
     'field_name' => 'field_callblast_audio_url',
     'type_name' => 'callblast',
     'display_settings' => array(
+      'weight' => '-1',
+      'parent' => '',
       'label' => array(
         'format' => 'above',
-        'exclude' => 0,
       ),
       'teaser' => array(
         'format' => 'default',
@@ -434,7 +435,7 @@ function _callblast_content_default_fields() {
     'field_name' => 'field_callblast_call_forward',
     'type_name' => 'callblast',
     'display_settings' => array(
-      'weight' => '-1',
+      'weight' => 0,
       'parent' => '',
       'label' => array(
         'format' => 'above',
@@ -495,7 +496,7 @@ function _callblast_content_default_fields() {
         'exclude' => 0,
       ),
       'full' => array(
-        'format' => 'default',
+        'format' => 'callblast_list',
         'exclude' => 0,
       ),
       '4' => array(
@@ -726,7 +727,8 @@ function _callblast_fieldgroup_default_groups() {
         'description' => '',
       ),
       'display' => array(
-        'description' => '',
+        'weight' => '2',
+        'label' => 'above',
         'teaser' => array(
           'format' => 'fieldset',
           'exclude' => 0,
@@ -735,11 +737,11 @@ function _callblast_fieldgroup_default_groups() {
           'format' => 'fieldset',
           'exclude' => 0,
         ),
+        'description' => '',
         '4' => array(
           'format' => 'fieldset',
           'exclude' => 0,
         ),
-        'label' => 'above',
       ),
     ),
     'weight' => '2',
@@ -760,7 +762,8 @@ function _callblast_fieldgroup_default_groups() {
         'description' => '',
       ),
       'display' => array(
-        'description' => '',
+        'weight' => '1',
+        'label' => 'above',
         'teaser' => array(
           'format' => 'fieldset',
           'exclude' => 0,
@@ -769,11 +772,11 @@ function _callblast_fieldgroup_default_groups() {
           'format' => 'fieldset',
           'exclude' => 0,
         ),
+        'description' => '',
         '4' => array(
           'format' => 'fieldset',
           'exclude' => 0,
         ),
-        'label' => 'above',
       ),
     ),
     'weight' => '1',
