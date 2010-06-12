@@ -1,0 +1,9 @@
+; $Id$
+name = Call Blast List 
+description = Defines a CCK field type for referencing a list to be used for a call blast. 
+dependencies[] = content
+dependencies[] = text
+dependencies[] = optionwidgets
+package = Voip Drupal
+core = 6.x
+
