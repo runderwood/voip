@@ -377,25 +377,12 @@ function callblast_save_voipcall_nodes_finished($success, $results, $operations)
 */
 function callblast_widget_info() {
   return array(
-    // The machine name of the widget, no more than 32 
-    // characters.
+    // The machine name of the widget
     'callblast_calllist' => array(
-      // The human-readable label of the field that will be 
-      // seen in the Manage fields screen.
       'label' => t('Call List'),
-      // An array of the field types this widget can be 
-      // used with.
       'field types' => array('text'),
-      // Who will handle multiple values, default is core.
-      // 'CONTENT_HANDLE_MODULE' means the module does it.
-      // See optionwidgets for an example of a module that 
-      // handles its own multiple values.
-//      'multiple values' => CONTENT_HANDLE_CORE,
+      // 'multiple values' => CONTENT_HANDLE_CORE,
       'callbacks' => array(
-        // Who will create the default value, default is core.
-        // 'CONTENT_CALLBACK_CUSTOM' means the module does it.
-        // 'CONTENT_CALLBACK_NONE' means this widget has 
-        // no default value.
         'default value' => CONTENT_CALLBACK_DEFAULT,
       ),
     ),
