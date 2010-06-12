@@ -66,7 +66,21 @@ function callblast_theme() {
     'callblast_block' => array(
       'arguments' => array(),
     ),
+    'callblast_formatter_callblast_list' => array(
+      'arguments' => array('element' => NULL),
+    ),
   );
+}
+
+/**
+ * Callback for theme_callblast_list().
+ * 
+ * @param $element
+ *  array, I think this is the $element being passed by CCK here.
+ */
+function theme_callblast_formatter_callblast_list($element) {
+  $output = callblast_list_default($element['#item']['safe']);
+  return $output;
 }
 
 /**
@@ -211,6 +225,20 @@ function callblast_form_alter(&$form, &$form_state, $form_id){
 }
 
 /**
+ * Implementation of hook_nodeapi().
+ */
+function callblast_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
+  if ($op == 'presave' and $node->type == 'callblast') {
+    // Only save callblast list name.
+    // Don't store human readable name or '(((' ')))'
+    $list_name = $node->field_callblast_calllist[0]['value'];
+    $list_name = explode('(((', $list_name);
+    $list_name = trim(substr($list_name[1], 0, -3));
+    $node->field_callblast_calllist[0]['value'] = $list_name;
+  }
+}
+
+/**
  * On cron, run call blasts.
  * 
  * TODO Add test call before running call blast.
@@ -346,6 +374,8 @@ function callblast_save_voipcall_nodes($size, $list, $details, $node) {
 }
 
 /**
+ * TODO Delete. Cruft. (If blast is going to run on cron, not batch process.)
+ * 
  * Batch finished. Called when batch operations are complete.
  */
 function callblast_save_voipcall_nodes_finished($success, $results, $operations) {
@@ -422,7 +452,7 @@ function callblast_widget(&$form, &$form_state, $field, $items, $delta = 0) {
   $element['value'] = array(
     '#title' => t('Call List'), 
     '#type' => 'textfield',
-    '#default_value' => isset($items[$delta]['value']) ? $items[$delta]['value'] : NULL,
+    '#default_value' => callblast_list_default($items[$delta]['value']),
     '#autocomplete_path' => 'callblast/list/autocomplete',
     '#size' =>  60,
     '#attributes' => array('class' => 'callblast_calllist'),
@@ -439,6 +469,31 @@ function callblast_widget(&$form, &$form_state, $field, $items, $delta = 0) {
     '#value' => implode('][', array_merge($form['#parents'], array('value'))),
   );
   return $element;
+}
+
+/**
+ * Callblack for #default_value.
+ * Make it human readable.
+ * 
+ * todo Add error handling to check for two lists with the same id and then throw an error message. 
+ */
+function callblast_list_default($value) {
+  $title = module_invoke_all('callblast_get_title', $value);  
+  if ($title[0]) {
+    return $title[0] .'  ((('. $value .')))';
+  } 
+}
+
+/**
+ * hook_field_formatter_info()
+ */
+function callblast_field_formatter_info() {
+  return array(
+    'callblast_list' => array(
+      'label' => 'Call List',
+      'field types' => array('text'),
+    ),
+  );
 }
 
 //=============//

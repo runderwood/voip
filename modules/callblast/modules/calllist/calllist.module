@@ -36,4 +36,16 @@ function calllist_callblast_get_list($list_name) {
   return $list;
 }
 
-// TODO WRITE A HOOK FOR GETTING THE HUMAN READABLE NAME OF THE LIST
+/**
+ * Implementation of hook_callblast_get_title().
+ * 
+ * todo add to documentation
+ */
+function calllist_callblast_get_title($list_name) {
+  // Get ID from list name.
+  // List name should be "modulename_" concatenated with "id".
+  $nid = substr($list_name, 9);
+  // Get title for selected list
+  $title = check_plain(db_result(db_query("SELECT title FROM {node} WHERE nid = %d", $nid)));
+  return $title; 
+}

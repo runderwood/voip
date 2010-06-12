@@ -18,7 +18,11 @@ function callblast_list_autocomplete() {
   $items = array();
   $items = module_invoke_all('callblast_list');
   asort($items);
-  print drupal_to_js($items);
+  foreach ($items as $key => $value) {
+    $readable = $value .'  ((('. $key .')))';
+    $list[$readable] = $value;
+  }
+  print drupal_to_js($list);
   exit();
 }
 
