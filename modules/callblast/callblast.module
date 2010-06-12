@@ -423,7 +423,7 @@ function callblast_widget(&$form, &$form_state, $field, $items, $delta = 0) {
     // todo Decide if this is all we need. This is all that's included in nodereference hook_widget. 
     '#type' => 'textfield',
     '#default_value' => isset($items[$delta]['value']) ? $items[$delta]['value'] : NULL,
-    '#value_callback' => 'callblast_autocomplete_value',
+    '#value_callback' => 'callblast_calllist_autocomplete_value',
     // todo Decide if we need this stuff below. nodereference hook_widget doesn't have these here.
     '#title' => t('Call List'), 
     '#autocomplete_path' => 'callblast/list/autocomplete',
@@ -431,6 +431,7 @@ function callblast_widget(&$form, &$form_state, $field, $items, $delta = 0) {
     '#attributes' => array('class' => 'callblast_calllist'),
     '#maxlength' => !empty($field['max_length']) ? $field['max_length'] : NULL,
   );
+//dsm($element);
   
   // Used so that hook_field('validate') knows where to 
   // flag an error in deeply nested forms.
@@ -449,21 +450,90 @@ function callblast_widget(&$form, &$form_state, $field, $items, $delta = 0) {
  *
  * Substitute in the list title for list id.
  */
-function callblast_autocomplete_value($element, $edit = FALSE) {
-dsm($element);
+function callblast_calllist_autocomplete_value($element, $edit = FALSE) {
+//dsm($element);
   $list_id = $element['#default_value'];
-dsm($field_key);
+// dsm($field_key);
   // if (!empty($element['#default_value'][$field_key])) {
   if (!empty($list_id)) {
     $value = calllist_callblast_get_list($list_id, 'list name');
     $value .= ' ['. $list_id .']';
     return $value;
-// TODO This probably needs to be processed. Otherwise list name gets saved WITH human readable name in it.
-// CONTINUE HERE. 
   }
   // TODO handle this
   return array($field_key => NULL);
 }
+
+/**
+ * Implementation of FAPI hook_elements().
+ *
+ * Any FAPI callbacks needed for individual widgets can be declared here,
+ * and the element will be passed to those callbacks for processing.
+ *
+ * Drupal will automatically theme the element using a theme with
+ * the same name as the hook_elements key.
+ *
+ * Autocomplete_path is not used by text_widget but other widgets can use it
+ * (see nodereference and userreference).
+ */
+function callblast_elements() {
+  return array(
+    // todo Rename 'callblast_calllist_autocomplete' and create "..._select" also.
+    'callblast_calllist' => array(
+      '#input' => TRUE,
+      '#columns' => array('name'), '#delta' => 0,
+      '#process' => array('callblast_calllist_autocomplete_process'),
+      '#autocomplete_path' => FALSE,
+    ),
+  );
+}
+
+/**
+ * Process an individual element.
+ *
+ * Build the form element. When creating a form using FAPI #process,
+ * note that $element['#value'] is already set.
+ */
+function callblast_calllist_autocomplete_process($element, $edit, $form_state, $form) {
+//dsm('testing a b d');
+//dsm($element);
+/*
+  // The callblast autocomplete widget doesn't need to create its own
+  // element, it can wrap around the text_textfield element and add an autocomplete
+  // path and some extra processing to it.
+  // Add a validation step where the value can be unwrapped.
+  $field_key  = $element['#columns'][0];
+
+  $element[$field_key] = array(
+    '#type' => 'text_textfield',
+    '#default_value' => isset($element['#value']) ? $element['#value'] : '',
+    '#autocomplete_path' => 'nodereference/autocomplete/'. $element['#field_name'],
+    // The following values were set by the content module and need
+    // to be passed down to the nested element.
+    '#title' => $element['#title'],
+    '#required' => $element['#required'],
+    '#description' => $element['#description'],
+    '#field_name' => $element['#field_name'],
+    '#type_name' => $element['#type_name'],
+    '#delta' => $element['#delta'],
+    '#columns' => $element['#columns'],
+  );
+  if (empty($element[$field_key]['#element_validate'])) {
+    $element[$field_key]['#element_validate'] = array();
+  }
+  array_unshift($element[$field_key]['#element_validate'], 'nodereference_autocomplete_validate');
+
+  // Used so that hook_field('validate') knows where to flag an error.
+  $element['_error_element'] = array(
+    '#type' => 'value',
+    // Wrapping the element around a text_textfield element creates a
+    // nested element, so the final id will look like 'field-name-0-nid-nid'.
+    '#value' => implode('][', array_merge($element['#parents'], array($field_key, $field_key))),
+  );
+  return $element;
+// */
+}
+
 
 //=============//
 // End Widget
