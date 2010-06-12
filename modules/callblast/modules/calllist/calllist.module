@@ -19,21 +19,39 @@ function calllist_callblast_list() {
 
 /**
  * Implementation of hook_callblast_get_list().
+ * 
+ * todo Add documentation for params and ability to return list name.
  */
-function calllist_callblast_get_list($list_name) {
-  // Get ID from list name.
-  // List name should be "modulename_" concatenated with "id".
-  $nid = substr($list_name, 9);
+function calllist_callblast_get_list($list_id, $op = 'full list') {
+  switch ($op) {
+    // return call list
+    case 'full list': 
+      // Get nid from machine readable list name.
+      // Machine list name should be "modulename_" concatenated with "id".
+      // (calllist module uses the nid as the call list's uniques id.)
+      $nid = substr($list_id, 9);
   
-  // Get numbers for selected list
-  $result = db_query("SELECT nid FROM {node} WHERE nid = %d", $nid);
-  $node = node_load($nid);
-  $list = array();
-  foreach ($node->field_calllist_phone_numbers as $num) {
-    $list[]['destination'] = $num['value'];
-  } 
+      // Get numbers for selected list
+      $result = db_query("SELECT nid FROM {node} WHERE nid = %d", $nid);
+      $node = node_load($nid);
+      $list = array();
+      foreach ($node->field_calllist_phone_numbers as $num) {
+        $list[]['destination'] = $num['value'];
+      } 
+      return $list;
+    break; 
 
-  return $list;
+    // return human readable list name
+    case 'list name': 
+      // Get nid from machine readable list name.
+      // Machine list name should be "modulename_" concatenated with "id".
+      // (calllist module uses the nid as the call list's uniques id.)
+      $nid = substr($list_id, 9);
+      // Get node title.  
+      $list_name = db_result(db_query("SELECT title FROM {node} WHERE nid = %d", $nid));
+      return $list_name;
+    break;
+  } 
 }
 
 // TODO WRITE A HOOK FOR GETTING THE HUMAN READABLE NAME OF THE LIST

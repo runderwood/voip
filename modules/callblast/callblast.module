@@ -451,13 +451,17 @@ function callblast_widget(&$form, &$form_state, $field, $items, $delta = 0) {
  */
 function callblast_autocomplete_value($element, $edit = FALSE) {
 dsm($element);
-  $field_key  = $element['#columns'][0];
-  if (!empty($element['#default_value'][$field_key])) {
-    $nid = $element['#default_value'][$field_key];
-    $value = db_result(db_query(db_rewrite_sql('SELECT n.title FROM {node} n WHERE n.nid = %d'), $nid));
-    $value .= ' [nid:'. $nid .']';
-    return array($field_key => $value);
+  $list_id = $element['#default_value'];
+dsm($field_key);
+  // if (!empty($element['#default_value'][$field_key])) {
+  if (!empty($list_id)) {
+    $value = calllist_callblast_get_list($list_id, 'list name');
+    $value .= ' ['. $list_id .']';
+    return $value;
+// TODO This probably needs to be processed. Otherwise list name gets saved WITH human readable name in it.
+// CONTINUE HERE. 
   }
+  // TODO handle this
   return array($field_key => NULL);
 }
 
