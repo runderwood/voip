@@ -79,76 +79,23 @@ function callblastlist_field_info() {
  */
 function callblastlist_field_settings($op, $field) {
   switch ($op) {
-    case 'form':
-      $form = array();
-      $form['referenceable_types'] = array(
-        '#type' => 'checkboxes',
-        '#title' => t('Content types that can be referenced'),
-        '#multiple' => TRUE,
-        '#default_value' => is_array($field['referenceable_types']) ? $field['referenceable_types'] : array(),
-        '#options' => array_map('check_plain', node_get_types('names')),
-      );
-      if (module_exists('views')) {
-        $views = array('--' => '--');
-        $all_views = views_get_all_views();
-        foreach ($all_views as $view) {
-          // Only 'node' views that have fields will work for our purpose.
-          if ($view->base_table == 'node' && !empty($view->display['default']->display_options['fields'])) {
-            if ($view->type == 'Default') {
-              $views[t('Default Views')][$view->name] = $view->name;
-            }
-            else {
-              $views[t('Existing Views')][$view->name] = $view->name;
-            }
-          }
-        }
-
-        $form['advanced'] = array(
-           '#type' => 'fieldset',
-           '#title' => t('Advanced - Nodes that can be referenced (View)'),
-           '#collapsible' => TRUE,
-           '#collapsed' => !isset($field['advanced_view']) || $field['advanced_view'] == '--',
-         );
-        if (count($views) > 1) {
-          $form['advanced']['advanced_view'] = array(
-            '#type' => 'select',
-            '#title' => t('View used to select the nodes'),
-            '#options' => $views,
-            '#default_value' => isset($field['advanced_view']) ? $field['advanced_view'] : '--',
-            '#description' => t('<p>Choose the "Views module" view that selects the nodes that can be referenced.<br />Note:</p>') .
-              t('<ul><li>Only views that have fields will work for this purpose.</li><li>This will discard the "Content types" settings above. Use the view\'s "filters" section instead.</li><li>Use the view\'s "fields" section to display additional informations about candidate nodes on node creation/edition form.</li><li>Use the view\'s "sort criteria" section to determine the order in which candidate nodes will be displayed.</li></ul>'),
-          );
-          $form['advanced']['advanced_view_args'] = array(
-            '#type' => 'textfield',
-            '#title' => t('View arguments'),
-            '#default_value' => isset($field['advanced_view_args']) ? $field['advanced_view_args'] : '',
-            '#required' => FALSE,
-            '#description' => t('Provide a comma separated list of arguments to pass to the view.'),
-          );
-        }
-        else {
-          $form['advanced']['no_view_help'] = array(
-            '#value' => t('<p>The list of nodes that can be referenced can be based on a "Views module" view but no appropriate views were found. <br />Note:</p>') .
-              t('<ul><li>Only views that have fields will work for this purpose.</li><li>This will discard the "Content types" settings above. Use the view\'s "filters" section instead.</li><li>Use the view\'s "fields" section to display additional informations about candidate nodes on node creation/edition form.</li><li>Use the view\'s "sort criteria" section to determine the order in which candidate nodes will be displayed.</li></ul>'),
-          );
-        }
-      }
-      return $form;
-
-    case 'save':
-      $settings = array('referenceable_types');
-      if (module_exists('views')) {
-        $settings[] = 'advanced_view';
-        $settings[] = 'advanced_view_args';
-      }
-      return $settings;
-
     case 'database columns':
       $columns = array(
-        'nid' => array('type' => 'int', 'unsigned' => TRUE, 'not null' => FALSE, 'index' => TRUE),
+        'id' => array(
+          'type' => 'varchar', 
+          'length' => is_numeric($field['max_length']) ? $field['max_length'] : 255, 
+          'not null' => FALSE, 
+          'sortable' => TRUE, 
+          'views' => TRUE,
+        ),
+// TODO Try storing the title in column 2? 
+//        'title' => array('type' => 'varchar', 'unsigned' => TRUE, 'not null' => FALSE, 'index' => TRUE),
       );
       return $columns;
 
+  /*
+  // TODO Add Views handler here.
+  //  see more explanation here; http://www.lullabot.com/articles/creating-custom-cck-fields 
     case 'views data':
       $data = content_views_field_views_data($field);
       $db_info = content_database_info($field);
@@ -175,6 +122,7 @@ function callblastlist_field_settings($op, $field) {
         'content_field_name' => $field['field_name'],
       );
       return $data;
+  // */
   }
 }
 
@@ -356,29 +304,33 @@ function _callblastlist_titles($nid, $known_title = NULL) {
 function callblastlist_widget_info() {
   return array(
     'callblastlist_select' => array(
-      'label' => t('Select list'),
-      'field types' => array('callblastlist'),
+      'label' => t('Select Call Blast List'),
+      'field types' => array('text'),
       'multiple values' => CONTENT_HANDLE_MODULE,
       'callbacks' => array(
         'default value' => CONTENT_CALLBACK_DEFAULT,
       ),
     ),
+   /*
+   // todo callblastlist_buttons
     'callblastlist_buttons' => array(
       'label' => t('Check boxes/radio buttons'),
-      'field types' => array('callblastlist'),
+      'field types' => array('text'),
       'multiple values' => CONTENT_HANDLE_MODULE,
       'callbacks' => array(
         'default value' => CONTENT_CALLBACK_DEFAULT,
       ),
     ),
+   // todo callblastlist_autocomplete
     'callblastlist_autocomplete' => array(
       'label' => t('Autocomplete text field'),
-      'field types' => array('callblastlist'),
+      'field types' => array('text'),
       'multiple values' => CONTENT_HANDLE_CORE,
       'callbacks' => array(
         'default value' => CONTENT_CALLBACK_DEFAULT,
       ),
     ),
+// */
   );
 }
 
@@ -486,11 +438,13 @@ function callblastlist_widget_settings($op, $widget) {
  *   the form item for a single element for this field
  */
 function callblastlist_widget(&$form, &$form_state, $field, $items, $delta = 0) {
+dsm('callblast_widget');
   switch ($field['widget']['type']) {
     case 'callblastlist_select':
       $element = array(
         '#type' => 'callblastlist_select',
         '#default_value' => $items,
+        '#option' => $items,
       );
       break;
 
@@ -724,7 +678,7 @@ function callblastlist_allowed_values($field) {
 }
 
 /**
- * Fetch an array of all candidate referenced nodes.
+ * Fetch an array of all candidate referenced callblast lists.
  *
  * This info is used in various places (allowed values, autocomplete results,
  * input validation...). Some of them only need the nids, others nid + titles,
@@ -910,6 +864,9 @@ function _callblastlist_potential_references_standard($field, $string = '', $mat
  * Menu callback; Retrieve a pipe delimited string of autocomplete suggestions for existing users
  */
 function callblastlist_autocomplete($field_name, $string = '') {
+  /*
+  // nodereference original 
+  // 
   $fields = content_fields();
   $field = $fields[$field_name];
   $match = isset($field['widget']['autocomplete_match']) ? $field['widget']['autocomplete_match'] : 'contains';
@@ -920,6 +877,18 @@ function callblastlist_autocomplete($field_name, $string = '') {
     // Add a class wrapper for a few required CSS overrides.
     $matches[$row['title'] ." [nid:$id]"] = '<div class="reference-autocomplete">'. $row['rendered'] . '</div>';
   }
+  // */
+  $fields = content_fields();
+  $field = $fields[$field_name];
+  $match = isset($field['widget']['autocomplete_match']) ? $field['widget']['autocomplete_match'] : 'contains';
+  $matches = array();
+
+  $references = _callblastlist_potential_references($field, $string, $match, array(), 10);
+  foreach ($references as $id => $row) {
+    // Add a class wrapper for a few required CSS overrides.
+    $matches[$row['title'] ." [nid:$id]"] = '<div class="reference-autocomplete">'. $row['rendered'] . '</div>';
+  }
+
   drupal_json($matches);
 }
 
