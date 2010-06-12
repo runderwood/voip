@@ -7,7 +7,7 @@ include_once('calllist.features.inc');
  */
 function calllist_callblast_list() {
   $lists = array();
-  $result = db_query("SELECT nid, title FROM {node} WHERE type = 'calllist'");
+  $result = db_query(db_rewrite_sql("SELECT nid, title FROM {node} WHERE type = 'calllist'"));
   while ($list = db_fetch_object($result)) {
     $id = 'calllist_' . $list->nid;
     $name = t($list->title);

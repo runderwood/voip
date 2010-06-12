@@ -420,9 +420,12 @@ function callblast_widget_info() {
 */
 function callblast_widget(&$form, &$form_state, $field, $items, $delta = 0) {
   $element['value'] = array(
-    '#title' => t('Call List'), 
+    // todo Decide if this is all we need. This is all that's included in nodereference hook_widget. 
     '#type' => 'textfield',
     '#default_value' => isset($items[$delta]['value']) ? $items[$delta]['value'] : NULL,
+    '#value_callback' => 'callblast_autocomplete_value',
+    // todo Decide if we need this stuff below. nodereference hook_widget doesn't have these here.
+    '#title' => t('Call List'), 
     '#autocomplete_path' => 'callblast/list/autocomplete',
     '#size' =>  60,
     '#attributes' => array('class' => 'callblast_calllist'),
@@ -439,6 +442,23 @@ function callblast_widget(&$form, &$form_state, $field, $items, $delta = 0) {
     '#value' => implode('][', array_merge($form['#parents'], array('value'))),
   );
   return $element;
+}
+
+/**
+ * Value for a calllist autocomplete element.
+ *
+ * Substitute in the list title for list id.
+ */
+function callblast_autocomplete_value($element, $edit = FALSE) {
+dsm($element);
+  $field_key  = $element['#columns'][0];
+  if (!empty($element['#default_value'][$field_key])) {
+    $nid = $element['#default_value'][$field_key];
+    $value = db_result(db_query(db_rewrite_sql('SELECT n.title FROM {node} n WHERE n.nid = %d'), $nid));
+    $value .= ' [nid:'. $nid .']';
+    return array($field_key => $value);
+  }
+  return array($field_key => NULL);
 }
 
 //=============//
