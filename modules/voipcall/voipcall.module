@@ -229,6 +229,7 @@ function voipcall_admin_form() {
 function voipcall_admin_form_validate($form, &$form_state) {
   $values = $form_state['values'];
 //todo: make sure that default script name is not empty ''
+// todo: make sure the default script name actually points to a non-empty array
   return;
 }
 
@@ -256,12 +257,12 @@ function voipcall_is_hangup($voipcall) {
   $rc = FALSE;
   $status = $voipcall['field_voipcall_status'][0]['value'];
   switch($status) {
-    case 'VOIPCALL_ERROR':
-    case 'VOIPCALL_NO_ANSWER':
-    case 'VOIPCALL_BUSY':
-    case 'VOIPCALL_INVALID':
-    case 'VOIPCALL_MACHINE_HANGUP':
-    case 'VOIPCALL_COMPLETED':
+    case VOIPCALL_ERROR:
+    case VOIPCALL_NO_ANSWER:
+    case VOIPCALL_BUSY:
+    case VOIPCALL_INVALID:
+    case VOIPCALL_MACHINE_HANGUP:
+    case VOIPCALL_COMPLETED:
       $rc = TRUE;
       break;
   }
