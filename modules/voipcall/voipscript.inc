@@ -55,35 +55,35 @@ class VoipScript {
    */
 
   function addHangup() {
-    $self->commands[] = new VoipCmdHangup();
+    $this->commands[] = new VoipCmdHangup();
   }
 
   function addLoad($script_name) {
-    $self->commands[] = new VoipCmdLoad($script_name);
+    $this->commands[] = new VoipCmdLoad($script_name);
   }
 
   function addSet($var_name, $value) {
-    $self->commands[] = new VoipCmdSet($var_name, $value);
+    $this->commands[] = new VoipCmdSet($var_name, $value);
   }
 
   function addLabel($label_name) {
-    $self->commands[] = new VoipCmdLabel($label_name);
+    $this->commands[] = new VoipCmdLabel($label_name);
   }
 
   function addGoto($label_name) {
-    $self->commands[] = new VoipCmdGoto($label_name);
+    $this->commands[] = new VoipCmdGoto($label_name);
   }
 
   function addGotoIf($label_name, $condition) {
-    $self->commands[] = new VoipCmdGotoIf($label_name, $condition);
+    $this->commands[] = new VoipCmdGotoIf($label_name, $condition);
   }
 
   function addGosub($script_name) {
-    $self->commands[] = new VoipCmdGosub($script_name);
+    $this->commands[] = new VoipCmdGosub($script_name);
   }
 
   function addReturn() {
-    $self->commands[] = new VoipCmdReturn();
+    $this->commands[] = new VoipCmdReturn();
   }
 
   // the following function is provided in case subclasses decide to
@@ -116,13 +116,13 @@ class VoipCommand {
   // calculate the value associated with the given parameter
   // Notes regarding the way values are handled: 
   // * placeholders for script variables start with '%'
-  // * param values that start with '!' are treated as expressions to be
+  // * param values that start with '^' are treated as expressions to be
   //   evaluated
   // * when defining expressions that include string variables, make sure the
   //   variable placeholder is enclosed in " or '.  For instance,
-  //      Correct form:   "!echo('The content is ' . '%msg');"
-  //      Incorrect form: "!echo('The content is ' . %msg);"
-  //   The incorrect form will produce a parser errors if the variable msg
+  //      Correct form:   "^echo('The content is ' . '%msg');"
+  //      Incorrect form: "^echo('The content is ' . %msg);"
+  //   The incorrect form will produce a parser error if the variable msg
   //   contains characters such as a space, math sign, etc...
   function calculateParamValue($param_name, $script_variables) {
     $str = $this->params[$param_name];
@@ -138,7 +138,7 @@ class VoipCommand {
     } while ($count);
 
     //check if $val contains a function or expression to be processed
-    if($val[0] == '!') {
+    if($val[0] == '^') {
       $expression = substr($val,1);
       $val = eval("return ($expression);");
     }
@@ -259,7 +259,6 @@ class VoipCmdSet extends VoipCommand {
   }
 
   function process(&$processing, &$script_variables=array(), &$script_stack=array()) {
-// TODO: implement set
     $var_name = $this->calculateParamValue('var_name', $script_variables);
     $value = $this->calculateParamValue('value', $script_variables);
     $script_variables[$var_name] = $value;
@@ -341,64 +340,3 @@ class VoipCmdReturn extends VoipCommand {
   }
 }
 
-
-
-class VoipScriptHandler {
-
-  private $script; // the current script being processed
-
-  private $variables; // variables processed by the script
-
-  private $stack; // stack of active subroutines 
-
-  private $is_error; // error flag
-
-  private $error_message; // error message
-
-
-  function __construct($script, $variables) {
-    $this->script = $script;
-    $this->variables = $variables;
-    $this->stack = array();
-    $this->is_error = FALSE;
-    $this->error_message = NULL;
-  }
-
-  function isError(){
-    return $this->is_error;
-  }
-
-  function getErrorMessage() {
-    return $this->error_message;
-  }
-
-  function run() {
-    $processing = TRUE;
-    $processed = array();
-
-    while($processing) {
-      if($this->index >= count($this->commands)) {
-        // no more commands to be processed
-        // TODO: either stop processing or go back to subroutine
-        $processing = FALSE;
-      }
-      else {
-        // process current command
-        $cmd = $this->commands[$this->index];
-        $p = $cmd->process($processing, $this->variables, $this->call_queue);
-        if($cmd->isError()) {
-          $this->is_error = TRUE;
-          $this->error_message = $cmd->getErrorMessage();
-          $processing = FALSE;
-        }
-        else {
-          $processed[] = $p;
-        } 
-      }
-    }
-
-   // now execute the processed commands
-
-  }
-
-}
