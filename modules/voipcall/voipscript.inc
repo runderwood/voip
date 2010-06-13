@@ -54,20 +54,16 @@ class VoipScript {
    * Supported script commands
    */
 
-  function addHangup() {
-    $this->commands[] = new VoipCmdHangup();
+  function addDial($number, $timeout=30, $hangup_key='*', $max_length=3600, $caller_id=''){
+    $this->commands[] = new VoipCmdDial($number, $timeout, $hangup_key, $max_length, $caller_id);
   }
 
-  function addLoad($script_name) {
-    $this->commands[] = new VoipCmdLoad($script_name);
+  function addGather($timeout=5, $end_key='#', $num_digits=NULL) {
+    $this->commands[] = new VoipCmdGather($timeout, $end_key, $num_digits);
   }
 
-  function addSet($var_name, $value) {
-    $this->commands[] = new VoipCmdSet($var_name, $value);
-  }
-
-  function addLabel($label_name) {
-    $this->commands[] = new VoipCmdLabel($label_name);
+  function addGosub($script_name) {
+    $this->commands[] = new VoipCmdGosub($script_name);
   }
 
   function addGoto($label_name) {
@@ -78,12 +74,36 @@ class VoipScript {
     $this->commands[] = new VoipCmdGotoIf($label_name, $condition);
   }
 
-  function addGosub($script_name) {
-    $this->commands[] = new VoipCmdGosub($script_name);
+  function addHangup() {
+    $this->commands[] = new VoipCmdHangup();
+  }
+
+  function addLabel($label_name) {
+    $this->commands[] = new VoipCmdLabel($label_name);
+  }
+
+  function addLoad($script_name) {
+    $this->commands[] = new VoipCmdLoad($script_name);
+  }
+
+  function addPlay($url, $loop=1) {
+    $this->commands[] = new VoipCmdPlay($url, $loop);
+  }
+
+  function addRecord($timeout=5, $end_key='#', $max_length=3600) {
+    $this->commands[] = new VoipCmdRecord($timeout, $end_key, $max_length);
   }
 
   function addReturn() {
     $this->commands[] = new VoipCmdReturn();
+  }
+
+  function addSay($text, $loop=1, $voice=NULL, $language=NULL) {
+    $this->commands[] = new VoipCmdSay($text, $loop, $voice, $language);
+  }
+
+  function addSet($var_name, $value) {
+    $this->commands[] = new VoipCmdSet($var_name, $value);
   }
 
   // the following function is provided in case subclasses decide to
@@ -94,6 +114,11 @@ class VoipScript {
 
 }
 
+
+
+/**
+ * Implementation of command-related classes
+ */
 
 class VoipCommand {
 
@@ -162,40 +187,6 @@ class VoipCommand {
 }
     
 
-class VoipCmdSay extends VoipCommand {
-        
-  function __construct($text, $loop=1, $voice=NULL, $language=NULL){
-    $params['text'] = $text;      
-    $params['loop'] = $loop;      
-    $params['voice'] = $voice;      
-    $params['language'] = $language;      
-    parent::__construct($params);
-  }
-        
-}
-    
-
-class VoipCmdPlay extends VoipCommand {
-
-  function __construct($url, $loop=1){
-    $params['url'] = $url;               
-    $params['loop'] = $loop;
-    parent::__construct($params);
-  }     
-        
-}
-    
-class VoipCmdRecord extends VoipCommand {
-
-  function __construct($timeout=5, $end_key='#', $max_length=3600){
-    $params['timeout'] = $timeout;  
-    $params['end_key'] = $end_key;
-    $params['max_length'] = $max_length;
-    parent::__construct($params);
-  }
-
-}
-
 class VoipCmdDial extends VoipCommand {
 
   function __construct($number, $timeout=30, $hangup_key='*', $max_length=3600, $caller_id=''){
@@ -221,22 +212,7 @@ class VoipCmdGather extends VoipCommand {
 }
 
 
-class VoipCmdHangup extends VoipCommand {
-
-  function __construct() {
-    $params = array();
-    parent::__construct($params);
-  }
-
-  function process(&$processing, &$script_variables=array(), &$script_stack=array()) {
-    $processing = FALSE;
-    return parent::process($processing, $script_variables, $script_stack);
-  }
-}
-
-
-
-class VoipCmdLoad extends VoipCommand {
+class VoipCmdGosub extends VoipCommand {
 
   function __construct($script_name) {
     $params['script_name'] = $script_name;
@@ -244,42 +220,9 @@ class VoipCmdLoad extends VoipCommand {
   }
 
   function process(&$processing, &$script_variables=array(), &$script_stack=array()) {
-// TODO: implement load
+// TODO: implement gosub
     return parent::process($processing, $script_variables, $script_stack);
   }
-}
-
-
-class VoipCmdSet extends VoipCommand {
-
-  function __construct($var_name, $value) {
-    $params['var_name'] = $var_name;
-    $params['value'] = $value;
-    parent::__construct($params);
-  }
-
-  function process(&$processing, &$script_variables=array(), &$script_stack=array()) {
-    $var_name = $this->calculateParamValue('var_name', $script_variables);
-    $value = $this->calculateParamValue('value', $script_variables);
-    $script_variables[$var_name] = $value;
-    return;
-  }
-
-}
-
-
-class VoipCmdLabel extends VoipCommand {
-
-  function __construct($label_name) {
-    $params['label_name'] = $label_name;
-    parent::__construct($params);
-  }
-
-  function process(&$processing, &$script_variables=array(), &$script_stack=array()) {
-    // Labels don't do nothing
-    return;
-  }
-
 }
 
 
@@ -313,7 +256,37 @@ class VoipCmdGotoIf extends VoipCommand {
 }
 
 
-class VoipCmdGosub extends VoipCommand {
+class VoipCmdHangup extends VoipCommand {
+
+  function __construct() {
+    $params = array();
+    parent::__construct($params);
+  }
+
+  function process(&$processing, &$script_variables=array(), &$script_stack=array()) {
+    $processing = FALSE;
+    return parent::process($processing, $script_variables, $script_stack);
+  }
+}
+
+
+
+class VoipCmdLabel extends VoipCommand {
+
+  function __construct($label_name) {
+    $params['label_name'] = $label_name;
+    parent::__construct($params);
+  }
+
+  function process(&$processing, &$script_variables=array(), &$script_stack=array()) {
+    // Labels don't do nothing
+    return;
+  }
+
+}
+
+
+class VoipCmdLoad extends VoipCommand {
 
   function __construct($script_name) {
     $params['script_name'] = $script_name;
@@ -321,9 +294,31 @@ class VoipCmdGosub extends VoipCommand {
   }
 
   function process(&$processing, &$script_variables=array(), &$script_stack=array()) {
-// TODO: implement gosub
+// TODO: implement load
     return parent::process($processing, $script_variables, $script_stack);
   }
+}
+
+
+class VoipCmdPlay extends VoipCommand {
+
+  function __construct($url, $loop=1){
+    $params['url'] = $url;               
+    $params['loop'] = $loop;
+    parent::__construct($params);
+  }     
+        
+}
+    
+class VoipCmdRecord extends VoipCommand {
+
+  function __construct($timeout=5, $end_key='#', $max_length=3600){
+    $params['timeout'] = $timeout;  
+    $params['end_key'] = $end_key;
+    $params['max_length'] = $max_length;
+    parent::__construct($params);
+  }
+
 }
 
 
@@ -339,4 +334,36 @@ class VoipCmdReturn extends VoipCommand {
     return parent::process($processing, $script_variables, $script_stack);
   }
 }
+
+
+class VoipCmdSay extends VoipCommand {
+        
+  function __construct($text, $loop=1, $voice=NULL, $language=NULL){
+    $params['text'] = $text;      
+    $params['loop'] = $loop;      
+    $params['voice'] = $voice;      
+    $params['language'] = $language;      
+    parent::__construct($params);
+  }
+        
+}
+    
+
+class VoipCmdSet extends VoipCommand {
+
+  function __construct($var_name, $value) {
+    $params['var_name'] = $var_name;
+    $params['value'] = $value;
+    parent::__construct($params);
+  }
+
+  function process(&$processing, &$script_variables=array(), &$script_stack=array()) {
+    $var_name = $this->calculateParamValue('var_name', $script_variables);
+    $value = $this->calculateParamValue('value', $script_variables);
+    $script_variables[$var_name] = $value;
+    return;
+  }
+
+}
+
 
