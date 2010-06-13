@@ -19,18 +19,18 @@ foreach (array('voipscript.inc') as $file) {
         
 class VoipScriptHandler {
 
-  private $script; // the current script being processed
+  private $script; // reference to the current script being processed
 
-  private $variables; // variables processed by the script
+  private $variables; // reference to the variables processed by the script
 
-  private $stack; // stack of active subroutines 
+  private $stack; // reference to the stack of active subroutines 
 
   private $is_error; // error flag
 
   private $error_message; // error message
 
 
-  function __construct($script, $variables=array(), $stack=array()) {
+  function __construct(&$script, &$variables=array(), &$stack=array()) {
     $this->script = $script;
     $this->variables = $variables;
     $this->stack = $stack;
@@ -51,14 +51,14 @@ class VoipScriptHandler {
     $processed = array();
 
     while($processing) {
-      $cmd = $script->getNextCommand();
+      $cmd = $this->script->getNextCommand();
       if(!$cmd) {
         // no more commands to be processed
         $processing = FALSE;
       }
       else {
         // process current command and update script context
-        $p = $cmd->process($processing, $this->variables, $this->stack);
+        $p = $cmd->process($processing, $this->variables, $this->script, $this->stack);
         if($cmd->isError()) {
           $this->is_error = TRUE;
           $this->error_message = $cmd->getErrorMessage();
@@ -71,12 +71,18 @@ class VoipScriptHandler {
     }
 
     // now send the processed commands to the voip server
+    // Note: is up to the send() method to decide what to do in case of error
     $this->send($processed);
 
   }
 
-  function send($processed) {
-watchdog('voipscripthandler', 'Sending the following processed commands to the server: '. print_r($processed, true));
+  /**
+   * Protected methods
+   */
+
+  protected function send($processed) {
+//watchdog('voipscripthandler', 'Sending the following processed commands to the server: '. print_r($processed, true));
+echo('voipscripthandler: ' . 'Sending the following processed commands to the server: '. print_r($processed, true));
   }
 
 

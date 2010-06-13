@@ -30,11 +30,22 @@ foreach (array('voipscript.inc', 'voipscripthandler.inc') as $file) {
 }
 
 function hello_world(){
- $script = new VoipScript('hello world');
+  $script = new VoipScript('hello world');
+  $script->addLabel('start');
+  $script->addSay('hi there!');
+  $script->addGoto('xxxxx');
+  $script->addLabel('end');
+  $script->addHangup();
  
-}
+  return $script;
 }
 
+$script = hello_world();
+$variables = array();
+$stack = array();
+$handler = new VoipScriptHandler($script, $variables, $stack);
+$handler->run();
+echo("\n handler isError: " . $handler->isError() .", message: " . $handler->getErrorMessage(). "\n");
 
 
 ?>
