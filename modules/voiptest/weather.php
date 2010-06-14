@@ -1,44 +1,66 @@
 <?php
+
 /**
  * Retrieves weather foreacast from Yahoo Weather
  *
- *  Note: The following function is based on http://pkarl.com/articles/parse-yahoo-weather-rss-using-php-and-simplexml-al/
+ *  Note: The following function is based on http://www.phpclasses.org/package/2665-PHP-Retrieve-information-from-Yahoo-weather-RSS-feeds.html
  *
  * @param $woeid, the WOEID of the desired location
  * 
  * @param $unit, string with either 'c' for Celsius or 'f' for Fahrenheit
  */
+
 function _get_weather($woeid, $unit='f') {
+  require_once('class.xml.parser.php');
+
   $yahoo_url = "http://weather.yahooapis.com/forecastrss?w=$woeid&u=$unit";
+  $yahoo_ns = "http://xml.weather.yahoo.com/ns/rss/1.0";
+
   $weather_feed = file_get_contents($yahoo_url);
-  $weather = simplexml_load_string($weather_feed);
 
-  if(!$weather) {
-    return FALSE;
-  }
-echo "\n-----------------\n";
-print_r($weather);
-echo "\n-----------------\n";
 
-  $copyright = $weather->channel->copyright;
-  
-  $channel_yweather = $weather->channel->children("http://xml.weather.yahoo.com/ns/rss/1.0");
-  
-  foreach($channel_yweather as $x => $channel_item) 
-    foreach($channel_item->attributes() as $k => $attr) 
-		  $yw_channel[$x][$k] = $attr;
-
-  $item_yweather = $weather->channel->item->children("http://xml.weather.yahoo.com/ns/rss/1.0");
-
-  foreach($item_yweather as $x => $yw_item) {
-    foreach($yw_item->attributes() as $k => $attr) {
-      if($k == 'day') $day = $attr;
-      if($x == 'forecast') { $yw_forecast[$x][$day . ''][$k] = $attr;	} 
-      else { $yw_forecast[$x][$k] = $attr; }
+  $parser = new xmlParser();
+  $parser->parse($yahoo_url);
+  $content=&$parser->output[0]['child'][0]['child'];
+  foreach ($content as $item) {
+    switch ($item['name']) {
+      case 'TITLE':
+      case 'LINK':
+      case 'DESCRIPTION':
+      case 'LANGUAGE':
+      case 'LASTBUILDDATE':
+        $forecast[$item['name']]=$item['content'];
+        break;
+      case 'YWEATHER:LOCATION':
+      case 'YWEATHER:UNITS':
+      case 'YWEATHER:ASTRONOMY':
+        foreach ($item['attrs'] as $attr=>$value)
+          $forecast[$attr]=$value;
+        break;
+      case 'IMAGE':
+        break;
+      case 'ITEM':
+        foreach ($item['child'] as $detail) {
+          switch ($detail['name']) {
+            case 'GEO:LAT':
+            case 'GEO:LONG':
+            case 'PUBDATE':
+              $forecast[$detail['name']]=$detail['content'];
+              break;
+            case 'YWEATHER:CONDITION':
+              $forecast['CURRENT']=$detail['attrs'];
+              break;
+            case 'YWEATHER:FORECAST':
+              array_push($forecast,$detail['attrs']);
+              break;
+          }
+        }
+        break;
     }
   }
- 
-  return $yw_forecast;
+
+  return $forecast;
+
 }
 
 
