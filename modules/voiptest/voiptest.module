@@ -3,6 +3,11 @@
  * @file test Voip Drupal hooks.
  */ 
 
+foreach (array('voiptest_weather.inc') as $file) {
+  require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'includes' . DIRECTORY_SEPARATOR . $file);
+}
+
+
 /**
  * Implementation of hook_voipcall_load_script()
  */
@@ -292,6 +297,11 @@ function voiptest_voipcall_load_script($voipcall, $script_name) {
       VOIPCALL_CMD_ID => VOIPCALL_HANGUP
     );
 
+  }
+
+
+  if($script_name == 'voiptest_weather_report') {
+    $script = _voiptest_get_weather_report();
   }
 
   return $script;

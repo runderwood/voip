@@ -6,9 +6,6 @@
 
 require_once('voiptest_weather.inc');
 
-$zip = '02478';
-$unit = 'f';
-
-$script = _voiptest_get_weather_report($zip, $unit);
+$script = _voiptest_get_weather_report();
 
 print_r($script);

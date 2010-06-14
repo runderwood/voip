@@ -7,20 +7,151 @@
 /*
  * Returns a voip script with local weather information
  *
- * @param $zip, the zip code of the desired location
- * 
- * @param $unit, string with either 'c' for Celsius or 'f' for Fahrenheit
- *
  * @return FALSE in case of failure, or the script array in case of success
  */
-function _voiptest_get_weather_report($zip, $unit) {
+function _voiptest_get_weather_report() {
 
   $woeid = _voiptest_getWoeidFromZip($zip);
-echo("\nthe woeid for $zip is: $woeid\n");
 
-  $forecast = _voiptest_get_weather($woeid, $unit);
-  return $forecast;
+//echo("\nthe woeid for $zip is: $woeid\n");
+//$forecast = _voiptest_get_weather($woeid, $unit);
 
+//------------
+  $script = array();
+
+  $script[] = array(
+    VOIPCALL_CMD_ID => VOIPCALL_LABEL,
+    VOIPCALL_CMD_BODY => array(
+      'label_name' => array(VOIPCALL_VAL => 'start'),
+    ),
+  );
+
+  // read zip code from user
+  $script[] = array(
+    VOIPCALL_CMD_ID => VOIPCALL_GATHER,
+    VOIPCALL_CMD_BODY => array(
+      'text' => array(VOIPCALL_VAL => 'Local weather by phone. Please type your 5-digit zip code.'),
+      'num_digits' => array(VOIPCALL_VAL => 5),
+      'timeout' => array(VOIPCALL_VAL => 5),
+    ),
+  );
+
+  $script[] = array(
+    VOIPCALL_CMD_ID => VOIPCALL_SAY,
+    VOIPCALL_CMD_BODY => array(
+      'text' => array(VOIPCALL_VAL => "You pressed: "),
+    ),
+  );
+  $script[] = array(
+    VOIPCALL_CMD_ID => VOIPCALL_SAY,
+    VOIPCALL_CMD_BODY => array(
+      'text' => array(VOIPCALL_VAR => "gather_digits"),
+    ),
+  );
+  $script[] = array(
+    VOIPCALL_CMD_ID => VOIPCALL_SET,
+    VOIPCALL_CMD_BODY => array(
+      'var_name' => array(VOIPCALL_VAL => "zip_code"),
+      'var_value' => array(VOIPCALL_VAR => "gather_digits"),
+    ),
+  );
+  $script[] = array(
+    VOIPCALL_CMD_ID => VOIPCALL_SAY,
+    VOIPCALL_CMD_BODY => array(
+      'text' => array(VOIPCALL_VAL => "The variable 'zip_code' is now set to "),
+    ),
+  );
+
+  $script[] = array(
+    VOIPCALL_CMD_ID => VOIPCALL_SAY,
+    VOIPCALL_CMD_BODY => array(
+      'text' => array(VOIPCALL_VAR => "zip_code"),
+    ),
+  );
+/********
+//-------
+      // If user presses a button during the main message, handle the options
+      $script[] = array(
+        VOIPCALL_CMD_ID => VOIPCALL_GOTOIF,
+        VOIPCALL_CMD_BODY => array(
+          'label_name' => array(VOIPCALL_VAL => 'process_options'),
+          // Note: variable names have to be enclosed in between '@<'and '>@'
+          'expression' => array(VOIPCALL_EVAL => "@<gather_digits>@ != '" . VOIPCALL_NO_INPUT . "'"),
+        ),
+      );
+
+      // play options
+      $script[] = array(
+        VOIPCALL_CMD_ID => VOIPCALL_LABEL,
+        VOIPCALL_CMD_BODY => array(
+          'label_name' => array(VOIPCALL_VAL => 'options'),
+        ),
+      );
+      $script[] = array(
+        VOIPCALL_CMD_ID => VOIPCALL_GATHER,
+        VOIPCALL_CMD_BODY => array(
+          'text' => array(VOIPCALL_VAL => 'To repeat this forecast, press the star key.  To end the call, press the pound key.'),
+          'num_digits' => array(VOIPCALL_VAL => 1),
+          'end_key' => array(VOIPCALL_VAL => ""),
+        ),
+      );
+
+      // process options
+      $script[] = array(
+        VOIPCALL_CMD_ID => VOIPCALL_LABEL,
+        VOIPCALL_CMD_BODY => array(
+          'label_name' => array(VOIPCALL_VAL => 'process_options'),
+        ),
+      );
+
+      // Go to user's selected option.
+      // * replay previous message 
+      $script[] = array(
+        VOIPCALL_CMD_ID => VOIPCALL_GOTOIF,
+        VOIPCALL_CMD_BODY => array(
+          'label_name' => array(VOIPCALL_VAL => 'start'),
+          // Note: variable names have to be enclosed in between '@<'and '>@'
+          'expression' => array(VOIPCALL_EVAL => "@<gather_digits>@ == '*'"),
+        ),
+      );
+
+      // #, end call
+      $script[] = array(
+        VOIPCALL_CMD_ID => VOIPCALL_GOTOIF,
+        VOIPCALL_CMD_BODY => array(
+          'label_name' => array(VOIPCALL_VAL => 'end call'),
+          // Note: variable names have to be enclosed in between '@<'and '>@'
+          'expression' => array(VOIPCALL_EVAL => "@<gather_digits>@ == '#'"),
+        ),
+      );
+
+      // If invalid option selected, go back to the options menu
+      $script[] = array(
+        VOIPCALL_CMD_ID => VOIPCALL_SAY,
+        VOIPCALL_CMD_BODY => array(
+          'text' => array(VOIPCALL_VAL => "Invalid option selected. Please try again."),
+        ),
+      );
+      $script[] = array(
+        VOIPCALL_CMD_ID => VOIPCALL_GOTO,
+        VOIPCALL_CMD_BODY => array(
+          'label_name' => array(VOIPCALL_VAL => 'options'),
+        ),
+      );
+
+*****/
+      // end call (hang up)
+      $script[] = array(
+        VOIPCALL_CMD_ID => VOIPCALL_LABEL,
+        VOIPCALL_CMD_BODY => array(
+          'label_name' => array(VOIPCALL_VAL => 'end call'),
+        ),
+      );
+      $script[] = array(
+        VOIPCALL_CMD_ID => VOIPCALL_HANGUP
+      );
+
+  return $script;
 }
 
 /**
