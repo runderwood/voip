@@ -4,18 +4,21 @@
  *
  *  Note: The following function is based on http://pkarl.com/articles/parse-yahoo-weather-rss-using-php-and-simplexml-al/
  *
- * @param $zip_code, the 5-digit zip code of the desired location
+ * @param $woeid, the WOEID of the desired location
  * 
  * @param $unit, string with either 'c' for Celsius or 'f' for Fahrenheit
  */
-function _get_weather($zip_code, $unit='f') {
-  $yahoo_url = "http://weather.yahooapis.com/forecastrss?p=$zip_code&u=$unit";
+function _get_weather($woeid, $unit='f') {
+  $yahoo_url = "http://weather.yahooapis.com/forecastrss?w=$woeid&u=$unit";
   $weather_feed = file_get_contents($yahoo_url);
   $weather = simplexml_load_string($weather_feed);
 
   if(!$weather) {
     return FALSE;
   }
+echo "\n-----------------\n";
+print_r($weather);
+echo "\n-----------------\n";
 
   $copyright = $weather->channel->copyright;
   
@@ -38,9 +41,58 @@ function _get_weather($zip_code, $unit='f') {
   return $yw_forecast;
 }
 
-$zip = '02478';
+
+/**
+ * Based on http://arguments.callee.info/2010/03/26/convert-zip-code-to-yahoo-woeid/
+ */
+function _getWoeidFromZip($zip) {
+  static $woeidFromZip = array();
+
+  $woeid = $woeidFromZip[$zip];
+
+  if(!$woeid) {
+    $q = "select woeid from geo.places where text='$zip' limit 1";
+    $ch = curl_init('http://query.yahooapis.com/v1/public/yql?format=json&q=' . urlencode($q));
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    $response = curl_exec($ch);
+    if (!$response) {
+      $woeid = FALSE;
+    }
+    else {
+      try {
+        $response = json_decode($response, true);
+        $woeid = intval($response['query']['results']['place']['woeid']);
+        
+        // store response in cache
+        if ($woeid) {
+          $woeidFromZip[$zip] = $woeid;
+        }
+      }
+      catch(Exception $ex) {
+        $woeid = FALSE;
+      }
+    }
+  }
+  return $woeid;
+}
+
+
+
+
+
+
+
 $unit = 'f';
-$forecast = _get_weather($zip, $unit);
-var_dump($forecast)
+
+$zip = '02478';
+$woeid = _getWoeidFromZip($zip);
+echo("\nthe woeid for $zip is: $woeid\n");
+
+$zip = '02139';
+$woeid = _getWoeidFromZip($zip);
+echo("\nthe woeid for $zip is: $woeid\n");
+
+$forecast = _get_weather($woeid, $unit);
+print_r($forecast)
 ?>
 
