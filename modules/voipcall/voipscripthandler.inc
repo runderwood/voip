@@ -59,7 +59,9 @@ class VoipScriptHandler {
       else {
         // process current command and update script context
         $p = $cmd->process($processing, $this->variables, $this->script, $this->stack);
+echo("\nCommand processed: " . print_r($cmd, true));
         if($cmd->isError()) {
+echo("\nCommand with error: " . print_r($cmd, true));
           $this->is_error = TRUE;
           $this->error_message = $cmd->getErrorMessage();
           $processing = FALSE;

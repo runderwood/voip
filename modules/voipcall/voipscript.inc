@@ -17,8 +17,8 @@ class VoipScript {
   private $name;
   private $commands;
   private $index;
-  private $is_error;
-  private $error_message;
+  protected $is_error;
+  protected $error_message;
             
   function __construct($name) {
     $this->name = $name;
@@ -128,8 +128,8 @@ class VoipCommand {
 
   private $id; // command id
   private $params; // command parameters
-  private $is_error;
-  private $error_message;
+  protected $is_error;
+  protected $error_message;
 
   function __construct($params=array()) {
     $this->id = get_class($this);
