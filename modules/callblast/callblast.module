@@ -72,6 +72,9 @@ function callblast_theme() {
     'callblast_formatter_callblast_list_title' => array(
       'arguments' => array('element' => NULL),
     ),
+    'callblast_formatter_callblast_list_calls_link' => array(
+      'arguments' => array('element' => NULL),
+    ),
   );
 }
 
@@ -94,6 +97,26 @@ function theme_callblast_formatter_callblast_list($element) {
  */
 function theme_callblast_formatter_callblast_list_title($element) {
   $output = callblast_list_title($element['#item']['safe']);
+  return $output;
+}
+
+/**
+ * Callback for theme_callblast_list_calls_link().
+ * 
+ * @param $element
+ *  array, I think this is the $element being passed by CCK here.
+ * 
+ * todo Replace this workaround with a proper Views handler to create a View Calls link.
+ */
+function theme_callblast_formatter_callblast_list_calls_link($element) {
+  $txt = t('View Calls');
+  $path = 'callstatus';
+  $options = array('query' => 'callblast_nid='. $element['#node']->nid);
+  $output = l($txt, $path, $options);
+  // $output = callblast_list_title($element['#item']['safe']);
+
+ //callstatus & callblast_nid 
+
   return $output;
 }
 
@@ -123,6 +146,10 @@ function theme_callblast_block() {
   return $output;
 }
 
+//----------------------------//
+// Views hooks
+//----------------------------//
+
 /**
  * Implementation of hook_views_data().
  * 
@@ -138,7 +165,6 @@ function callblast_views_data() {
 
   // link callblast_call table to node table, join on callblast_nid
   $data['callblast_call']['table']['join']['node'] = array(
-// TODO verify left_field v. field is correct here
     'left_field' => 'nid',
     'field' => 'callblast_nid',
   );
@@ -172,28 +198,19 @@ function callblast_views_data() {
     ),
   );
 
+/*
+// TODO figure out why this doesn't work!
   // Call Blast Name field
-  $data['callblast_call']['callblast_name'] = array( 
+  $data['callblast_call']['callblast_title'] = array( 
     'group' => t('Node'),
-    'title' => t('Call Blast Name'),
-    'help' => t('The node ID of the Call Blast node.'),
-    'argument' => array(
-      // todo? 'handler' => '',
-      'name field' => 'title', // the field to display in the summary.
-      'numeric' => TRUE,
-      'validate type' => 'nid',
-    ),
+    'help' => t('The human readable title/name of the Call Blast node.'),
     'field' => array(
-      'handler' => 'views_handler_field',
+      'field' => 'callblast_nid', // the real field
+      'handler' => 'callblast_handler_field_callblast_call_callblast_title',
       'click sortable' => TRUE,
     ),
-    'filter' => array(
-      'handler' => 'views_handler_filter_numeric',
-    ),
-    'sort' => array(
-      'handler' => 'views_handler_sort',
-    ),
   );
+// */
 
   // callblast_call.voipcall_nid field
   $data['callblast_call']['voipcall_nid'] = array(
@@ -222,11 +239,32 @@ function callblast_views_data() {
 }
 
 /**
+ * Implementation of hook_views_handlers().
+ */
+function callblast_views_handlers() {
+  return array(
+    'info' => array(
+      'path' => drupal_get_path('module', 'callblast') . '/includes',
+    ),
+    'handlers' => array(
+      'callblast_handler_field_callblast_call_callblast_title' => array(
+        'parent' => 'views_handler_field',
+      ),
+    ),
+  );
+}
+ 
+//------------------//
+// End Views hooks 
+//------------------//
+
+/**
  * Implementation of hook_form_alter().
  * 
- * TODO Delete this is we don't end up using voipfield.
+ * TODO Delete this if we don't end up using voipfield.
  */
 function callblast_form_alter(&$form, &$form_state, $form_id){
+  // callblast node form
   if ($form_id == 'callblast_node_form') {
     // hide 'blast sent' field for users other than user 1
     global $user;
@@ -528,6 +566,10 @@ function callblast_field_formatter_info() {
     ),
     'callblast_list_title' => array(
       'label' => 'Call List Title',
+      'field types' => array('text'),
+    ),
+    'callblast_list_calls_link' => array(
+      'label' => 'Call List Calls Link',
       'field types' => array('text'),
     ),
   );
