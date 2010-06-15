@@ -75,6 +75,9 @@ function callblast_theme() {
     'callblast_formatter_callblast_list_calls_link' => array(
       'arguments' => array('element' => NULL),
     ),
+    'callblast_formatter_callblast_edit_link' => array(
+      'arguments' => array('element' => NULL),
+    ),
   );
 }
 
@@ -113,11 +116,31 @@ function theme_callblast_formatter_callblast_list_calls_link($element) {
   $path = 'callstatus';
   $options = array('query' => 'callblast_nid='. $element['#node']->nid);
   $output = l($txt, $path, $options);
-  // $output = callblast_list_title($element['#item']['safe']);
-
- //callstatus & callblast_nid 
 
   return $output;
+}
+
+/**
+ * Callback for theme_callblast_list_calls_link().
+ * 
+ * @param $element
+ *  array, I think this is the $element being passed by CCK here.
+ * 
+ * todo Replace this workaround with a proper Views handler to create a callblast-status-aware edit link.
+ * todo Use hook_nodeapi and hook_menu_alter to actually prevent user from editing sent callblasts.
+ */
+function theme_callblast_formatter_callblast_edit_link($element) {
+  $node = $element['#node'];
+  $blast_sent = $node->node_data_field_callblast_audio_file_field_blast_sent_value;
+  // only return an edit link if blast has NOT been sent yet.
+  if (!$blast_sent) {
+    $txt = t('edit');
+    $path = 'node/'. $node->nid .'/edit';
+    $output = l($txt, $path);
+    return $output;
+  } else {
+    return '';
+  }
 }
 
 /**
@@ -568,8 +591,12 @@ function callblast_field_formatter_info() {
       'label' => 'Call List Title',
       'field types' => array('text'),
     ),
-    'callblast_list_calls_link' => array(
+    'callblast_list_calls_link' => array( // todo temp. replace. see todo note at theme function.
       'label' => 'Call List Calls Link',
+      'field types' => array('text'),
+    ),
+    'callblast_edit_link' => array(      // todo temp. replace. see todo note at theme function.
+      'label' => 'Call Blast Edit Link', 
       'field types' => array('text'),
     ),
   );
