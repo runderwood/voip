@@ -69,6 +69,9 @@ function callblast_theme() {
     'callblast_formatter_callblast_list' => array(
       'arguments' => array('element' => NULL),
     ),
+    'callblast_formatter_callblast_list_title' => array(
+      'arguments' => array('element' => NULL),
+    ),
   );
 }
 
@@ -80,6 +83,17 @@ function callblast_theme() {
  */
 function theme_callblast_formatter_callblast_list($element) {
   $output = callblast_list_default($element['#item']['safe']);
+  return $output;
+}
+
+/**
+ * Callback for theme_callblast_list_title().
+ * 
+ * @param $element
+ *  array, I think this is the $element being passed by CCK here.
+ */
+function theme_callblast_formatter_callblast_list_title($element) {
+  $output = callblast_list_title($element['#item']['safe']);
   return $output;
 }
 
@@ -214,6 +228,11 @@ function callblast_views_data() {
  */
 function callblast_form_alter(&$form, &$form_state, $form_id){
   if ($form_id == 'callblast_node_form') {
+    // hide 'blast sent' field for users other than user 1
+    global $user;
+    if ($user->uid != 1) {
+      $form['field_blast_sent']['#access'] = FALSE;
+    }
     /**
      * If voipfield module is NOT enabled
      * hide the Main Message URL field. 
@@ -485,12 +504,30 @@ function callblast_list_default($value) {
 }
 
 /**
+ * Callblack for formatting Call List title as
+ * human readable, without showing calllist ID. 
+ * Make it human readable.
+ * 
+ * todo Add error handling to check for two lists with the same id and then throw an error message. 
+ */
+function callblast_list_title($value) {
+  $title = module_invoke_all('callblast_get_title', $value);  
+  if ($title[0]) {
+    return $title[0];
+  } 
+}
+
+/**
  * hook_field_formatter_info()
  */
 function callblast_field_formatter_info() {
   return array(
     'callblast_list' => array(
       'label' => 'Call List',
+      'field types' => array('text'),
+    ),
+    'callblast_list_title' => array(
+      'label' => 'Call List Title',
       'field types' => array('text'),
     ),
   );
