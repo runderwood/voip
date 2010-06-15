@@ -31,6 +31,7 @@ function _voiptest_get_weather_report() {
     ),
   );
 
+/******
   $script[] = array(
     VOIPCALL_CMD_ID => VOIPCALL_SAY,
     VOIPCALL_CMD_BODY => array(
@@ -43,6 +44,7 @@ function _voiptest_get_weather_report() {
       'text' => array(VOIPCALL_VAR => "gather_digits"),
     ),
   );
+*****/
   $script[] = array(
     VOIPCALL_CMD_ID => VOIPCALL_SET,
     VOIPCALL_CMD_BODY => array(
@@ -50,19 +52,21 @@ function _voiptest_get_weather_report() {
       'var_value' => array(VOIPCALL_VAR => "gather_digits"),
     ),
   );
+
+/********
   $script[] = array(
     VOIPCALL_CMD_ID => VOIPCALL_SAY,
     VOIPCALL_CMD_BODY => array(
       'text' => array(VOIPCALL_VAL => "The variable 'zip_code' is now set to "),
     ),
   );
-
   $script[] = array(
     VOIPCALL_CMD_ID => VOIPCALL_SAY,
     VOIPCALL_CMD_BODY => array(
       'text' => array(VOIPCALL_VAR => "zip_code"),
     ),
   );
+*********/
 
 // ------ Analize user input
   // If timeout or invalid zip code
@@ -75,8 +79,8 @@ function _voiptest_get_weather_report() {
   );
 
 
-// ---- Play the forecast and/or error message
-  // get the forecast
+// ---- Play the report and/or error message
+  // get the report
   $script[] = array(
     VOIPCALL_CMD_ID => VOIPCALL_SET,
     VOIPCALL_CMD_BODY => array(
@@ -93,7 +97,7 @@ function _voiptest_get_weather_report() {
       'expression' => array(VOIPCALL_EVAL => "@<forecast_result>@ == NULL"),
     ),
   );
-  // say the forecast
+  // say the weather report
   $script[] = array(
     VOIPCALL_CMD_ID => VOIPCALL_LABEL,
     VOIPCALL_CMD_BODY => array(
@@ -205,7 +209,7 @@ function _voiptest_get_weather_report() {
 }
 
 /**
- * Return string with weather forecast for given zip code
+ * Return string with weather report for given zip code
  */
 function _voiptest_get_forecast($zip) {
   $forecast = NULL;
@@ -224,7 +228,7 @@ function _voiptest_get_forecast($zip) {
       $degrees = $info['CURRENT']['TEMP'];
       $conditions = $info['CURRENT']['TEXT'];
       $location = $info['CITY'];
-      $forecast = "It is currently $degrees Fahrenheit and $conditions in $location.";
+      $forecast = "It is currently $degrees degrees Fahrenheit and $conditions in $location.";
     }
   }
 
