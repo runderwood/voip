@@ -435,114 +435,6 @@ The only events that do not activate the hangup script are the ones that lead to
     ),
   );
 
-  // Exported field: field_voipcall_process_response
-  $fields[] = array(
-    'field_name' => 'field_voipcall_process_response',
-    'type_name' => 'voipcall',
-    'display_settings' => array(
-      'label' => array(
-        'format' => 'above',
-        'exclude' => 0,
-      ),
-      'teaser' => array(
-        'format' => 'default',
-        'exclude' => 0,
-      ),
-      'full' => array(
-        'format' => 'default',
-        'exclude' => 0,
-      ),
-      '4' => array(
-        'format' => 'default',
-        'exclude' => 0,
-      ),
-      'token' => array(
-        'format' => 'default',
-        'exclude' => 0,
-      ),
-    ),
-    'widget_active' => '1',
-    'type' => 'number_integer',
-    'required' => '0',
-    'multiple' => '0',
-    'module' => 'number',
-    'active' => '1',
-    'prefix' => '',
-    'suffix' => '',
-    'min' => '',
-    'max' => '',
-    'allowed_values' => '',
-    'allowed_values_php' => '',
-    'widget' => array(
-      'default_value' => array(
-        '0' => array(
-          'value' => '',
-          '_error_element' => 'default_value_widget][field_voipcall_process_response][0][value',
-        ),
-      ),
-      'default_value_php' => NULL,
-      'label' => 'Process Response',
-      'weight' => '6',
-      'description' => 'This is a flag that, if not 0, indicates to script handler that it should process a response to the current command before moving forward to the next command in the script.',
-      'type' => 'number',
-      'module' => 'number',
-    ),
-  );
-
-  // Exported field: field_voipcall_script_commands
-  $fields[] = array(
-    'field_name' => 'field_voipcall_script_commands',
-    'type_name' => 'voipcall',
-    'display_settings' => array(
-      'label' => array(
-        'format' => 'above',
-        'exclude' => 0,
-      ),
-      'teaser' => array(
-        'format' => 'default',
-        'exclude' => 0,
-      ),
-      'full' => array(
-        'format' => 'default',
-        'exclude' => 0,
-      ),
-      '4' => array(
-        'format' => 'default',
-        'exclude' => 0,
-      ),
-      'token' => array(
-        'format' => 'default',
-        'exclude' => 0,
-      ),
-    ),
-    'widget_active' => '1',
-    'type' => 'text',
-    'required' => '0',
-    'multiple' => '0',
-    'module' => 'text',
-    'active' => '1',
-    'text_processing' => '0',
-    'max_length' => '',
-    'allowed_values' => '',
-    'allowed_values_php' => '',
-    'widget' => array(
-      'rows' => 5,
-      'size' => '60',
-      'default_value' => array(
-        '0' => array(
-          'value' => '',
-          '_error_element' => 'default_value_widget][field_voipcall_script_commands][0][value',
-        ),
-      ),
-      'default_value_php' => NULL,
-      'label' => 'Script Commands',
-      'weight' => '3',
-      'description' => 'A (serialized) array with the actual commands of the script.',
-      'type' => 'text_textfield',
-      'module' => 'text',
-    ),
-  );
-
   // Exported field: field_voipcall_script_index
   $fields[] = array(
     'field_name' => 'field_voipcall_script_index',
@@ -877,8 +769,6 @@ The only events that do not activate the hangup script are the ones that lead to
     t('End time'),
     t('Error Message'),
     t('Hangup Script'),
-    t('Process Response'),
-    t('Script Commands'),
     t('Script Index'),
     t('Script Name'),
     t('Script Variables'),
