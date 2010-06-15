@@ -11,12 +11,6 @@
  */
 function _voiptest_get_weather_report() {
 
-  $woeid = _voiptest_getWoeidFromZip($zip);
-
-//echo("\nthe woeid for $zip is: $woeid\n");
-//$forecast = _voiptest_get_weather($woeid, $unit);
-
-//------------
   $script = array();
 
   $script[] = array(
@@ -33,6 +27,7 @@ function _voiptest_get_weather_report() {
       'text' => array(VOIPCALL_VAL => 'Local weather by phone. Please type your 5-digit zip code.'),
       'num_digits' => array(VOIPCALL_VAL => 5),
       'timeout' => array(VOIPCALL_VAL => 5),
+      'end_key' => array(VOIPCALL_VAL => ''),
     ),
   );
 
@@ -68,19 +63,52 @@ function _voiptest_get_weather_report() {
       'text' => array(VOIPCALL_VAR => "zip_code"),
     ),
   );
-/********
-//-------
-      // If user presses a button during the main message, handle the options
-      $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_GOTOIF,
-        VOIPCALL_CMD_BODY => array(
-          'label_name' => array(VOIPCALL_VAL => 'process_options'),
-          // Note: variable names have to be enclosed in between '@<'and '>@'
-          'expression' => array(VOIPCALL_EVAL => "@<gather_digits>@ != '" . VOIPCALL_NO_INPUT . "'"),
-        ),
-      );
 
-      // play options
+// ------ Analize user input
+  // If timeout or invalid zip code
+  $script[] = array(
+    VOIPCALL_CMD_ID => VOIPCALL_GOTOIF,
+    VOIPCALL_CMD_BODY => array(
+      'label_name' => array(VOIPCALL_VAL => 'invalid_zip'),
+      'expression' => array(VOIPCALL_EVAL => "@<gather_digits>@ == '" . VOIPCALL_NO_INPUT . "'"),
+    ),
+  );
+
+
+// ---- Play the forecast and/or error message
+  // get the forecast
+  $script[] = array(
+    VOIPCALL_CMD_ID => VOIPCALL_SET,
+    VOIPCALL_CMD_BODY => array(
+      'var_name' => array(VOIPCALL_VAL => "forecast_result"),
+      // NOTE: Do not add a ';' at the end of the function call.  That will result in a runtime error.
+      'var_value' => array(VOIPCALL_EVAL => "_voiptest_get_forecast(@<zip_code>@)"),
+    ),
+  );
+  // process invalid input
+  $script[] = array(
+    VOIPCALL_CMD_ID => VOIPCALL_GOTOIF,
+    VOIPCALL_CMD_BODY => array(
+      'label_name' => array(VOIPCALL_VAL => 'invalid_zip'),
+      'expression' => array(VOIPCALL_EVAL => "@<forecast_result>@ == NULL"),
+    ),
+  );
+  // say the forecast
+  $script[] = array(
+    VOIPCALL_CMD_ID => VOIPCALL_LABEL,
+    VOIPCALL_CMD_BODY => array(
+      'label_name' => array(VOIPCALL_VAL => 'forecast'),
+    ),
+  );
+  $script[] = array(
+    VOIPCALL_CMD_ID => VOIPCALL_SAY,
+    VOIPCALL_CMD_BODY => array(
+      'text' => array(VOIPCALL_VAR => "forecast_result"),
+    ),
+  );
+
+// ------ Play final options
+      // play final options
       $script[] = array(
         VOIPCALL_CMD_ID => VOIPCALL_LABEL,
         VOIPCALL_CMD_BODY => array(
@@ -90,7 +118,7 @@ function _voiptest_get_weather_report() {
       $script[] = array(
         VOIPCALL_CMD_ID => VOIPCALL_GATHER,
         VOIPCALL_CMD_BODY => array(
-          'text' => array(VOIPCALL_VAL => 'To repeat this forecast, press the star key.  To end the call, press the pound key.'),
+          'text' => array(VOIPCALL_VAL => 'To repeat this report, press the star key.  To restart, press the pound key.'),
           'num_digits' => array(VOIPCALL_VAL => 1),
           'end_key' => array(VOIPCALL_VAL => ""),
         ),
@@ -109,17 +137,17 @@ function _voiptest_get_weather_report() {
       $script[] = array(
         VOIPCALL_CMD_ID => VOIPCALL_GOTOIF,
         VOIPCALL_CMD_BODY => array(
-          'label_name' => array(VOIPCALL_VAL => 'start'),
+          'label_name' => array(VOIPCALL_VAL => 'forecast'),
           // Note: variable names have to be enclosed in between '@<'and '>@'
           'expression' => array(VOIPCALL_EVAL => "@<gather_digits>@ == '*'"),
         ),
       );
 
-      // #, end call
+      // #, start all over again
       $script[] = array(
         VOIPCALL_CMD_ID => VOIPCALL_GOTOIF,
         VOIPCALL_CMD_BODY => array(
-          'label_name' => array(VOIPCALL_VAL => 'end call'),
+          'label_name' => array(VOIPCALL_VAL => 'start'),
           // Note: variable names have to be enclosed in between '@<'and '>@'
           'expression' => array(VOIPCALL_EVAL => "@<gather_digits>@ == '#'"),
         ),
@@ -139,7 +167,29 @@ function _voiptest_get_weather_report() {
         ),
       );
 
-*****/
+//------ handle invalid zip codes
+      // handle invalid zip codes
+      $script[] = array(
+        VOIPCALL_CMD_ID => VOIPCALL_LABEL,
+        VOIPCALL_CMD_BODY => array(
+          'label_name' => array(VOIPCALL_VAL => 'invalid_zip'),
+        ),
+      );
+    $script[] = array(
+      VOIPCALL_CMD_ID => VOIPCALL_SAY,
+      VOIPCALL_CMD_BODY => array(
+        'text' => array(VOIPCALL_VAL => "Invalid zip code received. Please try again."),
+      ),
+    );
+    $script[] = array(
+      VOIPCALL_CMD_ID => VOIPCALL_GOTO,
+      VOIPCALL_CMD_BODY => array(
+        'label_name' => array(VOIPCALL_VAL => 'start'),
+      ),
+    );
+
+
+// ------ end the call
       // end call (hang up)
       $script[] = array(
         VOIPCALL_CMD_ID => VOIPCALL_LABEL,
@@ -155,6 +205,35 @@ function _voiptest_get_weather_report() {
 }
 
 /**
+ * Return string with weather forecast for given zip code
+ */
+function _voiptest_get_forecast($zip) {
+  $forecast = NULL;
+
+  $woeid = _voiptest_getWoeidFromZip($zip);
+  if(!$woeid) {
+    // invalid zip code
+  }
+  else {
+    $unit = 'f';
+    $info = _voiptest_get_weather_info($woeid, $unit);
+    if(!$info) {
+      // processing error
+    }
+    else {
+      $degrees = $info['CURRENT']['TEMP'];
+      $conditions = $info['CURRENT']['TEXT'];
+      $location = $info['CITY'];
+      $forecast = "It is currently $degrees Fahrenheit and $conditions in $location.";
+    }
+  }
+
+  return $forecast;
+
+}
+
+
+/**
  * Retrieves weather foreacast from Yahoo Weather
  *
  *  Note: The following function is based on http://www.phpclasses.org/package/2665-PHP-Retrieve-information-from-Yahoo-weather-RSS-feeds.html
@@ -164,7 +243,7 @@ function _voiptest_get_weather_report() {
  * @param $unit, string with either 'c' for Celsius or 'f' for Fahrenheit
  */
 
-function _voiptest_get_weather($woeid, $unit='f') {
+function _voiptest_get_weather_info($woeid, $unit='f') {
   require_once('class.xml.parser.php');
 
   $yahoo_url = "http://weather.yahooapis.com/forecastrss?w=$woeid&u=$unit";

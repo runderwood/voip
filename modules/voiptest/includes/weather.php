@@ -6,6 +6,7 @@
 
 require_once('voiptest_weather.inc');
 
-$script = _voiptest_get_weather_report();
+$zip = 'x12345679?';
+$forecast = _voiptest_get_forecast($zip);
 
-print_r($script);
+print_r($forecast);
