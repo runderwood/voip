@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- You may freely edit this file. See commented blocks below for -->
+<!-- some examples of how to customize the build. -->
+<!-- (If you delete it and reopen the project it will be recreated.) -->
+<project name="NanoGong" default="default" basedir=".">
+    <description>Builds the project NanoGong.</description>
+    <import file="nbproject/build-impl.xml"/>
+    <target name="-post-compile">
+        <copy todir="${build.classes.dir}/org">
+            <fileset dir="jspeex/org"/>
+        </copy>
+    </target>
+    <target name="-post-jar">
+        <available property="keystore.available" file="keystore.jks"/>
+        <fail unless="keystore.available">Please provide a keystore and save it as 'keystore.jks' in this directory. Otherwise, you have to sign your NanoGong applet manually.</fail>
+        <!-- sign the jar file -->
+        <signjar jar="${dist.jar}" keystore="keystore.jks" alias="nanogong" storepass="nanogong"/>
+    </target>
+</project>
