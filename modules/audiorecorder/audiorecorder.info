@@ -1,0 +1,7 @@
+; $Id$
+name = "Audio Recorder"
+description = "Enables audio recording directly from the web browser."
+package = Voip Drupal
+;dependencies[] = voip
+core = 6.x
+

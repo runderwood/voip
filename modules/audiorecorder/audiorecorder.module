@@ -1,0 +1,47 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ * Enables audio recording straight from the web browser
+ */
+
+//-----------------------------------------------------------------------------
+// Include files
+//-----------------------------------------------------------------------------
+foreach (array('audiorecorder.inc') as $file) {
+  require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'includes' . DIRECTORY_SEPARATOR . $file);
+}
+
+
+//-----------------------------------------------------------------------------
+// Public functions
+//-----------------------------------------------------------------------------
+
+/*
+ * Implementation of hook_menu()
+ */
+function audiorecorder_menu() {
+  $items = array();
+
+  $items['audiorecorder/upload_handler'] = array(
+    'title' => 'Audio Recorder upload handler',
+    'description' => 'Handles files uploaded by the Audio Recorder.',
+    'access arguments' => array('upload recorded audio'), // Note: Until we
+      // figure out the id of the user, make sure that anonymous users are able
+      // to upload recorded audio
+    'page callback' => '_audiorecorder_upload_handler',
+    'type' => MENU_CALLBACK,
+  );
+
+  return $items;
+}
+
+/*
+ * Implementation of hook_perm()
+ */
+function audiorecorder_perm() {
+  return array('record audio', 'upload recorded audio', 'download recorded audio');
+}
+
+
