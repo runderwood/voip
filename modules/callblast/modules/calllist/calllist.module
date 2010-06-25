@@ -28,9 +28,13 @@ function calllist_callblast_get_list($list_name) {
   // Get numbers for selected list
   $result = db_query("SELECT nid FROM {node} WHERE nid = %d", $nid);
   $node = node_load($nid);
+  $i = 0;
   $list = array();
   foreach ($node->field_calllist_phone_numbers as $num) {
-    $list[]['destination'] = $num['value'];
+    $destination = explode(',', $num['value']);
+    $list[$i]['destination'] = $destination[0]; 
+    $list[$i]['name'] = ($destination[1]) ? $destination[1] : t('not available');
+    $i++;
   } 
 
   return $list;
