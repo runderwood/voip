@@ -33,7 +33,7 @@ function calllist_callblast_get_list($list_name) {
   foreach ($node->field_calllist_phone_numbers as $num) {
     $destination = explode(',', $num['value']);
     $list[$i]['destination'] = $destination[0]; 
-    $list[$i]['name'] = ($destination[1]) ? $destination[1] : t('not available');
+    $list[$i]['name'] = ($destination[1]) ? trim($destination[1]) : t('not available');
     $i++;
   } 
 
