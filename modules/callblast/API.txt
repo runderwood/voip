@@ -82,10 +82,13 @@ function calllist_callblast_list() {
  *  $list = array(                         // note: optional values fall back to defaults set for whole call blast
  *    1 => array(                          
  *      'destination' => '555 555 5555',   // destination number for phone call (required)
+ *      'name' => 'Leo Burd',              // name of person at destination number (optional)
  *    2 => array(                          
- *      'destination' => '555 555 5555',   // destination number for phone call (required)
+ *      'destination' => '666 666 6666',   // destination number for phone call (required)
+ *      'name' => 'Bryan Hirsch',          // name of person at destination number (optional)
  *    3 => array(                          
- *      'destination' => '555 555 5555',   // destination number for phone call (required)
+ *      'destination' => '777 777 7777',   // destination number for phone call (required)
+ *      'name' => 'George Washington',     // name of person at destination number (optional)
  *    ),
  *  ); 
  *  

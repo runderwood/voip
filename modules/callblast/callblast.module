@@ -69,6 +69,15 @@ function callblast_theme() {
     'callblast_formatter_callblast_list' => array(
       'arguments' => array('element' => NULL),
     ),
+    'callblast_formatter_callblast_list_title' => array(
+      'arguments' => array('element' => NULL),
+    ),
+    'callblast_formatter_callblast_list_calls_link' => array(
+      'arguments' => array('element' => NULL),
+    ),
+    'callblast_formatter_callblast_edit_link' => array(
+      'arguments' => array('element' => NULL),
+    ),
   );
 }
 
@@ -81,6 +90,57 @@ function callblast_theme() {
 function theme_callblast_formatter_callblast_list($element) {
   $output = callblast_list_default($element['#item']['safe']);
   return $output;
+}
+
+/**
+ * Callback for theme_callblast_list_title().
+ * 
+ * @param $element
+ *  array, I think this is the $element being passed by CCK here.
+ */
+function theme_callblast_formatter_callblast_list_title($element) {
+  $output = callblast_list_title($element['#item']['safe']);
+  return $output;
+}
+
+/**
+ * Callback for theme_callblast_list_calls_link().
+ * 
+ * @param $element
+ *  array, I think this is the $element being passed by CCK here.
+ * 
+ * todo Replace this workaround with a proper Views handler to create a View Calls link.
+ */
+function theme_callblast_formatter_callblast_list_calls_link($element) {
+  $txt = t('View Calls');
+  $path = 'callstatus';
+  $options = array('query' => 'callblast_nid='. $element['#node']->nid);
+  $output = l($txt, $path, $options);
+
+  return $output;
+}
+
+/**
+ * Callback for theme_callblast_list_calls_link().
+ * 
+ * @param $element
+ *  array, I think this is the $element being passed by CCK here.
+ * 
+ * todo Replace this workaround with a proper Views handler to create a callblast-status-aware edit link.
+ * todo Use hook_nodeapi and hook_menu_alter to actually prevent user from editing sent callblasts.
+ */
+function theme_callblast_formatter_callblast_edit_link($element) {
+  $node = $element['#node'];
+  $blast_sent = $node->node_data_field_callblast_audio_file_field_blast_sent_value;
+  // only return an edit link if blast has NOT been sent yet.
+  if (!$blast_sent) {
+    $txt = t('edit');
+    $path = 'node/'. $node->nid .'/edit';
+    $output = l($txt, $path);
+    return $output;
+  } else {
+    return '';
+  }
 }
 
 /**
@@ -109,6 +169,10 @@ function theme_callblast_block() {
   return $output;
 }
 
+//----------------------------//
+// Views hooks
+//----------------------------//
+
 /**
  * Implementation of hook_views_data().
  * 
@@ -124,7 +188,6 @@ function callblast_views_data() {
 
   // link callblast_call table to node table, join on callblast_nid
   $data['callblast_call']['table']['join']['node'] = array(
-// TODO verify left_field v. field is correct here
     'left_field' => 'nid',
     'field' => 'callblast_nid',
   );
@@ -158,28 +221,19 @@ function callblast_views_data() {
     ),
   );
 
+/*
+// TODO figure out why this doesn't work!
   // Call Blast Name field
-  $data['callblast_call']['callblast_name'] = array( 
+  $data['callblast_call']['callblast_title'] = array( 
     'group' => t('Node'),
-    'title' => t('Call Blast Name'),
-    'help' => t('The node ID of the Call Blast node.'),
-    'argument' => array(
-      // todo? 'handler' => '',
-      'name field' => 'title', // the field to display in the summary.
-      'numeric' => TRUE,
-      'validate type' => 'nid',
-    ),
+    'help' => t('The human readable title/name of the Call Blast node.'),
     'field' => array(
-      'handler' => 'views_handler_field',
+      'field' => 'callblast_nid', // the real field
+      'handler' => 'callblast_handler_field_callblast_call_callblast_title',
       'click sortable' => TRUE,
     ),
-    'filter' => array(
-      'handler' => 'views_handler_filter_numeric',
-    ),
-    'sort' => array(
-      'handler' => 'views_handler_sort',
-    ),
   );
+// */
 
   // callblast_call.voipcall_nid field
   $data['callblast_call']['voipcall_nid'] = array(
@@ -208,12 +262,38 @@ function callblast_views_data() {
 }
 
 /**
+ * Implementation of hook_views_handlers().
+ */
+function callblast_views_handlers() {
+  return array(
+    'info' => array(
+      'path' => drupal_get_path('module', 'callblast') . '/includes',
+    ),
+    'handlers' => array(
+      'callblast_handler_field_callblast_call_callblast_title' => array(
+        'parent' => 'views_handler_field',
+      ),
+    ),
+  );
+}
+ 
+//------------------//
+// End Views hooks 
+//------------------//
+
+/**
  * Implementation of hook_form_alter().
  * 
- * TODO Delete this is we don't end up using voipfield.
+ * TODO Delete this if we don't end up using voipfield.
  */
 function callblast_form_alter(&$form, &$form_state, $form_id){
+  // callblast node form
   if ($form_id == 'callblast_node_form') {
+    // hide 'blast sent' field for users other than user 1
+    global $user;
+    if ($user->uid != 1) {
+      $form['field_blast_sent']['#access'] = FALSE;
+    }
     /**
      * If voipfield module is NOT enabled
      * hide the Main Message URL field. 
@@ -485,12 +565,38 @@ function callblast_list_default($value) {
 }
 
 /**
+ * Callblack for formatting Call List title as
+ * human readable, without showing calllist ID. 
+ * Make it human readable.
+ * 
+ * todo Add error handling to check for two lists with the same id and then throw an error message. 
+ */
+function callblast_list_title($value) {
+  $title = module_invoke_all('callblast_get_title', $value);  
+  if ($title[0]) {
+    return $title[0];
+  } 
+}
+
+/**
  * hook_field_formatter_info()
  */
 function callblast_field_formatter_info() {
   return array(
     'callblast_list' => array(
       'label' => 'Call List',
+      'field types' => array('text'),
+    ),
+    'callblast_list_title' => array(
+      'label' => 'Call List Title',
+      'field types' => array('text'),
+    ),
+    'callblast_list_calls_link' => array( // todo temp. replace. see todo note at theme function.
+      'label' => 'Call List Calls Link',
+      'field types' => array('text'),
+    ),
+    'callblast_edit_link' => array(      // todo temp. replace. see todo note at theme function.
+      'label' => 'Call Blast Edit Link', 
       'field types' => array('text'),
     ),
   );
@@ -626,6 +732,8 @@ function callblast_save_voipcalls($list, $node) {
   while ($i < $count) {
     if ($list[$i]['destination']) {
       $details['dest_number'] = $list[$i]['destination'];
+//dsm($list);
+// TODO Pass $details['dest_name'] = $list[$1]['name']; to voipcall node 
       // save voipcall node
       voipcall_save($details);
       // store callblast_nid / voipcall_nid pairs in  callblast_call table
