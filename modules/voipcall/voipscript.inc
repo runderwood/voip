@@ -20,6 +20,10 @@ class VoipScript {
   protected $is_error;
   protected $error_message;
             
+  /*
+   * Constructors
+   */
+
   function __construct($name) {
     $this->name = $name;
     $this->commands = array();
@@ -27,7 +31,32 @@ class VoipScript {
     $this->is_error = FALSE;
     $this->error_message = NULL;
   }
+
+  public static function load_script($script_name){
+    // evoke hook_voipscript_load_script() giving modules the opportunity to return a
+    // custom script and update its variables as needed
+    $script_tmp = $this;
+    $processed = FALSE;
+    foreach (module_implements('voipscript_load_script') as $module) {
+      $function = $module .'_'. 'voipscript_load_script';
+      $result = call_user_func($function, $script_tmp, $script_name);
+      if(isset($result)) {
+        $script_tmp = $result;
+        $processed = TRUE;
+      }
+    }
+    if($processed){
+      return $script_tmp;
+    }
+    else {
+      return NULL;
+    }
+  }
         
+  /*
+   * Public methods
+   */
+
   function getName() {
     return $this->name;
   }
@@ -221,6 +250,7 @@ class VoipCmdDial extends VoipCommand {
   }
 }
 
+
 class VoipCmdGetInput extends VoipCommand {
 
   function __construct($text='', $url='', $timeout=5, $end_key='#', $num_digits=NULL){
@@ -263,7 +293,6 @@ class VoipCmdGoto extends VoipCommand {
     $string = $this->params['label_name'];
     $label_name = $script->evalString($string);
     $found = FALSE;
-    $i = 0;
     $script_tmp = $script;
     $script_tmp->resetIndex();
     while(!$found) {
@@ -288,7 +317,7 @@ class VoipCmdGoto extends VoipCommand {
       }
     }
 
-echo (parent::process($processing, $script, $stack));
+//echo (parent::process($processing, $script, $stack));
     return NULL;
   }
 
@@ -304,8 +333,40 @@ class VoipCmdGotoIf extends VoipCommand {
   }
 
   function process(&$processing, &$script=NULL, &$stack=array()) {
-// TODO: implement gotoif
-    return parent::process($processing, $script, $stack);
+    // evaluate expression
+    $string = $cmd->getParam('condition');
+    $condition = $script->evalString($string);
+
+    if($condition) {
+      $string = $this->params['label_name'];
+      $label_name = $script->evalString($string);
+      $found = FALSE;
+      $script_tmp = $script;
+      $script_tmp->resetIndex();
+      while(!$found) {
+        $cmd = $script_tmp->getNextCommand();
+        if(!$cmd) {
+          // label nor found
+          $this->is_error = TRUE;
+          $script_name = $script_tmp->getName();
+          $this->error_message = "Label '$label_name' not found in script '$script_name': " . print_r($script, true);
+          $processing = FALSE;
+          $found = TRUE;
+        }
+        else {
+          if($cmd->getId() == 'VoipCmdLabel') {
+            $string_tmp = $cmd->getParam('label_name');
+            $label_name_tmp = $script->evalString($string_tmp);
+            if($label_name_tmp == $label_name) {
+              $script = $script_tmp;
+              $found = TRUE;
+            }
+          }
+        }
+      }
+    }
+//echo (parent::process($processing, $script, $stack));
+    return NULL;
   }
 }
 
@@ -324,7 +385,6 @@ class VoipCmdHangup extends VoipCommand {
 }
 
 
-
 class VoipCmdLabel extends VoipCommand {
 
   function __construct($label_name) {
@@ -334,9 +394,9 @@ class VoipCmdLabel extends VoipCommand {
 
   function process(&$processing, &$script=NULL, &$stack=array()) {
     // Labels don't do anything
-    return parent::process($processing, $script, $stack);
+    parent::process($processing, $script, $stack);
+    return NULL;
   }
-
 }
 
 
@@ -348,9 +408,24 @@ class VoipCmdLoad extends VoipCommand {
   }
 
   function process(&$processing, &$script=NULL, &$stack=array()) {
-// TODO: implement load
+    $string_tmp = $cmd->getParam('script_name');
+    $script_name = $script->evalString($string_tmp);
+
+    $script_tmp = VoipScript::load_script($script_name);
+    
+    if($script_tmp){
+      $script = $script_tmp;
+    }
+    else {
+      // no script found with the given name
+      $this->is_error = TRUE;
+      $this->error_message = "Script '$script_name' not found for script '" . $script->getName() . "': " . print_r($script, true);
+      $processing = FALSE;
+    }
+
     return parent::process($processing, $script, $stack);
   }
+
 }
 
 
