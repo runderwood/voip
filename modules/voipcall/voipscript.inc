@@ -97,8 +97,8 @@ class VoipScript {
     $this->commands[] = new VoipCmdDial($number, $timeout, $hangup_key, $max_length, $caller_id);
   }
 
-  function addGather($text='', $url='', $timeout=5, $end_key='#', $num_digits=NULL) {
-    $this->commands[] = new VoipCmdGather($text, $url, $timeout, $end_key, $num_digits);
+  function addGetInput($text='', $url='', $timeout=5, $end_key='#', $num_digits=NULL) {
+    $this->commands[] = new VoipCmdGetInput($text, $url, $timeout, $end_key, $num_digits);
   }
 
   function addGosub($script_name) {
@@ -221,7 +221,7 @@ class VoipCmdDial extends VoipCommand {
   }
 }
 
-class VoipCmdGather extends VoipCommand {
+class VoipCmdGetInput extends VoipCommand {
 
   function __construct($text='', $url='', $timeout=5, $end_key='#', $num_digits=NULL){
     $params['text'] = $text;
