@@ -248,7 +248,7 @@ watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
   }
 
   // retrieve script context
-  $context = voipcall_load_script($voipcall, $script_name, $reset_index);
+  $context = voipcall_load_script_context($voipcall, $script_name, $reset_index);
   $name = $context['script_name'];
   $commands = $context['script_commands'];
   $index = $context['script_index'];

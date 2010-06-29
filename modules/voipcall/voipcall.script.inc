@@ -88,7 +88,7 @@ watchdog('voipcal_script_get_param', "expression: $expression, expression_tmp: $
  *
  * @return array with the new context. Check voip_error() for processing errors.
  */
-function voipcall_load_script($voipcall, $script_name=NULL, $reset_index=FALSE) {
+function voipcall_load_script_context($voipcall, $script_name=NULL, $reset_index=FALSE) {
 
   if(!$script_name) {
     $script_name = $voipcall['field_voipcall_script_name'][0]['value'];
