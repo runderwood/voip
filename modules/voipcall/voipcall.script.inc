@@ -50,41 +50,6 @@ define('VOIPCALL_NO_INPUT', 'no_input'); // Used to report timeouts and empty in
  */
 
 /**
- * Return the name of the default script to be used with new incoming calls
- */
-function voipcall_get_default_script_name() {
-  $script_name = variable_get('voipcall_pickup_script_name', 'voipcall_call_pickup');
-  return $script_name;
-}
-
-/**
- * Implementation of hook_voipcall_load_script()
- */
-function voipcall_voipcall_load_script($voipcall, $script_name) {
-  $script = NULL;
-  if($script_name == 'voipcall_call_pickup') { 
-    $script = array();
-    $script[] = array(
-      VOIPCALL_CMD_ID => VOIPCALL_SAY,
-      VOIPCALL_CMD_BODY => array(
-        'text' => array(VOIPCALL_VAL => t("Welcome to the Voip Drupal platform!")),
-      ),
-    );
-    $script[] = array(
-      VOIPCALL_CMD_ID => VOIPCALL_SAY,
-      VOIPCALL_CMD_BODY => array(
-       'text' => array(VOIPCALL_VAL => "Bye bye."),
-       ),
-    );
-    $script[] = array(
-      VOIPCALL_CMD_ID => VOIPCALL_HANGUP
-    );
-  }
-
-  return $script;
-}
-
-/**
  * Return the value of the given command parameter
  */
 function voipcall_script_get_parameter_value($command, $param_name, $variables, $default=NULL) {

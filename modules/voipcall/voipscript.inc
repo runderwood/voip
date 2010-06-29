@@ -42,6 +42,45 @@ class VoipScript {
     $this->index = 0;
   }
 
+  // Evaluate the given string based on the current value of script variables.
+  // Notes regarding the way values are handled: 
+  // * placeholders for script variables start with '%'
+  // * strings that start with '^' are treated as expressions to be
+  //   evaluated
+  // * when defining expressions that include string variables, make sure the
+  //   variable placeholder is enclosed in " or '.  For instance,
+  //      Correct form:   "^echo('The content is ' . '%msg');"
+  //      Incorrect form: "^echo('The content is ' . %msg);"
+  //   The incorrect form will produce a parser error if the variable msg
+  //   contains characters such as a space, math sign, etc...
+  function evalString($string) {
+    $variables = $this->variables;
+    // replace placeholders by the contents of the associated variable name
+    // since variables might refer to other variables, run the loop until all
+    // replacements are done.
+    $pattern = "/%(\w+)/e";
+    $replacement = '$variables[\'$1\']';
+    do {
+      $val = preg_replace($pattern, $replacement, $string, -1, $count);
+      $string = $val;
+    } while ($count);
+
+    //check if $val contains a function or expression to be processed
+    if($val[0] == '^') {
+      $expression = substr($val,1);
+      $val = eval("return ($expression);");
+    }
+    return $val;
+  }
+
+  function getVar($name) {
+    return $this->variables[$name];
+  }
+
+  function setVar($name, $value) {
+    $this->variables[$name] = $value;
+  }
+
   function isError(){
     return $this->is_error;
   }
@@ -142,36 +181,8 @@ class VoipCommand {
     return $this->id;
   }
 
-  // calculate the value associated with the given parameter
-  // Notes regarding the way values are handled: 
-  // * placeholders for script variables start with '%'
-  // * param values that start with '^' are treated as expressions to be
-  //   evaluated
-  // * when defining expressions that include string variables, make sure the
-  //   variable placeholder is enclosed in " or '.  For instance,
-  //      Correct form:   "^echo('The content is ' . '%msg');"
-  //      Incorrect form: "^echo('The content is ' . %msg);"
-  //   The incorrect form will produce a parser error if the variable msg
-  //   contains characters such as a space, math sign, etc...
-  function calculateParamValue($param_name, $variables) {
-    $str = $this->params[$param_name];
-
-    // replace placeholders by the contents of the associated variable name
-    // since variables might refer to other variables, run the loop until all
-    // replacements are done.
-    $pattern = "/%(\w+)/e";
-    $replacement = '$variables[\'$1\']';
-    do {
-      $val = preg_replace($pattern, $replacement, $str, -1, $count);
-      $str = $val;
-    } while ($count);
-
-    //check if $val contains a function or expression to be processed
-    if($val[0] == '^') {
-      $expression = substr($val,1);
-      $val = eval("return ($expression);");
-    }
-    return $val;
+  function getParam($param_name) {
+    return $this->params[$param_name];
   }
 
   function isError(){
@@ -183,10 +194,9 @@ class VoipCommand {
   }
 
   // virtual function to be implemented by subclasses
-  function process(&$processing, &$variables=array(), &$script=NULL, &$stack=array()) {
+  function process(&$processing, &$script=NULL, &$stack=array()) {
     $msg = "(" . $script->getName() . ')(' . $this->id .') '
            . "proc: $processing "
-           . " vars: " . ($variables?print_r($variables, TRUE):NULL)
            . " stack: " . ($stack?print_r($stack, TRUE):NULL)
            . " params: " . ($this->params?print_r($this->params, TRUE):NULL);
     return $msg;
@@ -206,8 +216,8 @@ class VoipCmdDial extends VoipCommand {
     parent::__construct($params);
   }
 
-  function process(&$processing, &$variables=array(), &$script=NULL, &$stack=array()) {
-    return parent::process($processing, $variables, $script, $stack);
+  function process(&$processing, &$script=NULL, &$stack=array()) {
+    return parent::process($processing, $script, $stack);
   }
 }
 
@@ -222,8 +232,8 @@ class VoipCmdGather extends VoipCommand {
     parent::__construct($params);
   }
 
-  function process(&$processing, &$variables=array(), &$script=NULL, &$stack=array()) {
-    return parent::process($processing, $variables, $script, $stack);
+  function process(&$processing, &$script=NULL, &$stack=array()) {
+    return parent::process($processing, $script, $stack);
   }
 }
 
@@ -235,9 +245,9 @@ class VoipCmdGosub extends VoipCommand {
     parent::__construct($params);
   }
 
-  function process(&$processing, &$variables=array(), &$script=NULL, &$stack=array()) {
+  function process(&$processing, &$script=NULL, &$stack=array()) {
 // TODO: implement gosub
-    return parent::process($processing, $variables, $script, $stack);
+    return parent::process($processing, $script, $stack);
   }
 }
 
@@ -249,8 +259,9 @@ class VoipCmdGoto extends VoipCommand {
     parent::__construct($params);
   }
 
-  function process(&$processing, &$variables=array(), &$script=NULL, &$stack=array()) {
-    $label_name = $this->calculateParamValue('label_name', $variables);
+  function process(&$processing, &$script=NULL, &$stack=array()) {
+    $string = $this->params['label_name'];
+    $label_name = $script->evalString($string);
     $found = FALSE;
     $i = 0;
     $script_tmp = $script;
@@ -267,7 +278,8 @@ class VoipCmdGoto extends VoipCommand {
       }
       else {
         if($cmd->getId() == 'VoipCmdLabel') {
-          $label_name_tmp = $cmd->calculateParamValue('label_name', $variables);
+          $string_tmp = $cmd->getParam('label_name');
+          $label_name_tmp = $script->evalString($string_tmp);
           if($label_name_tmp == $label_name) {
             $script = $script_tmp;
             $found = TRUE;
@@ -276,7 +288,7 @@ class VoipCmdGoto extends VoipCommand {
       }
     }
 
-echo (parent::process($processing, $variables, $script, $stack));
+echo (parent::process($processing, $script, $stack));
     return NULL;
   }
 
@@ -291,9 +303,9 @@ class VoipCmdGotoIf extends VoipCommand {
     parent::__construct($params);
   }
 
-  function process(&$processing, &$variables=array(), &$script=NULL, &$stack=array()) {
+  function process(&$processing, &$script=NULL, &$stack=array()) {
 // TODO: implement gotoif
-    return parent::process($processing, $variables, $script, $stack);
+    return parent::process($processing, $script, $stack);
   }
 }
 
@@ -305,9 +317,9 @@ class VoipCmdHangup extends VoipCommand {
     parent::__construct($params);
   }
 
-  function process(&$processing, &$variables=array(), &$script=NULL, &$stack=array()) {
+  function process(&$processing, &$script=NULL, &$stack=array()) {
     $processing = FALSE;
-    return parent::process($processing, $variables, $script, $stack);
+    return parent::process($processing, $script, $stack);
   }
 }
 
@@ -320,9 +332,9 @@ class VoipCmdLabel extends VoipCommand {
     parent::__construct($params);
   }
 
-  function process(&$processing, &$variables=array(), &$script=NULL, &$stack=array()) {
+  function process(&$processing, &$script=NULL, &$stack=array()) {
     // Labels don't do anything
-    return parent::process($processing, $variables, $script, $stack);
+    return parent::process($processing, $script, $stack);
   }
 
 }
@@ -335,9 +347,9 @@ class VoipCmdLoad extends VoipCommand {
     parent::__construct($params);
   }
 
-  function process(&$processing, &$variables=array(), &$script=NULL, &$stack=array()) {
+  function process(&$processing, &$script=NULL, &$stack=array()) {
 // TODO: implement load
-    return parent::process($processing, $variables, $script, $stack);
+    return parent::process($processing, $script, $stack);
   }
 }
 
@@ -350,8 +362,8 @@ class VoipCmdPlay extends VoipCommand {
     parent::__construct($params);
   }     
         
-  function process(&$processing, &$variables=array(), &$script=NULL, &$stack=array()) {
-    return parent::process($processing, $variables, $script, $stack);
+  function process(&$processing, &$script=NULL, &$stack=array()) {
+    return parent::process($processing, $script, $stack);
   }
 }
     
@@ -364,8 +376,8 @@ class VoipCmdRecord extends VoipCommand {
     parent::__construct($params);
   }
 
-  function process(&$processing, &$variables=array(), &$script=NULL, &$stack=array()) {
-    return parent::process($processing, $variables, $script, $stack);
+  function process(&$processing, &$script=NULL, &$stack=array()) {
+    return parent::process($processing, $script, $stack);
   }
 }
 
@@ -377,9 +389,9 @@ class VoipCmdReturn extends VoipCommand {
     parent::__construct($params);
   }
 
-  function process(&$processing, &$variables=array(), &$script=NULL, &$stack=array()) {
+  function process(&$processing, &$script=NULL, &$stack=array()) {
 // TODO: implement return
-    return parent::process($processing, $variables, $script, $stack);
+    return parent::process($processing, $script, $stack);
   }
 }
 
@@ -394,8 +406,8 @@ class VoipCmdSay extends VoipCommand {
     parent::__construct($params);
   }
         
-  function process(&$processing, &$variables=array(), &$script=NULL, &$stack=array()) {
-    return parent::process($processing, $variables, $script, $stack);
+  function process(&$processing, &$script=NULL, &$stack=array()) {
+    return parent::process($processing, $script, $stack);
   }
 }
     
@@ -408,10 +420,12 @@ class VoipCmdSet extends VoipCommand {
     parent::__construct($params);
   }
 
-  function process(&$processing, &$variables=array(), &$script=NULL, &$stack=array()) {
-    $var_name = $this->calculateParamValue('var_name', $variables);
-    $value = $this->calculateParamValue('value', $variables);
-    $variables[$var_name] = $value;
+  function process(&$processing, &$script=NULL, &$stack=array()) {
+    $string = $this->params['var_name'];
+    $var_name = $script->evalString($string);
+    $string = $this->params['value'];
+    $value = $script->evalString($string);
+    $script->setVar($var_name, $value);
     return;
   }
 
