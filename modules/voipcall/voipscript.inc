@@ -34,12 +34,12 @@ class VoipScript {
 
   public static function load_script($script_name){
     // evoke hook_voipscript_load_script() giving modules the opportunity to return a
-    // custom script and update its variables as needed
-    $script_tmp = $this;
+    // custom script
+    $script_tmp = NULL;
     $processed = FALSE;
     foreach (module_implements('voipscript_load_script') as $module) {
       $function = $module .'_'. 'voipscript_load_script';
-      $result = call_user_func($function, $script_tmp, $script_name);
+      $result = call_user_func($function, $script_name, $script_tmp);
       if(isset($result)) {
         $script_tmp = $result;
         $processed = TRUE;
@@ -100,14 +100,6 @@ class VoipScript {
       $val = eval("return ($expression);");
     }
     return $val;
-  }
-
-  function getVar($name) {
-    return $this->variables[$name];
-  }
-
-  function setVar($name, $value) {
-    $this->variables[$name] = $value;
   }
 
   function isError(){

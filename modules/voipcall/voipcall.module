@@ -120,8 +120,19 @@ function voipcall_save($details=array()) {
 
   if(isset($details['call_status'])) $node->field_voipcall_status[0]['value'] = $details['call_status'];
 
+
+
+// ----- The following code might become obsolete with the new implementation -----
   if(isset($details['script_name'])) $node->field_voipcall_script_name[0]['value'] =  $details['script_name'];
   if(isset($details['script_index'])) $node->field_voipcall_script_index[0]['value'] =  $details['script_index'];
+// ----------------------------------------------------------------------------
+
+  if(isset($details['script'])) $node->field_voipcall_script[0]['value'] =  serialize($details['script']);
+  if(isset($details['script_stack'])) $node->field_voipcall_script_stack[0]['value'] =  serialize($details['stack']);
+
+
+
+
 // todo: serialize variables
   if(isset($details['script_variables'])) $node->field_voipcall_script_variables[0]['value'] =  serialize($details['script_variables']);
   if(isset($details['hangup_script'])) $node->field_voipcall_hangup_script[0]['value'] =  $details['hangup_script'];
@@ -145,20 +156,6 @@ function voipcall_save($details=array()) {
   node_save($node);
 
   return $node;
-}
-
-/**
- * Return the voipcall nid associated with the given call_id.
- * 
- * @param string $call_id, the unique identifier of a call
- *
- * @return $nid or NULL depending on the result of the query
- */
-function voipcall_get_nid_from_call_id($call_id){
-
-  // fetch the desired voipcall node
-  $nid = db_result(db_query("SELECT `nid` FROM `content_type_voipcall` WHERE `field_voipcall_call_id_value` = '%s'", $call_id));
-  return $nid;
 }
 
 /**
@@ -253,6 +250,21 @@ function voipcall_admin_form_submit($form, &$form_state) {
 
 
 /**
+ * Return the voipcall nid associated with the given call_id.
+ * 
+ * @param string $call_id, the unique identifier of a call
+ *
+ * @return $nid or NULL depending on the result of the query
+ */
+function voipcall_get_nid_from_call_id($call_id){
+
+  // fetch the desired voipcall node
+  $nid = db_result(db_query("SELECT `nid` FROM `content_type_voipcall` WHERE `field_voipcall_call_id_value` = '%s'", $call_id));
+  return $nid;
+}
+
+
+/**
  * Check if the call is in a hangup state
  */
 function voipcall_is_hangup($voipcall) {
@@ -298,6 +310,11 @@ function voipcall_processing_error($module, $voipcall, $msg, $params=array()){
 }
 
 
+
+/*
+ * Script-related functions
+ */
+
 /**
  * Return the name of the default script to be used with new incoming calls
  */
@@ -332,7 +349,6 @@ function voipcall_voipcall_load_script($voipcall, $script_name) {
 
   return $script;
 }
-
 
 
 /**

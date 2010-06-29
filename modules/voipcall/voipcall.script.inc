@@ -110,6 +110,7 @@ function voipcall_load_script_context($voipcall, $script_name=NULL, $reset_index
 
   $context['call_status'] = $voipcall['field_voipcall_status'][0]['value'];
 
+// --- The following code might become obsolete with the new implementation --
   $context['script_name'] = $voipcall['field_voipcall_script_name'][0]['value'];
   $context['script_commands'] = $script_commands;
   if($reset_index) {
@@ -118,6 +119,11 @@ function voipcall_load_script_context($voipcall, $script_name=NULL, $reset_index
   else {
     $context['script_index'] = $voipcall['field_voipcall_script_index'][0]['value'];
   }
+// ---------------------------------------------------------------------------
+
+  $context['script'] = unserialize($voipcall['field_voipcall_script'][0]['value']);
+
+
   $context['script_variables'] = unserialize($voipcall['field_voipcall_script_variables'][0]['value']);
   $context['hangup_script'] = $voipcall['field_voipcall_hangup_script'][0]['value'];
 

@@ -46,6 +46,14 @@ class VoipScriptHandler {
     return $this->error_message;
   }
 
+  function getVar($name) {
+    return $this->variables[$name];
+  }
+
+  function setVar($name, $value) {
+    $this->variables[$name] = $value;
+  }
+
   function run() {
     $processing = TRUE;
     $processed = array();
