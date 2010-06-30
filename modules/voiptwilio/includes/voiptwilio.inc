@@ -176,7 +176,7 @@ watchdog('voiptwilio', $msg, $vars, WATCHDOG_INFO);
         // updated a few lines above
         break;
       case 'process_gather':
-        $call['script_variables']['gather_digits'] = $_REQUEST['Digits'];
+        $call['script_variables']['input_digits'] = $_REQUEST['Digits'];
         break;
       case 'process_record':
         // Note: I'm adding an '.mp3' at the end of the url to make sure we use the mp3 file (check http://www.twilio.com/docs/demos/voicerecorder)

@@ -12,6 +12,7 @@ foreach (array('voiptest_weather.inc') as $file) {
  * Implementation of hook_voipcall_load_script()
  */
 function voiptest_voipcall_load_script($voipcall, $script_name) {
+// TO DO: rename this function and convert the script
   if($script_name == 'voiptest_test') {
     $script = array();
     $script[] = array(
@@ -299,7 +300,11 @@ function voiptest_voipcall_load_script($voipcall, $script_name) {
 
   }
 
+  return $script;
+}
 
+
+function voiptest_voipscript_load_script($script_name) {
   if($script_name == 'voiptest_weather_report') {
     $script = _voiptest_get_weather_report();
   }

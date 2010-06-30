@@ -91,13 +91,16 @@ class VoipScript {
     // since variables might refer to other variables, run the loop until all
     // replacements are done.
     $pattern = "/%(\w+)/e";
-    $replacement = '$variables[\'$1\']';
+// TODO: check the syntax below...
+    $pattern = "/%(\w+)/";
+    $replacement = '$this->variables[\'$1\']';
     do {
       $val = preg_replace($pattern, $replacement, $string, -1, $count);
       $string = $val;
     } while ($count);
 
     //check if $val contains a function or expression to be processed
+dsm($val,'$val');
     if($val[0] == '^') {
       $expression = substr($val,1);
       $val = eval("return ($expression);");
@@ -222,14 +225,14 @@ class VoipScript {
         // label nor found
         $this->is_error = TRUE;
         $script_name = $this->name;
-        $this->error_message = "Label '$label_name' not found in script '$script_name': " . print_r($script, true);
+        $this->error_message = "Label '$label_name' not found in script '$script_name': " . print_r($this, true);
         $rc = FALSE;
         $found = TRUE;
       }
       else {
         if($cmd->getId() == 'VoipCmdLabel') {
           $string_tmp = $cmd->getParam('label_name');
-          $label_name_tmp = $script->evalString($string_tmp);
+          $label_name_tmp = $this->evalString($string_tmp);
           if($label_name_tmp == $label_name) {
             $this->index = $i;
             $found = TRUE;
@@ -242,15 +245,16 @@ class VoipScript {
     return $rc;
   }
 
-  function runGotoIf($condition, $label_name) {
+  function runGotoIf($label_name, $condition) {
     $rc = TRUE;
     $condition = $this->evalString($condition);
     if($condition) {
-      $rc = $this->goto($label_name);
+      $rc = $this->runGoto($label_name);
     }
     return $rc;
   }
 
+// TODO: move runLoad to a protected function...
   function runLoad($script_name) {
     $rc = TRUE;
     $found = FALSE;

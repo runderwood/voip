@@ -11,199 +11,71 @@
  */
 function _voiptest_get_weather_report() {
 
-  $script = array();
+  $script = new VoipScript('voiptest_weather_report');
 
-  $script[] = array(
-    VOIPCALL_CMD_ID => VOIPCALL_LABEL,
-    VOIPCALL_CMD_BODY => array(
-      'label_name' => array(VOIPCALL_VAL => 'start'),
-    ),
-  );
+  $script->addLabel('start');
 
-  // read zip code from user
-  $script[] = array(
-    VOIPCALL_CMD_ID => VOIPCALL_GATHER,
-    VOIPCALL_CMD_BODY => array(
-      'text' => array(VOIPCALL_VAL => 'Local weather by phone. Please type your 5-digit zip code.'),
-      'num_digits' => array(VOIPCALL_VAL => 5),
-      'timeout' => array(VOIPCALL_VAL => 5),
-      'end_key' => array(VOIPCALL_VAL => ''),
-    ),
-  );
+  // read zip code
+  $text = t('Local weather by phone. Please type your 5-digit zip code.');
+  $url = '';
+  $timeout = 5;
+  $end_key = '';
+  $num_digits = 5;
+  $script->addGetInput($text, $url, $timeout, $end_key, $num_digits);
 
-/******
-  $script[] = array(
-    VOIPCALL_CMD_ID => VOIPCALL_SAY,
-    VOIPCALL_CMD_BODY => array(
-      'text' => array(VOIPCALL_VAL => "You pressed: "),
-    ),
-  );
-  $script[] = array(
-    VOIPCALL_CMD_ID => VOIPCALL_SAY,
-    VOIPCALL_CMD_BODY => array(
-      'text' => array(VOIPCALL_VAR => "gather_digits"),
-    ),
-  );
-*****/
-  $script[] = array(
-    VOIPCALL_CMD_ID => VOIPCALL_SET,
-    VOIPCALL_CMD_BODY => array(
-      'var_name' => array(VOIPCALL_VAL => "zip_code"),
-      'var_value' => array(VOIPCALL_VAR => "gather_digits"),
-    ),
-  );
+//  $script->addSay('You pressed: %input_digits');
 
-/********
-  $script[] = array(
-    VOIPCALL_CMD_ID => VOIPCALL_SAY,
-    VOIPCALL_CMD_BODY => array(
-      'text' => array(VOIPCALL_VAL => "The variable 'zip_code' is now set to "),
-    ),
-  );
-  $script[] = array(
-    VOIPCALL_CMD_ID => VOIPCALL_SAY,
-    VOIPCALL_CMD_BODY => array(
-      'text' => array(VOIPCALL_VAR => "zip_code"),
-    ),
-  );
-*********/
+  $script->addSet('zip_code', 'input_digits');
 
-// ------ Analize user input
+// $script->addSay("The variable 'zip_code' is now set to %zip_code.");
+
   // If timeout or invalid zip code
-  $script[] = array(
-    VOIPCALL_CMD_ID => VOIPCALL_GOTOIF,
-    VOIPCALL_CMD_BODY => array(
-      'label_name' => array(VOIPCALL_VAL => 'invalid_zip'),
-      'expression' => array(VOIPCALL_EVAL => "@<gather_digits>@ == '" . VOIPCALL_NO_INPUT . "'"),
-    ),
-  );
+// TODO: what to do with constants such as VOIPCALL_NO_INPUT?
+// TODO: remove spaces from all constants?
+  $script->addGotoIf('invalid_zip', "^%input_digits == '" . VOIPCALL_NO_INPUT . "'");
 
-
-// ---- Play the report and/or error message
   // get the report
-  $script[] = array(
-    VOIPCALL_CMD_ID => VOIPCALL_SET,
-    VOIPCALL_CMD_BODY => array(
-      'var_name' => array(VOIPCALL_VAL => "forecast_result"),
-      // NOTE: Do not add a ';' at the end of the function call.  That will result in a runtime error.
-      'var_value' => array(VOIPCALL_EVAL => "_voiptest_get_forecast(@<zip_code>@)"),
-    ),
-  );
+  $script->addSet('forecast_result', '^_voiptest_get_forecast(%zip_code)');
+
   // process invalid input
-  $script[] = array(
-    VOIPCALL_CMD_ID => VOIPCALL_GOTOIF,
-    VOIPCALL_CMD_BODY => array(
-      'label_name' => array(VOIPCALL_VAL => 'invalid_zip'),
-      'expression' => array(VOIPCALL_EVAL => "@<forecast_result>@ == NULL"),
-    ),
-  );
+  $script->addGotoIf('invalid_zip', '^%forecast_result == NULL');
+
   // say the weather report
-  $script[] = array(
-    VOIPCALL_CMD_ID => VOIPCALL_LABEL,
-    VOIPCALL_CMD_BODY => array(
-      'label_name' => array(VOIPCALL_VAL => 'forecast'),
-    ),
-  );
-  $script[] = array(
-    VOIPCALL_CMD_ID => VOIPCALL_SAY,
-    VOIPCALL_CMD_BODY => array(
-      'text' => array(VOIPCALL_VAR => "forecast_result"),
-    ),
-  );
+  $script->addLabel('forecast');
+  $script->addSay('%forecast_result');
 
-// ------ Play final options
-      // play final options
-      $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_LABEL,
-        VOIPCALL_CMD_BODY => array(
-          'label_name' => array(VOIPCALL_VAL => 'options'),
-        ),
-      );
-      $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_GATHER,
-        VOIPCALL_CMD_BODY => array(
-          'text' => array(VOIPCALL_VAL => 'To repeat this report, press the star key.  To restart, press the pound key.'),
-          'num_digits' => array(VOIPCALL_VAL => 1),
-          'end_key' => array(VOIPCALL_VAL => ""),
-        ),
-      );
+  // play final options
+  $script->addLabel('options');
 
-      // process options
-      $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_LABEL,
-        VOIPCALL_CMD_BODY => array(
-          'label_name' => array(VOIPCALL_VAL => 'process_options'),
-        ),
-      );
+  $text = t('To repeat this report, press the star key.  To restart, press the pound key.');
+  $url = '';
+  $timeout = 5;
+  $end_key = '';
+  $num_digits = 1;
+  $script->addGetInput($text, $url, $timeout, $end_key, $num_digits);
 
-      // Go to user's selected option.
-      // * replay previous message 
-      $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_GOTOIF,
-        VOIPCALL_CMD_BODY => array(
-          'label_name' => array(VOIPCALL_VAL => 'forecast'),
-          // Note: variable names have to be enclosed in between '@<'and '>@'
-          'expression' => array(VOIPCALL_EVAL => "@<gather_digits>@ == '*'"),
-        ),
-      );
+  // process options
+  $script->addLabel('process_options');
 
-      // #, start all over again
-      $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_GOTOIF,
-        VOIPCALL_CMD_BODY => array(
-          'label_name' => array(VOIPCALL_VAL => 'start'),
-          // Note: variable names have to be enclosed in between '@<'and '>@'
-          'expression' => array(VOIPCALL_EVAL => "@<gather_digits>@ == '#'"),
-        ),
-      );
+  // Go to user's selected option.
+  // * replay previous message 
+  $script->addGotoIf('forecast', "^%input_digits == '*'");
 
-      // If invalid option selected, go back to the options menu
-      $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_SAY,
-        VOIPCALL_CMD_BODY => array(
-          'text' => array(VOIPCALL_VAL => "Invalid option selected. Please try again."),
-        ),
-      );
-      $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_GOTO,
-        VOIPCALL_CMD_BODY => array(
-          'label_name' => array(VOIPCALL_VAL => 'options'),
-        ),
-      );
+  // #, start all over again
+  $script->addGotoIf('start', "^input_digits == '#'");
 
-//------ handle invalid zip codes
-      // handle invalid zip codes
-      $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_LABEL,
-        VOIPCALL_CMD_BODY => array(
-          'label_name' => array(VOIPCALL_VAL => 'invalid_zip'),
-        ),
-      );
-    $script[] = array(
-      VOIPCALL_CMD_ID => VOIPCALL_SAY,
-      VOIPCALL_CMD_BODY => array(
-        'text' => array(VOIPCALL_VAL => "Invalid zip code received. Please try again."),
-      ),
-    );
-    $script[] = array(
-      VOIPCALL_CMD_ID => VOIPCALL_GOTO,
-      VOIPCALL_CMD_BODY => array(
-        'label_name' => array(VOIPCALL_VAL => 'start'),
-      ),
-    );
+  // If invalid option selected, go back to the options menu
+  $script->addSay("Invalid option selected. Please try again.");
+  $script->addGoto('options');
 
+  // handle invalid zip codes
+  $script->addLabel('invalid_zip');
+  $script->addSay("Invalid zip code received. Please try again.");
+  $script->addGoto('start');
 
-// ------ end the call
-      // end call (hang up)
-      $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_LABEL,
-        VOIPCALL_CMD_BODY => array(
-          'label_name' => array(VOIPCALL_VAL => 'end call'),
-        ),
-      );
-      $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_HANGUP
-      );
+  // end call (hang up)
+  $script->addLabel('end call');
+  $script->addHangup();
 
   return $script;
 }
