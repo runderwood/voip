@@ -231,13 +231,9 @@ function voipcall_admin_form() {
  */
 function voipcall_admin_form_validate($form, &$form_state) {
   $values = $form_state['values'];
-dsm("in voipcall_admin_form_validate()");
-//dsm($form, '$form');
-dsm($values, '$values');
   $script_name = $values['voipcall_pickup_script_name'];
-// TODO: provide better feedback
+// TODO: provide feedback directly on the affected fields...
   $script = VoipScript::loadScript($script_name);
-dsm(print_r($script,true), '$script');
   if(!$script){
     form_set_error('', t('Invalid script name: @script_name.', array('@script_name' => $script_name)));
   }
