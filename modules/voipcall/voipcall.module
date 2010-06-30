@@ -93,7 +93,13 @@ function voipcall_save($details=array()) {
 
     // initialize script-related fields with their default values
     $script_name = voipcall_get_default_script_name();
+
     $node->field_voipcall_script_name[0]['value'] = $script_name;
+//----
+    $default_script = VoipScript::loadScript($script_name);
+    $node->field_voipcall_script[0]['value'] = serialize($default_script);
+//----
+
     $node->field_voipcall_script_index[0]['value'] =  0;
 // todo: serialize variables
     $node->field_voipcall_script_variables[0]['value'] =  serialize(array());
@@ -128,8 +134,6 @@ function voipcall_save($details=array()) {
 // ----------------------------------------------------------------------------
 
   if(isset($details['script'])) $node->field_voipcall_script[0]['value'] =  serialize($details['script']);
-  if(isset($details['script_stack'])) $node->field_voipcall_script_stack[0]['value'] =  serialize($details['stack']);
-
 
 
 
@@ -227,9 +231,16 @@ function voipcall_admin_form() {
  */
 function voipcall_admin_form_validate($form, &$form_state) {
   $values = $form_state['values'];
-//todo: make sure that default script name is not empty ''
-// todo: make sure the default script name actually points to a non-empty array
-  return;
+dsm("in voipcall_admin_form_validate()");
+//dsm($form, '$form');
+dsm($values, '$values');
+  $script_name = $values['voipcall_pickup_script_name'];
+// TODO: provide better feedback
+  $script = VoipScript::loadScript($script_name);
+dsm(print_r($script,true), '$script');
+  if(!$script){
+    form_set_error('', t('Invalid script name: @script_name.', array('@script_name' => $script_name)));
+  }
 }
 
 
@@ -327,6 +338,7 @@ function voipcall_get_default_script_name() {
  * Implementation of hook_voipcall_load_script()
  */
 function voipcall_voipcall_load_script($voipcall, $script_name) {
+// TODO: this function will be deprecated in favor of hook_voipscript_load_script
   $script = NULL;
   if($script_name == 'voipcall_call_pickup') {
     $script = array();
@@ -345,6 +357,21 @@ function voipcall_voipcall_load_script($voipcall, $script_name) {
     $script[] = array(
       VOIPCALL_CMD_ID => VOIPCALL_HANGUP
     );
+  }
+
+  return $script;
+}
+
+/**
+ * Implementation of hook_voipscript_load_script()
+ */
+function voipcall_voipscript_load_script($script_name) {
+  $script = NULL;
+  if($script_name == 'voipcall_call_pickup') {
+    $script = new VoipScript('voipcall_call_pickup');
+    $script->addSay(t("Welcome to the Voip Drupal platform!"));
+    $script->addSay(t("Bye bye."));
+    $script->addHangup();
   }
 
   return $script;

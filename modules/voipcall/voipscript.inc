@@ -16,7 +16,9 @@
 class VoipScript {
   private $name;
   private $commands;
-  private $index;
+  private $index; // index of the current command
+  private $variables; 
+  private $stack; // stack of active subroutines 
   protected $is_error;
   protected $error_message;
             
@@ -24,35 +26,27 @@ class VoipScript {
    * Constructors
    */
 
-  function __construct($name) {
+  function __construct($name, $variables=array()) {
     $this->name = $name;
     $this->commands = array();
     $this->index = 0;
+    $this->variables = $variables;
+    $this->stack = array();
     $this->is_error = FALSE;
     $this->error_message = NULL;
   }
 
-  public static function load_script($script_name){
-    // evoke hook_voipscript_load_script() giving modules the opportunity to return a
-    // custom script
-    $script_tmp = NULL;
-    $processed = FALSE;
-    foreach (module_implements('voipscript_load_script') as $module) {
-      $function = $module .'_'. 'voipscript_load_script';
-      $result = call_user_func($function, $script_name, $script_tmp);
-      if(isset($result)) {
-        $script_tmp = $result;
-        $processed = TRUE;
-      }
+  public static function loadScript($script_name){
+    $rc = NULL;
+    $script_tmp = new VoipScript($script_name);
+    $script_tmp->runLoad($script_name);
+    if(!$script_tmp->isError()) {
+      $rc = $script_tmp;
     }
-    if($processed){
-      return $script_tmp;
-    }
-    else {
-      return NULL;
-    }
+    return $rc;
   }
         
+
   /*
    * Public methods
    */
@@ -69,6 +63,15 @@ class VoipScript {
 
   function resetIndex() {
     $this->index = 0;
+  }
+
+
+  function getVar($name) {
+    return $this->variables[$name];
+  }
+
+  function setVar($name, $value) {
+    $this->variables[$name] = $value;
   }
 
   // Evaluate the given string based on the current value of script variables.
@@ -102,6 +105,7 @@ class VoipScript {
     return $val;
   }
 
+
   function isError(){
     return $this->is_error;
   }
@@ -115,62 +119,212 @@ class VoipScript {
    */
 
   function addDial($number, $timeout=30, $hangup_key='*', $max_length=3600, $caller_id=''){
-    $this->commands[] = new VoipCmdDial($number, $timeout, $hangup_key, $max_length, $caller_id);
+    $params['number'] = $number;
+    $params['timeout'] = $timeout;
+    $params['hangup_key'] = $hangup_key;
+    $params['max_length'] = $max_length;
+    $params['caller_id'] = $caller_id;
+    $this->commands[] = new VoipCommand('VoipCmdDial', $params);
   }
 
   function addGetInput($text='', $url='', $timeout=5, $end_key='#', $num_digits=NULL) {
-    $this->commands[] = new VoipCmdGetInput($text, $url, $timeout, $end_key, $num_digits);
+    $params['text'] = $text;
+    $params['url'] = $url;
+    $params['timeout'] = $timeout;
+    $params['end_key'] = $end_key;
+    $params['num_digits'] = $num_digits;
+    $this->commands[] = new VoipCommand('VoipCmdGetInput', $params);
   }
 
   function addGosub($script_name) {
-    $this->commands[] = new VoipCmdGosub($script_name);
+    $params['script_name'] = $script_name;
+    $this->commands[] = new VoipCommand('VoipCmdGosub', $params);
   }
 
   function addGoto($label_name) {
-    $this->commands[] = new VoipCmdGoto($label_name);
+    $params['label_name'] = $label_name;
+    $this->commands[] = new VoipCommand('VoipCmdGoto', $params);
   }
 
   function addGotoIf($label_name, $condition) {
-    $this->commands[] = new VoipCmdGotoIf($label_name, $condition);
+    $params['label_name'] = $label_name;
+    $params['condition'] = $condition;
+    $this->commands[] = new VoipCommand('VoipCmdGotoIf', $params);
   }
 
   function addHangup() {
-    $this->commands[] = new VoipCmdHangup();
+    $this->commands[] = new VoipCommand('VoipCmdHangup');
   }
 
   function addLabel($label_name) {
-    $this->commands[] = new VoipCmdLabel($label_name);
+    $params['label_name'] = $label_name;
+    $this->commands[] = new VoipCommand('VoipCmdLabel', $params);
   }
 
   function addLoad($script_name) {
-    $this->commands[] = new VoipCmdLoad($script_name);
+    $params['script_name'] = $script_name;
+    $this->commands[] = new VoipCommand('VoipCmdLoad', $params);
   }
 
   function addPlay($url, $loop=1) {
-    $this->commands[] = new VoipCmdPlay($url, $loop);
+    $params['url'] = $url;
+    $params['loop'] = $loop;
+    $this->commands[] = new VoipCommand('VoipCmdPlay', $params);
   }
 
   function addRecord($timeout=5, $end_key='#', $max_length=3600) {
-    $this->commands[] = new VoipCmdRecord($timeout, $end_key, $max_length);
+    $params['timeout'] = $timeout;
+    $params['end_key'] = $end_key;
+    $params['max_length'] = $max_length;
+    $this->commands[] = new VoipCommand('VoipCmdRecord', $params);
   }
 
   function addReturn() {
-    $this->commands[] = new VoipCmdReturn();
+    $this->commands[] = new VoipCommand('VoipCmdReturn');
   }
 
   function addSay($text, $loop=1, $voice=NULL, $language=NULL) {
-    $this->commands[] = new VoipCmdSay($text, $loop, $voice, $language);
+    $params['text'] = $text;
+    $params['loop'] = $loop;
+    $params['voice'] = $voice;
+    $params['language'] = $language;
+    $this->commands[] = new VoipCommand('VoipCmdSay', $params);
   }
 
   function addSet($var_name, $value) {
-    $this->commands[] = new VoipCmdSet($var_name, $value);
+    $params['var_name'] = $var_name;
+    $params['value'] = $value;
+    $this->commands[] = new VoipCommand('VoipCmdSet', $params);
   }
+
+
+  /*
+   * Implementation of common script commands that are not voip-specific
+   */
+
+  function runGosub($script_name) {
+    $script_state = array('name' => $this->name,
+                          'commands' => $this->commands,
+                          'index' => $this->index);
+    $this->stack[] = $script_state;
+    $rc =  runLoad($script_name);
+    return $rc;
+  }
+
+  function runGoto($label_name) {
+    $rc = TRUE;
+    $label_name = $this->evalString($label_name);
+    $found = FALSE;
+    $i = 0;
+    while(!$found) {
+      $cmd = $this->commands[$i];
+      if(!$cmd) {
+        // label nor found
+        $this->is_error = TRUE;
+        $script_name = $this->name;
+        $this->error_message = "Label '$label_name' not found in script '$script_name': " . print_r($script, true);
+        $rc = FALSE;
+        $found = TRUE;
+      }
+      else {
+        if($cmd->getId() == 'VoipCmdLabel') {
+          $string_tmp = $cmd->getParam('label_name');
+          $label_name_tmp = $script->evalString($string_tmp);
+          if($label_name_tmp == $label_name) {
+            $this->index = $i;
+            $found = TRUE;
+          }
+        }
+        // move to the next command in the script
+        $i++;
+      }
+    }
+    return $rc;
+  }
+
+  function runGotoIf($condition, $label_name) {
+    $rc = TRUE;
+    $condition = $this->evalString($condition);
+    if($condition) {
+      $rc = $this->goto($label_name);
+    }
+    return $rc;
+  }
+
+  function runLoad($script_name) {
+    $rc = TRUE;
+    $found = FALSE;
+
+    // evoke hook_voipscript_load_script() giving modules the opportunity to return a
+    // custom script
+    foreach (module_implements('voipscript_load_script') as $module) {
+      $function = $module .'_'. 'voipscript_load_script';
+      $new_script = call_user_func($function, $script_name);
+      if(isset($new_script)) {
+        $found = TRUE;
+        // loads new name and commands
+        $this->name = $new_script->getName();
+        $this->commands = $new_script->getCommands();
+        $this->index = 0;
+        // override variables with the same name and preserve the others
+        $this->variables = array_merge($this->variables, $new_script->getVariables());
+        // preserve the stack as is
+          // $this->stack = array();
+        $this->is_error = FALSE;
+        // scripts must have unique names. exit the foreach
+        break;
+      }
+    }
+
+    if(!$found) {
+      // no script found with the given name
+      $rc = FALSE;
+      $this->is_error = TRUE;
+      $this->error_message = "Script '$script_name' not found for script '" . $this->name . "': " . print_r($this->commands, TRUE);
+    }
+
+    return $rc;
+  } 
+
+  function runReturn() {
+    $rc = TRUE;
+    $script_state = array_pop($this->stack);
+    if ($script_state) {
+      $this->name = $script_state['name'];
+      $this->commands = $script_state['commands'];
+      $this->index = $script_state['index'];
+      // get ready to execute the next command in the script
+      $this->index++;
+    }
+    else {
+      // invalid return command
+      $this->is_error = TRUE;
+      $this->error_message = "Invalid return command for script '" . $this->name . "': " . print_r($this, true);
+    }
+    return $rc;
+  }
+
+  function runSet($var_name, $value) {
+    $var_name = $this->evalString($var_name);
+    $value = $this->evalString($value);
+    $this->variables[$var_name] = $value;
+    return;
+  }
+
 
   /**
    * Protected methods
    */
 
-  // the following function is provided in case subclasses decide to
+  protected function getCommands() {
+    return $this->commands;
+  }
+
+  protected function getVariables() {
+    return $this->variables;
+  }
+
+  // the following function is provided in case there is a need to
   // extend the script API to include additional commands
   protected function addCommand($command) {
     $this->commands[] = $command;
@@ -188,14 +342,10 @@ class VoipCommand {
 
   private $id; // command id
   private $params; // command parameters
-  protected $is_error;
-  protected $error_message;
 
-  function __construct($params=array()) {
-    $this->id = get_class($this);
+  function __construct($id, $params=array()) {
+    $this->id = $id;
     $this->params = $params;
-    $this->is_error = FALSE;
-    $this->error_message = NULL;
   }
 
   function getId() {
@@ -205,297 +355,6 @@ class VoipCommand {
   function getParam($param_name) {
     return $this->params[$param_name];
   }
-
-  function isError(){
-    return $this->is_error;
-  }
-
-  function getErrorMessage() {
-    return $this->error_message;
-  }
-
-  // virtual function to be implemented by subclasses
-  function process(&$processing, &$script=NULL, &$stack=array()) {
-    $msg = "(" . $script->getName() . ')(' . $this->id .') '
-           . "proc: $processing "
-           . " stack: " . ($stack?print_r($stack, TRUE):NULL)
-           . " params: " . ($this->params?print_r($this->params, TRUE):NULL);
-    return $msg;
-  }
-
 }
     
-
-class VoipCmdDial extends VoipCommand {
-
-  function __construct($number, $timeout=30, $hangup_key='*', $max_length=3600, $caller_id=''){
-    $params['number'] = $number;  
-    $params['timeout'] = $timeout;  
-    $params['hangup_key'] = $hangup_key;  
-    $params['max_length'] = $max_length;
-    $params['caller_id'] = $caller_id;
-    parent::__construct($params);
-  }
-
-  function process(&$processing, &$script=NULL, &$stack=array()) {
-    return parent::process($processing, $script, $stack);
-  }
-}
-
-
-class VoipCmdGetInput extends VoipCommand {
-
-  function __construct($text='', $url='', $timeout=5, $end_key='#', $num_digits=NULL){
-    $params['text'] = $text;
-    $params['url'] = $url;
-    $params['timeout'] = $timeout;
-    $params['end_key'] = $end_key;
-    $params['num_digits'] = $num_digits;
-    parent::__construct($params);
-  }
-
-  function process(&$processing, &$script=NULL, &$stack=array()) {
-    return parent::process($processing, $script, $stack);
-  }
-}
-
-
-class VoipCmdGosub extends VoipCommand {
-
-  function __construct($script_name) {
-    $params['script_name'] = $script_name;
-    parent::__construct($params);
-  }
-
-  function process(&$processing, &$script=NULL, &$stack=array()) {
-// TODO: implement gosub
-    return parent::process($processing, $script, $stack);
-  }
-}
-
-
-class VoipCmdGoto extends VoipCommand {
-
-  function __construct($label_name) {
-    $params['label_name'] = $label_name;
-    parent::__construct($params);
-  }
-
-  function process(&$processing, &$script=NULL, &$stack=array()) {
-    $string = $this->params['label_name'];
-    $label_name = $script->evalString($string);
-    $found = FALSE;
-    $script_tmp = $script;
-    $script_tmp->resetIndex();
-    while(!$found) {
-      $cmd = $script_tmp->getNextCommand();
-      if(!$cmd) {
-        // label nor found
-        $this->is_error = TRUE;
-        $script_name = $script_tmp->getName();
-        $this->error_message = "Label '$label_name' not found in script '$script_name': " . print_r($script, true);
-        $processing = FALSE;
-        $found = TRUE;
-      }
-      else {
-        if($cmd->getId() == 'VoipCmdLabel') {
-          $string_tmp = $cmd->getParam('label_name');
-          $label_name_tmp = $script->evalString($string_tmp);
-          if($label_name_tmp == $label_name) {
-            $script = $script_tmp;
-            $found = TRUE;
-          }
-        }
-      }
-    }
-
-//echo (parent::process($processing, $script, $stack));
-    return NULL;
-  }
-
-}
-
-
-class VoipCmdGotoIf extends VoipCommand {
-
-  function __construct($label_name, $condition) {
-    $params['label_name'] = $label_name;
-    $params['condition'] = $condition;
-    parent::__construct($params);
-  }
-
-  function process(&$processing, &$script=NULL, &$stack=array()) {
-    // evaluate expression
-    $string = $cmd->getParam('condition');
-    $condition = $script->evalString($string);
-
-    if($condition) {
-      $string = $this->params['label_name'];
-      $label_name = $script->evalString($string);
-      $found = FALSE;
-      $script_tmp = $script;
-      $script_tmp->resetIndex();
-      while(!$found) {
-        $cmd = $script_tmp->getNextCommand();
-        if(!$cmd) {
-          // label nor found
-          $this->is_error = TRUE;
-          $script_name = $script_tmp->getName();
-          $this->error_message = "Label '$label_name' not found in script '$script_name': " . print_r($script, true);
-          $processing = FALSE;
-          $found = TRUE;
-        }
-        else {
-          if($cmd->getId() == 'VoipCmdLabel') {
-            $string_tmp = $cmd->getParam('label_name');
-            $label_name_tmp = $script->evalString($string_tmp);
-            if($label_name_tmp == $label_name) {
-              $script = $script_tmp;
-              $found = TRUE;
-            }
-          }
-        }
-      }
-    }
-//echo (parent::process($processing, $script, $stack));
-    return NULL;
-  }
-}
-
-
-class VoipCmdHangup extends VoipCommand {
-
-  function __construct() {
-    $params = array();
-    parent::__construct($params);
-  }
-
-  function process(&$processing, &$script=NULL, &$stack=array()) {
-    $processing = FALSE;
-    return parent::process($processing, $script, $stack);
-  }
-}
-
-
-class VoipCmdLabel extends VoipCommand {
-
-  function __construct($label_name) {
-    $params['label_name'] = $label_name;
-    parent::__construct($params);
-  }
-
-  function process(&$processing, &$script=NULL, &$stack=array()) {
-    // Labels don't do anything
-    parent::process($processing, $script, $stack);
-    return NULL;
-  }
-}
-
-
-class VoipCmdLoad extends VoipCommand {
-
-  function __construct($script_name) {
-    $params['script_name'] = $script_name;
-    parent::__construct($params);
-  }
-
-  function process(&$processing, &$script=NULL, &$stack=array()) {
-    $string_tmp = $cmd->getParam('script_name');
-    $script_name = $script->evalString($string_tmp);
-
-    $script_tmp = VoipScript::load_script($script_name);
-    
-    if($script_tmp){
-      $script = $script_tmp;
-    }
-    else {
-      // no script found with the given name
-      $this->is_error = TRUE;
-      $this->error_message = "Script '$script_name' not found for script '" . $script->getName() . "': " . print_r($script, true);
-      $processing = FALSE;
-    }
-
-    return parent::process($processing, $script, $stack);
-  }
-
-}
-
-
-class VoipCmdPlay extends VoipCommand {
-
-  function __construct($url, $loop=1){
-    $params['url'] = $url;               
-    $params['loop'] = $loop;
-    parent::__construct($params);
-  }     
-        
-  function process(&$processing, &$script=NULL, &$stack=array()) {
-    return parent::process($processing, $script, $stack);
-  }
-}
-    
-class VoipCmdRecord extends VoipCommand {
-
-  function __construct($timeout=5, $end_key='#', $max_length=3600){
-    $params['timeout'] = $timeout;  
-    $params['end_key'] = $end_key;
-    $params['max_length'] = $max_length;
-    parent::__construct($params);
-  }
-
-  function process(&$processing, &$script=NULL, &$stack=array()) {
-    return parent::process($processing, $script, $stack);
-  }
-}
-
-
-class VoipCmdReturn extends VoipCommand {
-
-  function __construct() {
-    $params = array();
-    parent::__construct($params);
-  }
-
-  function process(&$processing, &$script=NULL, &$stack=array()) {
-// TODO: implement return
-    return parent::process($processing, $script, $stack);
-  }
-}
-
-
-class VoipCmdSay extends VoipCommand {
-        
-  function __construct($text, $loop=1, $voice=NULL, $language=NULL){
-    $params['text'] = $text;      
-    $params['loop'] = $loop;      
-    $params['voice'] = $voice;      
-    $params['language'] = $language;      
-    parent::__construct($params);
-  }
-        
-  function process(&$processing, &$script=NULL, &$stack=array()) {
-    return parent::process($processing, $script, $stack);
-  }
-}
-    
-
-class VoipCmdSet extends VoipCommand {
-
-  function __construct($var_name, $value) {
-    $params['var_name'] = $var_name;
-    $params['value'] = $value;
-    parent::__construct($params);
-  }
-
-  function process(&$processing, &$script=NULL, &$stack=array()) {
-    $string = $this->params['var_name'];
-    $var_name = $script->evalString($string);
-    $string = $this->params['value'];
-    $value = $script->evalString($string);
-    $script->setVar($var_name, $value);
-    return;
-  }
-
-}
-
 
