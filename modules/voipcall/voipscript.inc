@@ -91,13 +91,6 @@ class VoipScript {
     // since variables might refer to other variables, run the loop until all
     // replacements are done.
     $pattern = "/%(\w+)/e";
-/****** Original:
-    $replacement = '$this->variables[\'$1\']';
-    do {
-      $val = preg_replace($pattern, $replacement, $string, -1, $count);
-      $string = $val;
-    } while ($count);
-******/
     do {
       // if the string is to be evaluated, make sure NULL variables are replaced
       // by the text 'NULL' (rather than ''). That will help prevent eventual
