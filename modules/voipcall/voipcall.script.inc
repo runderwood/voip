@@ -164,6 +164,7 @@ function voipcall_load_script($voipcall, $script_name=NULL, $reset_index=FALSE) 
 
   $context['script_variables']['call_id'] = $voipcall['field_voipcall_call_id'][0]['value'];
   $context['script_variables']['dest_number'] = $voipcall['field_voipcall_dest_number'][0]['value'];
+  $context['script_variables']['dest_name'] = $voipcall['field_voipcall_dest_name'][0]['value'];
   $context['script_variables']['caller_number'] = $voipcall['field_voipcall_caller_number'][0]['value'];
   $context['script_variables']['caller_name'] = $voipcall['field_voipcall_caller_name'][0]['value'];
 
