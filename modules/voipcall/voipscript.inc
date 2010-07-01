@@ -64,7 +64,7 @@ class VoipScript {
   }
 
 
-  // Methods used during the script execution
+  // Methods used during script execution
 
   function getNextCommand() {
     $cmd = $this->commands[$this->index];

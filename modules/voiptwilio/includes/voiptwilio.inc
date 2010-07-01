@@ -69,10 +69,9 @@ watchdog('voiptwilio', $msg, $vars, WATCHDOG_INFO);
   if(!isset($call['field_voipcall_caller_name'][0]['value'])) $call['caller_name'] = $_REQUEST['CallerName'];
   if(!isset($call['field_voipcall_dest_number'][0]['value'])) $call['dest_number'] = $_REQUEST['Called'];
 
-  // extract contents from the script_variables field
-  // TODO: what to do about serialize/unserialize?
-  $variables = unserialize($call['field_voipcall_script_variables'][0]['value']); 
-  $call['script_variables'] = $variables;
+  // update script variables
+  $script = unserialize($call['field_voipcall_script'][0]['value']); 
+  $call['script'] = $script;
 
   // store call location, if available
   $call_location = array();
@@ -85,7 +84,7 @@ watchdog('voiptwilio', $msg, $vars, WATCHDOG_INFO);
   if(isset($_REQUEST['CalledZip'])) $call_location['calldr_zip'] = $_REQUEST['CalledZip'];
   if(isset($_REQUEST['CalledCountry'])) $call_location['called_country'] = $_REQUEST['CalledCountry'];
   if($call_location) {
-    $call['script_variables']['call_location'] = $call_location;
+    $call['script']->setVar('call_location', $call_location);
   }
 
   $hangup = FALSE;
@@ -138,26 +137,26 @@ watchdog('voiptwilio', $msg, $vars, WATCHDOG_INFO);
         break;
       case 'fail': // From: REST API - making calls
       case 'failed': // From: TwiML Reference - Dial verb
-        $call['script_variables']['dial_status'] = VOIPCALL_ERROR;
+        $call['script']->setVar('dial_status', VOIPCALL_ERROR);
         break;
       case 'answered':
-        $call['script_variables']['dial_status'] = VOIPCALL_IN_PROGRESS;
+        $call['script']->setVar('dial_status', VOIPCALL_IN_PROGRESS);
         break;
       case 'busy':
-        $call['script_variables']['dial_status'] = VOIPCALL_BUSY;
+        $call['script']->setVar('dial_status', VOIPCALL_BUSY);
         break;
       case 'no-answer':
-        $call['script_variables']['dial_status'] = VOIPCALL_NO_ANSWER;
+        $call['script']->setVar('dial_status', VOIPCALL_NO_ANSWER);
         break;
       // NOTE: apparently, Twilio does not detect answering machines with the TwiML Dial verb.  The following error codes are only valid for making calls via REST API
       case 'answered-machine':
-        $call['script_variables']['dial_status'] = VOIPCALL_ANSWERED_MACHINE;
+        $call['script']->setVar('dial_status', VOIPCALL_ANSWERED_MACHINE);
         break;
       case 'answered-human':
-        $call['script_variables']['dial_status'] = VOIPCALL_ANSWERED_HUMAN;
+        $call['script']->setVar('dial_status', VOIPCALL_ANSWERED_HUMAN);
         break;
       case 'hangup-machine':
-        $call['script_variables']['dial_status'] = VOIPCALL_MACHINE_HANGUP;
+        $call['script']->setVar('dial_status', VOIPCALL_MACHINE_HANGUP);
         break;
     }
   }
@@ -176,14 +175,14 @@ watchdog('voiptwilio', $msg, $vars, WATCHDOG_INFO);
         // updated a few lines above
         break;
       case 'process_gather':
-        $call['script_variables']['input_digits'] = $_REQUEST['Digits'];
+        $call['script']->setVar('input_digits', $_REQUEST['Digits']);
         break;
       case 'process_record':
         // Note: I'm adding an '.mp3' at the end of the url to make sure we use the mp3 file (check http://www.twilio.com/docs/demos/voicerecorder)
-        $call['script_variables']['recording_url'] = $_REQUEST['RecordingUrl'] . '.mp3';
-        $call['script_variables']['recording_duration'] = $_REQUEST['Duration'];
-        $call['script_variables']['recording_file_size'] = $_REQUEST['RecordingFileSize'];
-        $call['script_variables']['recording_digits'] = $_REQUEST['Digits'];
+        $call['script']->setVar('recording_url', $_REQUEST['RecordingUrl'] . '.mp3');
+        $call['script']->setVar('recording_duration', $_REQUEST['Duration']);
+        $call['script']->setVar('recording_file_size', $_REQUEST['RecordingFileSize']);
+        $call['script']->setVar('recording_digits', $_REQUEST['Digits']);
         break;
     }
   }
@@ -235,31 +234,26 @@ watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
   // check if call is in a hangup state
   $hangup = voipcall_is_hangup($voipcall);
   if($hangup) {
-    $script_name = $voipcall['field_voipcall_hangup_script'][0]['value'];
-    $reset_index = TRUE;
+    $script = unserialize($voipcall['field_voipcall_hangup_script'][0]['value']);
     // Stop processing if no hangup_script defined
-    if(!$script_name) {
+    if(!$script) {
       return(TRUE);
     }
   }
   else {
-    $script_name = $voipcall['field_voipcall_script_name'][0]['value'];
-    $reset_index = FALSE;
+    $script = unserialize($voipcall['field_voipcall_script'][0]['value']);
   }
 
-  // retrieve script context
-  $context = voipcall_load_script_context($voipcall, $script_name, $reset_index);
-  $name = $context['script_name'];
-  $commands = $context['script_commands'];
-  $index = $context['script_index'];
-  $variables = $context['script_variables'];
+  // update script with current call variables
+  $script = voipcall_update_script($voipcall, $script);
     
   // process script commands
   $processing = TRUE;
   $response = '';
   while($processing) {
    
-    if($index >= count($commands)) {
+    $cmd = $script->getNextCommand();
+    if(!$cmd) {
       // no more commands to be processed
       // send a final hangup request 
       $response .= '<Hangup/>';
@@ -272,19 +266,22 @@ watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
     // process current command
     else {
 
-      $command = $commands[$index];
-      $cmd_id = $command[VOIPCALL_CMD_ID];
+      $cmd_id = $cmd->getId();
    
       switch($cmd_id) {
         default:
-          $msg = "Invalid command id '@cmd_id' (index: @index) in script '@script_name': @script";
-          $params = array('@cmd_id' => $cmd_id, '@index' => $index, '@script_name' => $script_name, '@script' => print_r($commands,true));
+          $msg = "Invalid command id '@cmd_id' in script '@script_name': @script";
+          $params = array('@cmd_id' => $cmd_id, '@script_name' => $script->getName(), '@script' => print_r($script,true));
           voipcall_processing_error('voiptwilio', $voipcall, $msg, $params);
           $rc = FALSE;
           $processing = FALSE;
           break;
 
-        case VOIPCALL_DIAL;
+// ===== STOPPED HERE!!
+
+
+
+        case 'VoipCmdDial';
           $menu_path = 'voip/twilio/callhandler';
           $call_id = $variables['call_id'];
           $response_url = $menu_path . '/' . $call_id . '/process_dial';
@@ -308,7 +305,7 @@ watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
           $processing = FALSE;
           break;
 
-        case VOIPCALL_GATHER:
+        case 'VoipCmdGetInput':
           $menu_path = 'voip/twilio/callhandler';
           $call_id = $variables['call_id'];
           $response_url = $menu_path . '/' . $call_id . '/process_gather';
@@ -341,14 +338,11 @@ watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
           $processing = FALSE;
           break;
 
-        case VOIPCALL_HANGUP:
-          // send the hangup request and stop processing script commands
-          // Note: this will trigger a response from Twilio with CallStatus = complete
-          $response .= '<Hangup/>';
-          $processing = FALSE;
+        case 'VoipCmdGosub':
+          // TODO: implement gosub
           break;
 
-        case VOIPCALL_GOTO;
+        case 'VoipCmdGoto';
           $label_name = voipcall_script_get_parameter_value($command, 'label_name', $variables, '');
           $found = FALSE;
           $i = 0;
@@ -378,7 +372,7 @@ watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
           }
           break;
 
-        case VOIPCALL_GOTOIF;
+        case 'VoipCmdGotoIf';
           // evaluate expression
           $expression = voipcall_script_get_parameter_value($command, 'expression', $variables, '');
           if($expression) {
@@ -412,21 +406,28 @@ watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
           }
           break;
 
-        case VOIPCALL_LABEL:
+        case 'VoipCmdHangup':
+          // send the hangup request and stop processing script commands
+          // Note: this will trigger a response from Twilio with CallStatus = complete
+          $response .= '<Hangup/>';
+          $processing = FALSE;
+          break;
+
+        case 'VoipCmdLabel':
           // don't do anything. Labels are just placeholders that mark a position within the script.
           break;
 
-        case VOIPCALL_LOAD:
+        case 'VoipCmdLoad':
 // TODO: implement load
           break;
 
-        case VOIPCALL_PLAY:
+        case 'VoipCmdPlay':
           $url = voipcall_script_get_parameter_value($command, 'url', $variables); 
           $loop = voipcall_script_get_parameter_value($command, 'loop', $variables, 1); 
           $response .= '<Play loop="' . $loop . '" >' . $url . '</Play>';
           break;
 
-        case VOIPCALL_RECORD:
+        case 'VoipCmdRecord':
           $menu_path = 'voip/twilio/callhandler';
           $call_id = $variables['call_id'];
           $response_url = $menu_path . '/' . $call_id . '/process_record';
@@ -448,12 +449,16 @@ watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
           $processing = FALSE;
           break;
 
-        case VOIPCALL_SAY:
+        case 'VoipCmdReturn':
+// TODO: implement return
+          break;
+
+        case 'VoipCmdSay':
           $text = voipcall_script_get_parameter_value($command, 'text', $variables); 
           $response .= "<Say>$text</Say>";
           break;
 
-        case VOIPCALL_SET;
+        case 'VoipCmdSet';
           $var_name = voipcall_script_get_parameter_value($command, 'var_name', $variables);
           $var_value = voipcall_script_get_parameter_value($command, 'var_value', $variables);
           $variables[$var_name] = $var_value;
@@ -466,10 +471,9 @@ watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
     }
   }
 
-  // store context for next script iteration
-  $context['script_index'] = $index;
-  $context['script_variables'] = $variables;
-  $voipcall = voipcall_save_script_context($voipcall, $context);
+  // save script for next iteration
+  $voipcall['script'] = $script;
+  $voipcall = voipcall_save($voipcall);
 
 $msg = 'Leaving script_handler with voipcall: ' . print_r($voipcall,true) . ", and response: $response";
 watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
@@ -478,7 +482,6 @@ watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
   if($response) {
 $response .= '<!--' . "_REQUEST: " . print_r($_REQUEST,true) .  "\n" . '-->';
 $response .= '<!--' . "voipcall: " . print_r($voipcall,true) .  "\n" . '-->';
-$response .= '<!--' . "script_context: " . print_r($context, true) .  "\n" . '-->';
     _voiptwilio_send_response($response);
   }
 
