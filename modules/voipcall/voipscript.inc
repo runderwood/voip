@@ -55,6 +55,17 @@ class VoipScript {
     return $this->name;
   }
 
+  function getVar($name) {
+    return $this->variables[$name];
+  }
+
+  function setVar($name, $value) {
+    $this->variables[$name] = $value;
+  }
+
+
+  // Methods used during the script execution
+
   function getNextCommand() {
     $cmd = $this->commands[$this->index];
     $this->index++;
@@ -65,14 +76,6 @@ class VoipScript {
     $this->index = 0;
   }
 
-
-  function getVar($name) {
-    return $this->variables[$name];
-  }
-
-  function setVar($name, $value) {
-    $this->variables[$name] = $value;
-  }
 
   // Evaluate the given string based on the current value of script variables.
   // Notes regarding the way values are handled: 
@@ -106,7 +109,6 @@ class VoipScript {
     } while ($count);
 
     //check if $val contains a function or expression to be processed
-dsm($val,'$val');
     if($val[0] == '^') {
       $expression = substr($val,1);
       $val = eval("return ($expression);");
@@ -208,7 +210,7 @@ dsm($val,'$val');
 
 
   /*
-   * Implementation of common script commands that are not voip-specific
+   * Execution of basic script commands that are not dependent on the voip server
    */
 
   function runGosub($script_name) {
@@ -216,7 +218,7 @@ dsm($val,'$val');
                           'commands' => $this->commands,
                           'index' => $this->index);
     $this->stack[] = $script_state;
-    $rc =  runLoad($script_name);
+    $rc =  $this->runLoad($script_name);
     return $rc;
   }
 
@@ -239,7 +241,7 @@ dsm($val,'$val');
         if($cmd->getId() == 'VoipCmdLabel') {
           $string_tmp = $cmd->getParam('label_name');
           $label_name_tmp = $this->evalString($string_tmp);
-          if($label_name_tmp == $label_name) {
+          if(strcasecmp($label_name_tmp, $label_name) == 0) {
             $this->index = $i;
             $found = TRUE;
           }
@@ -260,7 +262,7 @@ dsm($val,'$val');
     return $rc;
   }
 
-// TODO: move runLoad to a protected function...
+// TODO: shall we keep runLoad or change it into a protected function?
   function runLoad($script_name) {
     $rc = TRUE;
     $found = FALSE;

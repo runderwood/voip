@@ -308,6 +308,20 @@ function voiptest_voipscript_load_script($script_name) {
   if($script_name == 'voiptest_weather_report') {
     $script = _voiptest_get_weather_report();
   }
+  
+  if($script_name == 'voiptest_gosub_test_a') {
+    $script = new VoipScript('voiptest_gosub_test_a');
+    $script->addSay('script a');
+    $script->addGosub('voiptest_gosub_test_b');
+    $script->addSay('back in script a');
+    $script->addHangup();
+  }
+
+  if($script_name == 'voiptest_gosub_test_b') {
+    $script = new VoipScript('voiptest_gosub_test_b');
+    $script->addSay('script b');
+    $script->addReturn();
+  }
 
   return $script;
 }
