@@ -732,10 +732,12 @@ function callblast_save_voipcalls($list, $node) {
   while ($i < $count) {
     if ($list[$i]['destination']) {
       $details['dest_number'] = $list[$i]['destination'];
-//dsm($list);
-// TODO Pass $details['dest_name'] = $list[$1]['name']; to voipcall node 
+      $details['dest_name'] = $list[$i]['name'];
+dsm($details);
       // save voipcall node
-      voipcall_save($details);
+      //voipcall_save($details);
+      $v = voipcall_save($details);
+dsm($v);
       // store callblast_nid / voipcall_nid pairs in  callblast_call table
       $callblast_call->voipcall_nid = db_last_insert_id('node', 'nid');
       $callblast_call->callblast_nid = $node->nid;
