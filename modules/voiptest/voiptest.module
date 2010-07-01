@@ -86,7 +86,7 @@ function voiptest_voipcall_load_script($voipcall, $script_name) {
       VOIPCALL_CMD_BODY => array(
         'label_name' => array(VOIPCALL_VAL => 'no input received'),
         // Note: variable names have to be enclosed in between '@<'and '>@'
-        'expression' => array(VOIPCALL_EVAL => "@<gather_digits>@ == " . VOIPCALL_NO_INPUT),
+        'expression' => array(VOIPCALL_EVAL => "@<gather_digits>@ == " . VoipScript::NO_INPUT),
       ),
     );
     $script[] = array(

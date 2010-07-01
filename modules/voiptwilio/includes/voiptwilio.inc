@@ -277,22 +277,19 @@ watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
           $processing = FALSE;
           break;
 
-// ===== STOPPED HERE!!
-
-
-
         case 'VoipCmdDial';
           $menu_path = 'voip/twilio/callhandler';
           $call_id = $variables['call_id'];
           $response_url = $menu_path . '/' . $call_id . '/process_dial';
           $action = url($response_url, array('absolute' => TRUE));
           $method = 'POST';
-          $number = voipcall_script_get_parameter_value($command, 'number', $variables); 
+          $number = $script->evalString($cmd->getParam('number'));
           // TODO: implement the other features such as multi-dial, url and sendDigits?
-          $timeout = voipcall_script_get_parameter_value($command, 'timeout', $variables, 30); 
+          $timeout = $script->evalString($cmd->getParam('timeout', 30));
           // TODO: implement the hangupOnStar feature?
-          $time_limit = voipcall_script_get_parameter_value($command, 'time_limit', $variables, '14400'); 
+          $time_limit = $script->evalString($cmd->getParam('time_limit', '14400'));
           $caller_id = voipcall_script_get_parameter_value($command, 'caller_id', $variables, $variables['caller_number']); 
+          $caller_id = $script->evalString($cmd->getParam('caller_id', $script->getVar('caller_number'))); 
           $response .= '<Dial action="' . $action
                             . '" method="' . $method
                             . '" timeout="' . $timeout
@@ -307,15 +304,15 @@ watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
 
         case 'VoipCmdGetInput':
           $menu_path = 'voip/twilio/callhandler';
-          $call_id = $variables['call_id'];
+          $call_id = $script->getVar('call_id');
           $response_url = $menu_path . '/' . $call_id . '/process_gather';
           $action = url($response_url, array('absolute' => TRUE));
           $method = 'POST';
-          $timeout = voipcall_script_get_parameter_value($command, 'timeout', $variables, 5); 
-          $end_key = voipcall_script_get_parameter_value($command, 'end_key', $variables, ''); 
-          $num_digits = voipcall_script_get_parameter_value($command, 'num_digits', $variables); 
-          $text = voipcall_script_get_parameter_value($command, 'text', $variables); 
-          $url = voipcall_script_get_parameter_value($command, 'url', $variables); 
+          $timeout = $script->evalString($cmd->getParam('timeout', 5)); 
+          $end_key = $script->evalString($cmd->getParam('end_key', '')); 
+          $num_digits = $script->evalString($cmd->getParam('num_digits')); 
+          $text = $script->evalString($cmd->getParam('text')); 
+          $url = $script->evalString($cmd->getParam('url'));
           $response .= '<Gather action="' . $action
                             . '" method="' . $method
                             . '" timeout="' . $timeout
@@ -329,14 +326,16 @@ watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
             $response .= '<Play>' . $url . '</Play>';
           }
           $response .= '</Gather>';
-          // in case of timeout or empty input, set Digits to VOIPCALL_NO_INPUT
-          $action_timeout = $action . '&amp;Digits=' . VOIPCALL_NO_INPUT;
+          // in case of timeout or empty input, set Digits to VoipScript::NO_INPUT
+          $action_timeout = $action . '&amp;Digits=' . VoipScript::NO_INPUT;
           $response .= '<Redirect method="GET">'
                          . $action_timeout
                          . '</Redirect>';
           $rc = TRUE;
           $processing = FALSE;
           break;
+
+// ==== STOPPED HERE!! =====
 
         case 'VoipCmdGosub':
           // TODO: implement gosub

@@ -30,9 +30,8 @@ function _voiptest_get_weather_report() {
 // $script->addSay("The variable 'zip_code' is now set to %zip_code.");
 
   // If timeout or invalid zip code
-// TODO: what to do with constants such as VOIPCALL_NO_INPUT?
 // TODO: remove spaces from all constants?
-  $script->addGotoIf('invalid_zip', "^%input_digits == '" . VOIPCALL_NO_INPUT . "'");
+  $script->addGotoIf('invalid_zip', "^%input_digits == '" . VoipScript::NO_INPUT . "'");
 
   // get the report
   $script->addSet('forecast_result', '^_voiptest_get_forecast(%zip_code)');

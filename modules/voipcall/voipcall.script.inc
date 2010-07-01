@@ -39,11 +39,6 @@ define('VOIPCALL_VAL', 'value');  // A value
 define('VOIPCALL_VAR', 'variable'); // The name of a script variable containing the value
 define('VOIPVALL_EXEC', 'exec'); // An expression that will result in the value
 
-/**
- * Other script-related constants
- */
-define('VOIPCALL_NO_INPUT', 'no_input'); // Used to report timeouts and empty inputs
-
 
 /**
  * Public functions

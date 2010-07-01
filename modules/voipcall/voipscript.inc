@@ -23,6 +23,13 @@ class VoipScript {
   protected $error_message;
             
   /*
+   * Constants
+   */
+
+  const NO_INPUT='no_input';
+
+
+  /*
    * Constructors
    */
 
@@ -138,6 +145,11 @@ class VoipScript {
     $this->commands[] = new VoipCommand('VoipCmdDial', $params);
   }
 
+  /*
+   * Read input from phone keypad
+   *
+   * out: variable input_digits set to input or to VoipScrip::NO_INPUT
+   */
   function addGetInput($text='', $url='', $timeout=5, $end_key='#', $num_digits=NULL) {
     $params['text'] = $text;
     $params['url'] = $url;
@@ -363,8 +375,8 @@ class VoipCommand {
     return $this->id;
   }
 
-  function getParam($param_name) {
-    return $this->params[$param_name];
+  function getParam($param_name, $default=NULL) {
+    return $this->params[$param_name]?$this->params[$param_name]:$default;
   }
 }
     
