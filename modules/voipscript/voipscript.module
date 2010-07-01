@@ -1,3 +1,19 @@
 <?php
 
-include_once('voipscript.features.inc');
+// $Id$
+
+/**
+ * @file
+ * "Handles the call scripts associated with the Voip Drupal platform."
+ */
+
+
+foreach (array('voipscript.features.inc', 'voipscript.inc') as $file) {
+  require_once($file);
+}
+
+/**
+ * Implementation of hook_voipscript_load_script()
+ */
+function voipscript_voipscript_load_script($script_name) {
+}
