@@ -262,7 +262,6 @@ class VoipScript {
     return $rc;
   }
 
-// TODO: shall we keep runLoad or change it into a protected function?
   function runLoad($script_name) {
     $rc = TRUE;
     $found = FALSE;
