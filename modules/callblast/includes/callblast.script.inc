@@ -252,12 +252,13 @@ function callblast_voipcall_load_script($voipcall, $script_name) {
                        'url' => array(VOIPCALL_VAR => 'one_url'),
         ),
       );
+      // go back to "options" menu
       $script[] = array(
         VOIPCALL_CMD_ID => VOIPCALL_GOTO,
         VOIPCALL_CMD_BODY => array(
-          'label_name' => array(VOIPCALL_VAL => 'end call'),
+          'label_name' => array(VOIPCALL_VAL => 'options'),
         ),
-      ); 
+      );
 
       // option/message two 
       $script[] = array(
@@ -272,12 +273,13 @@ function callblast_voipcall_load_script($voipcall, $script_name) {
                        'url' => array(VOIPCALL_VAR => 'two_url'),
         ),
       );
+      // go back to "options" menu
       $script[] = array(
         VOIPCALL_CMD_ID => VOIPCALL_GOTO,
         VOIPCALL_CMD_BODY => array(
-          'label_name' => array(VOIPCALL_VAL => 'end call'),
+          'label_name' => array(VOIPCALL_VAL => 'options'),
         ),
-      ); 
+      );
 
       // option/message three 
       $script[] = array(
@@ -292,12 +294,13 @@ function callblast_voipcall_load_script($voipcall, $script_name) {
                        'url' => array(VOIPCALL_VAR => 'three_url'),
         ),
       );
+      // go back to "options" menu
       $script[] = array(
         VOIPCALL_CMD_ID => VOIPCALL_GOTO,
         VOIPCALL_CMD_BODY => array(
-          'label_name' => array(VOIPCALL_VAL => 'end call'),
+          'label_name' => array(VOIPCALL_VAL => 'options'),
         ),
-      ); 
+      );
 
       // option/message four 
       $script[] = array(
@@ -312,12 +315,13 @@ function callblast_voipcall_load_script($voipcall, $script_name) {
                        'url' => array(VOIPCALL_VAR => 'four_url'),
         ),
       );
+      // go back to "options" menu
       $script[] = array(
         VOIPCALL_CMD_ID => VOIPCALL_GOTO,
         VOIPCALL_CMD_BODY => array(
-          'label_name' => array(VOIPCALL_VAL => 'end call'),
+          'label_name' => array(VOIPCALL_VAL => 'options'),
         ),
-      ); 
+      );
 
       // option/message five 
       $script[] = array(
@@ -332,12 +336,14 @@ function callblast_voipcall_load_script($voipcall, $script_name) {
                        'url' => array(VOIPCALL_VAR => 'five_url'),
         ),
       );
+      // go back to "options" menu
       $script[] = array(
         VOIPCALL_CMD_ID => VOIPCALL_GOTO,
         VOIPCALL_CMD_BODY => array(
-          'label_name' => array(VOIPCALL_VAL => 'end call'),
+          'label_name' => array(VOIPCALL_VAL => 'options'),
         ),
-      ); 
+      );
+
 // TODO: add options for buttons 6-9?
       // end call (hang up)
       $script[] = array(
