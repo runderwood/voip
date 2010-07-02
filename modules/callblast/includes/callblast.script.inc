@@ -202,8 +202,50 @@ function callblast_voipcall_load_script($voipcall, $script_name) {
           'expression' => array(VOIPCALL_EVAL => "(@<gather_digits>@ == '5') && @<five_url>@"),
         ),
       );
+
+      // go to six
+      $script[] = array(
+        VOIPCALL_CMD_ID => VOIPCALL_GOTOIF,
+        VOIPCALL_CMD_BODY => array(
+          'label_name' => array(VOIPCALL_VAL => 'six'),
+          // Note: variable names have to be enclosed in between '@<'and '>@'
+          'expression' => array(VOIPCALL_EVAL => "@<gather_digits>@ == '6'"),
+          'expression' => array(VOIPCALL_EVAL => "(@<gather_digits>@ == '6') && @<six_url>@"),
+        ),
+      );
       
-// TODO: add options for buttons 6-9?
+      // go to seven
+      $script[] = array(
+        VOIPCALL_CMD_ID => VOIPCALL_GOTOIF,
+        VOIPCALL_CMD_BODY => array(
+          'label_name' => array(VOIPCALL_VAL => 'seven'),
+          // Note: variable names have to be enclosed in between '@<'and '>@'
+          'expression' => array(VOIPCALL_EVAL => "@<gather_digits>@ == '7'"),
+          'expression' => array(VOIPCALL_EVAL => "(@<gather_digits>@ == '7') && @<seven_url>@"),
+        ),
+      );
+
+      // go to eight
+      $script[] = array(
+        VOIPCALL_CMD_ID => VOIPCALL_GOTOIF,
+        VOIPCALL_CMD_BODY => array(
+          'label_name' => array(VOIPCALL_VAL => 'eight'),
+          // Note: variable names have to be enclosed in between '@<'and '>@'
+          'expression' => array(VOIPCALL_EVAL => "@<gather_digits>@ == '8'"),
+          'expression' => array(VOIPCALL_EVAL => "(@<gather_digits>@ == '8') && @<eight_url>@"),
+        ),
+      );
+
+      // go to nine
+      $script[] = array(
+        VOIPCALL_CMD_ID => VOIPCALL_GOTOIF,
+        VOIPCALL_CMD_BODY => array(
+          'label_name' => array(VOIPCALL_VAL => 'nine'),
+          // Note: variable names have to be enclosed in between '@<'and '>@'
+          'expression' => array(VOIPCALL_EVAL => "@<gather_digits>@ == '9'"),
+          'expression' => array(VOIPCALL_EVAL => "(@<gather_digits>@ == '9') && @<nine_url>@"),
+        ),
+      );
 
       // If invalid option selected, go back to the options menu
       $script[] = array(
@@ -344,7 +386,90 @@ function callblast_voipcall_load_script($voipcall, $script_name) {
         ),
       );
 
-// TODO: add options for buttons 6-9?
+      // option/message six
+      $script[] = array(
+        VOIPCALL_CMD_ID => VOIPCALL_LABEL,
+        VOIPCALL_CMD_BODY => array(
+          'label_name' => array(VOIPCALL_VAL => 'six'),
+        ),
+      );
+      $script[] = array(
+        VOIPCALL_CMD_ID => VOIPCALL_PLAY,
+        VOIPCALL_CMD_BODY => array(
+                       'url' => array(VOIPCALL_VAR => 'six_url'),
+        ),
+      );
+      // go back to "options" menu
+      $script[] = array(
+        VOIPCALL_CMD_ID => VOIPCALL_GOTO,
+        VOIPCALL_CMD_BODY => array(
+          'label_name' => array(VOIPCALL_VAL => 'options'),
+        ),
+      );
+
+      // option/message seven
+      $script[] = array(
+        VOIPCALL_CMD_ID => VOIPCALL_LABEL,
+        VOIPCALL_CMD_BODY => array(
+          'label_name' => array(VOIPCALL_VAL => 'seven'),
+        ),
+      );
+      $script[] = array(
+        VOIPCALL_CMD_ID => VOIPCALL_PLAY,
+        VOIPCALL_CMD_BODY => array(
+                       'url' => array(VOIPCALL_VAR => 'seven_url'),
+        ),
+      );
+      // go back to "options" menu
+      $script[] = array(
+        VOIPCALL_CMD_ID => VOIPCALL_GOTO,
+        VOIPCALL_CMD_BODY => array(
+          'label_name' => array(VOIPCALL_VAL => 'options'),
+        ),
+      );
+
+      // option/message eight
+      $script[] = array(
+        VOIPCALL_CMD_ID => VOIPCALL_LABEL,
+        VOIPCALL_CMD_BODY => array(
+          'label_name' => array(VOIPCALL_VAL => 'eight'),
+        ),
+      );
+      $script[] = array(
+        VOIPCALL_CMD_ID => VOIPCALL_PLAY,
+        VOIPCALL_CMD_BODY => array(
+                       'url' => array(VOIPCALL_VAR => 'eight_url'),
+        ),
+      );
+      // go back to "options" menu
+      $script[] = array(
+        VOIPCALL_CMD_ID => VOIPCALL_GOTO,
+        VOIPCALL_CMD_BODY => array(
+          'label_name' => array(VOIPCALL_VAL => 'options'),
+        ),
+      );
+
+      // option/message nine
+      $script[] = array(
+        VOIPCALL_CMD_ID => VOIPCALL_LABEL,
+        VOIPCALL_CMD_BODY => array(
+          'label_name' => array(VOIPCALL_VAL => 'nine'),
+        ),
+      );
+      $script[] = array(
+        VOIPCALL_CMD_ID => VOIPCALL_PLAY,
+        VOIPCALL_CMD_BODY => array(
+                       'url' => array(VOIPCALL_VAR => 'nine_url'),
+        ),
+      );
+      // go back to "options" menu
+      $script[] = array(
+        VOIPCALL_CMD_ID => VOIPCALL_GOTO,
+        VOIPCALL_CMD_BODY => array(
+          'label_name' => array(VOIPCALL_VAL => 'options'),
+        ),
+      );
+
       // end call (hang up)
       $script[] = array(
         VOIPCALL_CMD_ID => VOIPCALL_LABEL,
