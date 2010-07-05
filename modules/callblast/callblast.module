@@ -321,10 +321,6 @@ function callblast_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
 /**
  * On cron, run call blasts.
  * 
- * TODO Add test call before running call blast.
- * TODO Enable user to schedule date/time for test call and blast.
- * TODO Call node_save to update list before running blast. If people have been deleted from a dynamic list, don't call them.
- * 
  * Implementation of hook_cron().
  */
 function callblast_cron() {
