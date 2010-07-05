@@ -9,7 +9,8 @@ include_once('includes/callblast.script.inc');
 /**
  * @file callblast.module
  *   Drupal hooks implemented for VOIP call blasts.
- */ 
+ */
+ 
 /**
  * Implementation of hook_help(). 
  */
@@ -37,6 +38,13 @@ function callblast_menu() {
   );
   
   return $items;
+}
+
+/**
+ * Implementation of hook_perm().
+ */
+function callblast_perm() {
+  return array('send now');
 }
 
 /**
