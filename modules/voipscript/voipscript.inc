@@ -93,8 +93,9 @@ class VoipScript {
   //   variable placeholder is enclosed in " or '.  For instance,
   //      Correct form:   "^echo('The content is ' . '%msg');"
   //      Incorrect form: "^echo('The content is ' . %msg);"
-  //   The incorrect form will produce a parser error if the variable msg
-  //   contains characters such as a space, math sign, etc...
+  //   The incorrect form might produce a parser error if the variable msg
+  //   contains characters such as a space, math sign, etc... It might also
+  //   produce undesirable results if the variable starts with 0.
   function evalString($string) {
     $variables = $this->variables;
     // replace placeholders by the contents of the associated variable name
@@ -214,9 +215,9 @@ class VoipScript {
     $this->commands[] = new VoipCommand('VoipCmdSay', $params);
   }
 
-  function addSet($var_name, $value) {
+  function addSet($var_name, $var_value) {
     $params['var_name'] = $var_name;
-    $params['value'] = $value;
+    $params['var_value'] = $var_value;
     $this->commands[] = new VoipCommand('VoipCmdSet', $params);
   }
 
@@ -236,7 +237,6 @@ class VoipScript {
 
   function runGoto($label_name) {
     $rc = TRUE;
-    $label_name = $this->evalString($label_name);
     $found = FALSE;
     $i = 0;
     while(!$found) {
@@ -261,15 +261,6 @@ class VoipScript {
         // move to the next command in the script
         $i++;
       }
-    }
-    return $rc;
-  }
-
-  function runGotoIf($label_name, $condition) {
-    $rc = TRUE;
-    $condition = $this->evalString($condition);
-    if($condition) {
-      $rc = $this->runGoto($label_name);
     }
     return $rc;
   }
@@ -325,13 +316,6 @@ class VoipScript {
       $this->error_message = "Invalid return command for script '" . $this->name . "': " . print_r($this, true);
     }
     return $rc;
-  }
-
-  function runSet($var_name, $value) {
-    $var_name = $this->evalString($var_name);
-    $value = $this->evalString($value);
-    $this->variables[$var_name] = $value;
-    return;
   }
 
 

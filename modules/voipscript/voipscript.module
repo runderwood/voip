@@ -16,4 +16,9 @@ foreach (array('voipscript.features.inc', 'voipscript.inc') as $file) {
  * Implementation of hook_voipscript_load_script()
  */
 function voipscript_voipscript_load_script($script_name) {
+  $param = array('type' => 'voipscript', 'title' => $script_name, 'status' => 1);
+  $script_node = node_load($param);
+dsm($script_node, '$script_node');
+$script_code = $script_node->field_voipscript_code[0]['value'];
+dsm($script_code, '$script_code');
 }

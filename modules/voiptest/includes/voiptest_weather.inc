@@ -23,21 +23,23 @@ function _voiptest_get_weather_report() {
   $num_digits = 5;
   $script->addGetInput($text, $url, $timeout, $end_key, $num_digits);
 
-//  $script->addSay('You pressed: %input_digits');
+$script->addSay('You pressed: %input_digits');
 
-  $script->addSet('zip_code', 'input_digits');
+  $script->addSet('zip_code', '%input_digits');
 
-// $script->addSay("The variable 'zip_code' is now set to %zip_code.");
+$script->addSay("The variable 'zip_code' is now set to %zip_code.");
 
   // If timeout or invalid zip code
 // TODO: remove spaces from all constants?
   $script->addGotoIf('invalid_zip', "^%input_digits == '" . VoipScript::NO_INPUT . "'");
 
   // get the report
-  $script->addSet('forecast_result', '^_voiptest_get_forecast(%zip_code)');
+  $script->addSet('forecast_result', '^_voiptest_get_forecast("%zip_code")');
+
+$script->addSay("The variable 'forecast_result' is now set to '%forecast_result'.");
 
   // process invalid input
-  $script->addGotoIf('invalid_zip', '^%forecast_result == NULL');
+  $script->addGotoIf('invalid_zip', '^"%forecast_result" == NULL');
 
   // say the weather report
   $script->addLabel('forecast');
@@ -83,6 +85,9 @@ function _voiptest_get_weather_report() {
  * Return string with weather report for given zip code
  */
 function _voiptest_get_forecast($zip) {
+
+watchdog('forecast', "zip: $zip");
+
   $forecast = NULL;
 
   $woeid = _voiptest_getWoeidFromZip($zip);

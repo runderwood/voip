@@ -340,8 +340,8 @@ watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
           // TODO: implement gosub
           $script_name = $script->evalString($cmd->getParam('script_name'));
           $rc = $script->runGosub($script_name);
-          if($this->isError()){
-              $msg = $this->getErrorMessage();
+          if($script->isError()){
+              $msg = $script->getErrorMessage();
               $params = array();
               voipcall_processing_error('voiptwilio', $voipcall, $msg, $params);
               $rc = FALSE;
@@ -353,10 +353,10 @@ watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
           break;
 
         case 'VoipCmdGoto';
-          $label_name = $cmd->getParam('label_name', '');
+          $label_name = $script->evalString($cmd->getParam('label_name', ''));
           $rc = $script->runGoto($label_name);
-          if($this->isError()){
-            $msg = $this->getErrorMessage();
+          if($script->isError()){
+            $msg = $script->getErrorMessage();
             $params = array();
             voipcall_processing_error('voiptwilio', $voipcall, $msg, $params);
             $rc = FALSE;
@@ -367,17 +367,19 @@ watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
           break;
 
         case 'VoipCmdGotoIf';
-          $label_name = $cmd->getParam('label_name', '');
-          $condition = $cmd->getParam('condition', '');
-          $rc = $script->runGotoIf($label_name, $condition);
-          if($this->isError()){
-            $msg = $this->getErrorMessage();
-            $params = array();
-            voipcall_processing_error('voiptwilio', $voipcall, $msg, $params);
-            $rc = FALSE;
-            $processing = FALSE;
-            $found = TRUE;
-            $response .= "<Say>$msg.</Say>";
+          $condition = $script->evalString($cmd->getParam('condition', ''));
+          if($condition) { 
+            $label_name = $script->evalString($cmd->getParam('label_name', ''));
+            $rc = $script->runGoto($label_name, $condition);
+            if($script->isError()){
+              $msg = $script->getErrorMessage();
+              $params = array();
+              voipcall_processing_error('voiptwilio', $voipcall, $msg, $params);
+              $rc = FALSE;
+              $processing = FALSE;
+              $found = TRUE;
+              $response .= "<Say>$msg.</Say>";
+            }
           }
           break;
 
@@ -395,8 +397,8 @@ watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
         case 'VoipCmdLoad':
           $script_name = $script->evalString($cmd->getParam('script_name', ''));
           $rc = $script->runLoad($script_name);
-          if($this->isError()){
-            $msg = $this->getErrorMessage();
+          if($script->isError()){
+            $msg = $script->getErrorMessage();
             $params = array();
             voipcall_processing_error('voiptwilio', $voipcall, $msg, $params);
             $rc = FALSE;
@@ -436,8 +438,8 @@ watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
 
         case 'VoipCmdReturn':
           $rc = $script->runReturn();
-          if($this->isError()){
-            $msg = $this->getErrorMessage();
+          if($script->isError()){
+            $msg = $script->getErrorMessage();
             $params = array();
             voipcall_processing_error('voiptwilio', $voipcall, $msg, $params);
             $rc = FALSE;
@@ -450,12 +452,14 @@ watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
         case 'VoipCmdSay':
           $text = $script->evalString($cmd->getParam('text'));
           $response .= "<Say>$text</Say>";
+$script_array = print_r($script, true);
+watchdog('voiptwilio', "SAY: $response, from script: $script_array");
           break;
 
         case 'VoipCmdSet';
-          $var_name = $cmd->getParam('var_name');
-          $var_value = $cmd->getParam('var_value');
-          $script->runSet($var_name, $var_value);
+          $var_name = $script->evalString($cmd->getParam('var_name'));
+          $var_value = $script->evalString($cmd->getParam('var_value'));
+          $script->setVar($var_name, $var_value);
           break;
 
       }
@@ -474,7 +478,7 @@ watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
   // send response back to Twilio
   if($response) {
 $response .= '<!--' . "_REQUEST: " . print_r($_REQUEST,true) .  "\n" . '-->';
-$response .= '<!--' . "voipcall: " . print_r($voipcall,true) .  "\n" . '-->';
+//$response .= '<!--' . "voipcall: " . print_r($voipcall,true) .  "\n" . '-->';
     _voiptwilio_send_response($response);
   }
 
