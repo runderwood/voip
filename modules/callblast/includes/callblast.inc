@@ -217,3 +217,126 @@ function callblast_save_voipcalls($list, $node) {
     $i++;
   }
 }
+
+/**
+ * Send call blasst now.
+ * 
+ * @param
+ *  $nid, node ID of a callblast node to be sent now.
+ * 
+ * @return
+ *  boolean (true/false)
+ */
+// TODO I think we can get rid of this now (BH 7/8/10)
+function callblast_send_now($nid) {
+// TODO For some reason callblast_send() doesn't see the updated start time, but when the node loads to be displayed to the user, the scheduled start time has changed. This is mysterious. I've tried changing the time with node_save() and updating the tables directly.
+
+dsm("nid: $nid");
+  // Load requested node.
+  $node = node_load($nid);
+  
+  // Validation: 
+  // Make sure node type is a callblast.
+  // Make sure callblast has not been sent yet.
+  //   drupal_set_message($txt, $type);
+  //   return FALSE;
+
+  // Re-schedule call blast to be sent now.
+//dsm($node);
+  //$node->field_callblast_scheduled_start[0]['value'] = time() - 1;
+  //node_save($node);
+
+  $now = time();
+  db_query("UPDATE {content_type_callblast} "
+          ."SET field_callblast_scheduled_start_value = %d " 
+          ."WHERE nid = %d ",
+           $now, $nid);
+
+      // Clear cache to reflect update.
+ //     cache_clear_all('content:'. $callblast_nid .':'. $callblast_vid, content_cache_tablename()); 
+
+  cache_clear_all('content:'. $nid .':'. $node->vid, content_cache_tablename()); 
+  // Send scheduled call blast(s).
+  callblast_send(); 
+//dsm($node);
+  //   drupal_set_message($txt, $type);
+  //   return TRUE; 
+}
+
+/**
+ * Send scheduled call blasts.
+ */
+function callblast_run() {
+  // Check for call blasts that have been scheduled but not sent.
+  $sql = "SELECT n.nid, n.vid " 
+        ."FROM {node} n " 
+        ."JOIN {content_type_callblast} cb ON n.nid = cb.nid "
+        ."WHERE field_blast_sent_value = 0 ";
+  $result = db_query($sql);
+
+  // @todo these should be added to a queue. Lots of big lists could get messy.
+  // loop through unblasted blast lists and blast them
+  while ($row = db_fetch_object($result)) {
+    $callblast_nid = $row->nid;
+    $callblast_vid = $row->vid;
+  
+    // Check when call is scheduled to get sent. 
+    // Skip if it's scheduled for later.
+    // @todo Performance could probably be improved by using litenode for the query above and skipping the node_load here. 
+    $node = node_load($callblast_nid);
+    $start_time =  $node->field_callblast_scheduled_start[0]['value'];
+    // TODO Add timezone handling.
+    // $timezone = $node->field_callblast_scheduled_start[0]['timezone'];
+    $now = time();
+    if ($start_time <= $now) {
+      callblast_send($node);
+    } // end if ($start_time <= $now)
+  } // end while
+}
+
+/**
+ * Send call blast.
+ * 
+ * @param
+ *  $node, callblast node object.
+ */
+function callblast_send($node) {
+  // Get selected call list.
+  $list = callblast_list($node);
+  // Save call list. (Each number on list must
+  // be stored as a voipcall node.)
+  callblast_save_voipcalls($list, $node);
+
+  // get list of voipcall nids 
+  // voip.module gets the phone numbers from the voipcall node
+  $callblast_nid = $node->nid;
+  $callblast_vid = $node->vid;
+  $sql = 'SELECT voipcall_nid FROM {callblast_call} WHERE callblast_nid = %d'; 
+  $result2 = db_query($sql, $callblast_nid);
+
+  // place phone calls to each number on the list, one-by-one
+  while ($voipcall_nid = db_result($result2)) { 
+    $voipcall_node = node_load($voipcall_nid);    
+
+    // $request_id, Type of call being requested.
+    $request_id = 'voip_dial_out';
+
+    // place outgoing call
+    voip_send_request($request_id, $voipcall_node);
+  }
+  // Update node to indicate that blast has been sent.
+  db_query("UPDATE {content_type_callblast} "
+          ."SET field_blast_sent_value = 1 " 
+          ."WHERE nid = %d " 
+          ."AND vid = %d ",
+           $callblast_nid, $callblast_vid);
+
+  // Clear cache to reflect update.
+  cache_clear_all('content:'. $callblast_nid .':'. $callblast_vid, content_cache_tablename()); 
+
+  // Log call blast with watchdog
+  $type = 'call blast';
+  $message = t("Call blast nid-$callblast_nid sent.");
+  $severity = WATCHDOG_NOTICE;
+  watchdog($type, $message);
+}
