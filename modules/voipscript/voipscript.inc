@@ -85,10 +85,12 @@ class VoipScript {
 
 
   // Evaluate the given string based on the current value of script variables.
-  // Notes regarding the way values are handled: 
-  // * placeholders for script variables start with '%'
+  // Notes regarding the way input strings are handled: 
   // * strings that start with '^' are treated as expressions to be
   //   evaluated
+  // * placeholders for script variables start with '%'
+  // * this function is smart enough to process variables referenced by
+  //   other variables
   // * when defining expressions that include string variables, make sure the
   //   variable placeholder is enclosed in " or '.  For instance,
   //      Correct form:   "^echo('The content is ' . '%msg');"
@@ -97,22 +99,29 @@ class VoipScript {
   //   contains characters such as a space, math sign, etc... It might also
   //   produce undesirable results if the variable starts with 0.
   function evalString($string) {
-    $variables = $this->variables;
+    $vars = $this->variables;
     // replace placeholders by the contents of the associated variable name
     // since variables might refer to other variables, run the loop until all
     // replacements are done.
     $pattern = "/%(\w+)/e";
+    $count = 0;
     do {
-      // if the string is to be evaluated, make sure NULL variables are replaced
-      // by the text 'NULL' (rather than ''). That will help prevent eventual
-      // syntax errors in the evaluation.
-      if($string[0] == '^') {
-//ORIGINAL:        $replacement = '($this->variables[\'$1\']?$this->variables[\'$1\']:"NULL")';
-        $replacement = '($this->variables[\'$1\']?$this->variables[\'$1\']:"NULL")';
-      }
-      else {
-        $replacement = '$this->variables[\'$1\']';
-      }
+      $value = "\$vars['\$1']";
+      $quoted_value = "'\"' . $value . '\"'";
+      $replacement = "
+          ((!$value)
+            ? 'NULL'
+            : ((\$vars['\$1'][0] == '^')
+                ? \$this->evalString($value)
+                : (is_numeric($value)
+                    ? $value
+                    : ($count
+                         ? $value
+                         : $quoted_value
+                      )
+                  )
+              )
+          )";
       $val = preg_replace($pattern, $replacement, $string, -1, $count);
       $string = $val;
     } while ($count);
@@ -124,7 +133,6 @@ class VoipScript {
     }
     return $val;
   }
-
 
   function isError(){
     return $this->is_error;
