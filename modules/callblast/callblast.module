@@ -29,9 +29,9 @@ function callblast_menu() {
   $items = array();
 
  // Send callblast now 
-  $items['callblast/send-now/%'] = array(
+  $items['callblast/send-now/%node'] = array(
     'title' => 'Call Blast: Send',
-    'page callback' => 'callblast_send_now',
+    'page callback' => 'callblast_send',
     'page arguments' => array(2),
     'access arguments' => array('send now'),
     'type' => MENU_CALLBACK,
@@ -326,13 +326,15 @@ function callblast_form_alter(&$form, &$form_state, $form_id){
  * Implementation of hook_nodeapi().
  */
 function callblast_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
-  if ($op == 'presave' and $node->type == 'callblast' && arg(0) == 'node') {
+  if ($op == 'presave' and $node->type == 'callblast') {
     // Only save callblast list name.
     // Don't store human readable name or '(((' ')))'
     $list_name = $node->field_callblast_calllist[0]['value'];
-    $list_name = explode('(((', $list_name);
-    $list_name = trim(substr($list_name[1], 0, -3));
-    $node->field_callblast_calllist[0]['value'] = $list_name;
+    if (substr($list_name, -3) == ')))' ) {
+      $list_name = explode('(((', $list_name);
+      $list_name = trim(substr($list_name[1], 0, -3));
+      $node->field_callblast_calllist[0]['value'] = $list_name;
+    }
   }
 }
 

@@ -302,6 +302,9 @@ function callblast_run() {
  *  $node, callblast node object.
  */
 function callblast_send($node) {
+  // Save call blast start time.
+  $node->field_callblast_start[0]['value'] = time();
+
   // Get selected call list.
   $list = callblast_list($node);
   // Save call list. (Each number on list must
@@ -319,15 +322,13 @@ function callblast_send($node) {
   while ($voipcall_nid = db_result($result2)) { 
     _callblast_call($voipcall_nid);
   }
-  // Update node to indicate that blast has been sent.
-  db_query("UPDATE {content_type_callblast} "
-          ."SET field_blast_sent_value = 1 " 
-          ."WHERE nid = %d " 
-          ."AND vid = %d ",
-           $callblast_nid, $callblast_vid);
-
-  // Clear cache to reflect update.
-  cache_clear_all('content:'. $callblast_nid .':'. $callblast_vid, content_cache_tablename()); 
+  
+  // Record callblast as sent.
+  $node->field_blast_sent[0]['value'] = 1;
+  // Save callblast end time.
+  // (What time the callblast was completed.)
+  $node->field_callblast_end[0]['value'] = time();
+  node_save($node);
 
   // Log call blast with watchdog
   $type = 'call blast';
