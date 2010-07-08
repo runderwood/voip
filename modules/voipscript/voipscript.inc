@@ -107,6 +107,7 @@ class VoipScript {
       // by the text 'NULL' (rather than ''). That will help prevent eventual
       // syntax errors in the evaluation.
       if($string[0] == '^') {
+//ORIGINAL:        $replacement = '($this->variables[\'$1\']?$this->variables[\'$1\']:"NULL")';
         $replacement = '($this->variables[\'$1\']?$this->variables[\'$1\']:"NULL")';
       }
       else {

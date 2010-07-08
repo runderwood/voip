@@ -23,20 +23,16 @@ function _voiptest_get_weather_report() {
   $num_digits = 5;
   $script->addGetInput($text, $url, $timeout, $end_key, $num_digits);
 
-$script->addSay('You pressed: %input_digits');
+//$script->addSay('You pressed: \'%input_digits\'');
 
   $script->addSet('zip_code', '%input_digits');
 
-$script->addSay("The variable 'zip_code' is now set to %zip_code.");
-
   // If timeout or invalid zip code
 // TODO: remove spaces from all constants?
-  $script->addGotoIf('invalid_zip', "^%input_digits == '" . VoipScript::NO_INPUT . "'");
+  $script->addGotoIf('invalid_zip', "^'%input_digits' == '" . VoipScript::NO_INPUT . "'");
 
   // get the report
   $script->addSet('forecast_result', '^_voiptest_get_forecast("%zip_code")');
-
-$script->addSay("The variable 'forecast_result' is now set to '%forecast_result'.");
 
   // process invalid input
   $script->addGotoIf('invalid_zip', '^"%forecast_result" == NULL');
@@ -55,15 +51,18 @@ $script->addSay("The variable 'forecast_result' is now set to '%forecast_result'
   $num_digits = 1;
   $script->addGetInput($text, $url, $timeout, $end_key, $num_digits);
 
+//$script->addSay('You pressed: \'%input_digits\'');
+
+
   // process options
   $script->addLabel('process_options');
 
   // Go to user's selected option.
   // * replay previous message 
-  $script->addGotoIf('forecast', "^%input_digits == '*'");
+  $script->addGotoIf('forecast', "^'%input_digits' == '*'");
 
   // #, start all over again
-  $script->addGotoIf('start', "^input_digits == '#'");
+  $script->addGotoIf('start', "^'%input_digits' == '#'");
 
   // If invalid option selected, go back to the options menu
   $script->addSay("Invalid option selected. Please try again.");
