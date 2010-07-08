@@ -295,7 +295,8 @@ function callblast_run() {
 }
 
 /**
- * Send call blast.
+ * Send call blast (blast calls our 
+ * to all the numbers on this call blast list).
  * 
  * @param
  *  $node, callblast node object.
@@ -316,13 +317,7 @@ function callblast_send($node) {
 
   // place phone calls to each number on the list, one-by-one
   while ($voipcall_nid = db_result($result2)) { 
-    $voipcall_node = node_load($voipcall_nid);    
-
-    // $request_id, Type of call being requested.
-    $request_id = 'voip_dial_out';
-
-    // place outgoing call
-    voip_send_request($request_id, $voipcall_node);
+    _callblast_call($voipcall_nid);
   }
   // Update node to indicate that blast has been sent.
   db_query("UPDATE {content_type_callblast} "
@@ -339,4 +334,24 @@ function callblast_send($node) {
   $message = t("Call blast nid-$callblast_nid sent.");
   $severity = WATCHDOG_NOTICE;
   watchdog($type, $message);
+}
+
+/**
+ * Place an individual call to 
+ * the specified number (this is one of 
+ * the numbers on the call blast list 
+ * that is currently being called by callblast_send().
+ * 
+ * @param
+ *  $voipcall_nid, integer, node id of the voipcall 
+ *  node to be sent.
+ */
+function _callblast_call($voipcall_nid) {
+    $voipcall_node = node_load($voipcall_nid);    
+
+    // $request_id, Type of call being requested.
+    $request_id = 'voip_dial_out';
+
+    // place outgoing call
+    voip_send_request($request_id, $voipcall_node);
 }

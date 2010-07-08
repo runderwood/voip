@@ -342,7 +342,7 @@ function callblast_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
  * Implementation of hook_cron().
  */
 function callblast_cron() {
-  // Send scheduled call blasts.
+  // Run scheduled call blasts.
   callblast_run();
 }
 
