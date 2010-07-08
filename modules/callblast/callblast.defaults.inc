@@ -50,7 +50,7 @@ function _callblast_content_default_fields() {
       ),
       'default_value_php' => NULL,
       'label' => 'Blast sent',
-      'weight' => '3',
+      'weight' => '6',
       'description' => '',
       'type' => 'optionwidgets_onoff',
       'module' => 'optionwidgets',
@@ -714,6 +714,67 @@ function _callblast_content_default_fields() {
     ),
   );
 
+  // Exported field: field_callblast_end
+  $fields[] = array(
+    'field_name' => 'field_callblast_end',
+    'type_name' => 'callblast',
+    'display_settings' => array(
+      'label' => array(
+        'format' => 'above',
+        'exclude' => 0,
+      ),
+      'teaser' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      'full' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      '4' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+    ),
+    'widget_active' => '1',
+    'type' => 'datestamp',
+    'required' => '0',
+    'multiple' => '0',
+    'module' => 'date',
+    'active' => '1',
+    'granularity' => array(
+      'year' => 'year',
+      'month' => 'month',
+      'day' => 'day',
+      'hour' => 'hour',
+      'minute' => 'minute',
+      'second' => 'second',
+    ),
+    'timezone_db' => 'UTC',
+    'tz_handling' => 'site',
+    'todate' => '',
+    'repeat' => 0,
+    'repeat_collapsed' => '',
+    'default_format' => 'medium',
+    'widget' => array(
+      'default_value' => 'blank',
+      'default_value_code' => '',
+      'default_value2' => 'same',
+      'default_value_code2' => '',
+      'input_format' => 'Y-m-d H:i:s',
+      'input_format_custom' => '',
+      'increment' => '1',
+      'text_parts' => array(),
+      'year_range' => '-3:+3',
+      'label_position' => 'above',
+      'label' => 'End Time',
+      'weight' => '8',
+      'description' => '',
+      'type' => 'date_select',
+      'module' => 'date',
+    ),
+  );
+
   // Exported field: field_callblast_scheduled_start
   $fields[] = array(
     'field_name' => 'field_callblast_scheduled_start',
@@ -826,6 +887,67 @@ function _callblast_content_default_fields() {
     ),
   );
 
+  // Exported field: field_callblast_start
+  $fields[] = array(
+    'field_name' => 'field_callblast_start',
+    'type_name' => 'callblast',
+    'display_settings' => array(
+      'label' => array(
+        'format' => 'above',
+        'exclude' => 0,
+      ),
+      'teaser' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      'full' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      '4' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+    ),
+    'widget_active' => '1',
+    'type' => 'datestamp',
+    'required' => '0',
+    'multiple' => '0',
+    'module' => 'date',
+    'active' => '1',
+    'granularity' => array(
+      'year' => 'year',
+      'month' => 'month',
+      'day' => 'day',
+      'hour' => 'hour',
+      'minute' => 'minute',
+      'second' => 'second',
+    ),
+    'timezone_db' => 'UTC',
+    'tz_handling' => 'site',
+    'todate' => '',
+    'repeat' => 0,
+    'repeat_collapsed' => '',
+    'default_format' => 'medium',
+    'widget' => array(
+      'default_value' => 'blank',
+      'default_value_code' => '',
+      'default_value2' => 'same',
+      'default_value_code2' => '',
+      'input_format' => 'Y-m-d H:i:s',
+      'input_format_custom' => '',
+      'increment' => '1',
+      'text_parts' => array(),
+      'year_range' => '-3:+3',
+      'label_position' => 'above',
+      'label' => 'Start Time',
+      'weight' => '7',
+      'description' => '',
+      'type' => 'date_select',
+      'module' => 'date',
+    ),
+  );
+
   // Exported field: field_callblast_message
   $fields[] = array(
     'field_name' => 'field_callblast_message',
@@ -886,12 +1008,14 @@ function _callblast_content_default_fields() {
     t('Button 9 message'),
     t('Call Blast Message'),
     t('Call List'),
+    t('End Time'),
     t('Forward Call To'),
     t('Main Message'),
     t('Main Message URL'),
     t('Options Message'),
     t('Scheduled Start Time'),
     t('Script'),
+    t('Start Time'),
   );
 
   return $fields;

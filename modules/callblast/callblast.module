@@ -29,7 +29,7 @@ function callblast_menu() {
   $items = array();
 
  // Send callblast now 
-  $items['callblast/send-now/%node'] = array(
+  $items['callblast/send/%node'] = array(
     'title' => 'Call Blast: Send',
     'page callback' => 'callblast_send',
     'page arguments' => array(2),
@@ -307,10 +307,24 @@ function callblast_views_handlers() {
 function callblast_form_alter(&$form, &$form_state, $form_id){
   // callblast node form
   if ($form_id == 'callblast_node_form') {
-    // hide 'blast sent' field for users other than user 1
+dsm($form);
+    // Add "Send Now" button
+    $form['buttons']['send'] = array(
+      '#type' => 'submit',
+      '#value' => t('Send Now'),
+      '#access' => user_access('send now'),
+      '#submit' => array('node_form_submit', '_callblast_send_now'),
+      '#weight' => 7,
+    );
+  
+    // Usability:
+    // Hide 'blast sent', start time and end time
+    // fields for users other than user 1.
     global $user;
     if ($user->uid != 1) {
       $form['field_blast_sent']['#access'] = FALSE;
+      $form['field_callblast_start']['#access'] = FALSE;
+      $form['field_callblast_end']['#access'] = FALSE;
     }
     /**
      * If voipfield module is NOT enabled

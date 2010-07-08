@@ -219,51 +219,6 @@ function callblast_save_voipcalls($list, $node) {
 }
 
 /**
- * Send call blasst now.
- * 
- * @param
- *  $nid, node ID of a callblast node to be sent now.
- * 
- * @return
- *  boolean (true/false)
- */
-// TODO I think we can get rid of this now (BH 7/8/10)
-function callblast_send_now($nid) {
-// TODO For some reason callblast_send() doesn't see the updated start time, but when the node loads to be displayed to the user, the scheduled start time has changed. This is mysterious. I've tried changing the time with node_save() and updating the tables directly.
-
-dsm("nid: $nid");
-  // Load requested node.
-  $node = node_load($nid);
-  
-  // Validation: 
-  // Make sure node type is a callblast.
-  // Make sure callblast has not been sent yet.
-  //   drupal_set_message($txt, $type);
-  //   return FALSE;
-
-  // Re-schedule call blast to be sent now.
-//dsm($node);
-  //$node->field_callblast_scheduled_start[0]['value'] = time() - 1;
-  //node_save($node);
-
-  $now = time();
-  db_query("UPDATE {content_type_callblast} "
-          ."SET field_callblast_scheduled_start_value = %d " 
-          ."WHERE nid = %d ",
-           $now, $nid);
-
-      // Clear cache to reflect update.
- //     cache_clear_all('content:'. $callblast_nid .':'. $callblast_vid, content_cache_tablename()); 
-
-  cache_clear_all('content:'. $nid .':'. $node->vid, content_cache_tablename()); 
-  // Send scheduled call blast(s).
-  callblast_send(); 
-//dsm($node);
-  //   drupal_set_message($txt, $type);
-  //   return TRUE; 
-}
-
-/**
  * Send scheduled call blasts.
  */
 function callblast_run() {
@@ -335,6 +290,15 @@ function callblast_send($node) {
   $message = t("Call blast nid-$callblast_nid sent.");
   $severity = WATCHDOG_NOTICE;
   watchdog($type, $message);
+}
+
+/**
+ * Wrapper around callblast_send() for 
+ * "Send Now" button on callblast node edit forms.
+ */
+function _callblast_send_now($form, $form_state) {
+  $node = node_load($form_state['nid']);
+  callblast_send($node);
 }
 
 /**
