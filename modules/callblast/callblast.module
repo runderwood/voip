@@ -307,7 +307,7 @@ function callblast_views_handlers() {
 function callblast_form_alter(&$form, &$form_state, $form_id){
   // callblast node form
   if ($form_id == 'callblast_node_form') {
-dsm($form);
+    // Form buttons: 
     // Add "Send Now" button
     $form['buttons']['send'] = array(
       '#type' => 'submit',
@@ -316,7 +316,12 @@ dsm($form);
       '#submit' => array('node_form_submit', '_callblast_send_now'),
       '#weight' => 7,
     );
-  
+    // Change "Save" to "Send at Scheduled time"
+    $form['buttons']['submit']['#value'] = t('Save and Send at Scheduled Time');
+    // Get rid of preview button, we don't need it.
+    unset($form['buttons']['preview']);
+    
+
     // Usability:
     // Hide 'blast sent', start time and end time
     // fields for users other than user 1.
