@@ -23,6 +23,16 @@ function callblast_help($path, $arg) {
 }
 
 /**
+ * Implementation of hook_views_api().
+ */
+function callblast_views_api() {
+  return array(
+    'api' => 2,
+    'path' => drupal_get_path('module', 'callblast'), 
+  );
+}
+
+/**
  * Implementation of hook_menu().
  */
 function callblast_menu() {
@@ -186,118 +196,6 @@ function theme_callblast_block() {
 
   return $output;
 }
-
-//----------------------------//
-// Views hooks
-//----------------------------//
-
-/**
- * Implementation of hook_views_data().
- * 
- * Expose callblast_call table to views, so voipcall
- * nodes can be filtered in Views based on the callblast that 
- * created them.
- */
-function callblast_views_data() {
-  $data = array();
-
-  // callblast_call table
-  $data['callblast_call']['table']['group'] = t('Node');
-
-  // link callblast_call table to node table, join on callblast_nid
-  $data['callblast_call']['table']['join']['node'] = array(
-    'left_field' => 'nid',
-    'field' => 'callblast_nid',
-  );
-
-  // link callblast_call table to node table, join on voipcall_nid
-  $data['callblast_call']['table']['join']['node'] = array(
-    'left_field' => 'nid',
-    'field' => 'voipcall_nid',
-  );
-
-  // callblast_call.callblast_nid field
-  $data['callblast_call']['callblast_nid'] = array( 
-    'group' => t('Node'),
-    'title' => t('Call Blast Nid'),
-    'help' => t('The node ID of the Call Blast node.'),
-    'argument' => array(
-      // todo? 'handler' => '',
-      'name field' => 'title', // the field to display in the summary.
-      'numeric' => TRUE,
-      'validate type' => 'nid',
-    ),
-    'field' => array(
-      'handler' => 'views_handler_field',
-      'click sortable' => TRUE,
-    ),
-    'filter' => array(
-      'handler' => 'views_handler_filter_numeric',
-    ),
-    'sort' => array(
-      'handler' => 'views_handler_sort',
-    ),
-  );
-
-/*
-// TODO figure out why this doesn't work!
-  // Call Blast Name field
-  $data['callblast_call']['callblast_title'] = array( 
-    'group' => t('Node'),
-    'help' => t('The human readable title/name of the Call Blast node.'),
-    'field' => array(
-      'field' => 'callblast_nid', // the real field
-      'handler' => 'callblast_handler_field_callblast_call_callblast_title',
-      'click sortable' => TRUE,
-    ),
-  );
-// */
-
-  // callblast_call.voipcall_nid field
-  $data['callblast_call']['voipcall_nid'] = array(
-    'group' => t('Node'),
-    'title' => t('Voip Call Nid'),
-    'help' => t('The node ID of the Voip Call node.'),
-    'argument' => array(
-      // todo? 'handler' => '',
-      'name field' => 'title', // the field to display in the summary.
-      'numeric' => TRUE,
-      'validate type' => 'nid',
-    ),
-    'field' => array(
-      'handler' => 'views_handler_field',
-      'click sortable' => TRUE,
-    ),
-    'filter' => array(
-      'handler' => 'views_handler_filter_numeric',
-    ),
-    'sort' => array(
-      'handler' => 'views_handler_sort',
-    ),
-  );
-
-  return $data;
-}
-
-/**
- * Implementation of hook_views_handlers().
- */
-function callblast_views_handlers() {
-  return array(
-    'info' => array(
-      'path' => drupal_get_path('module', 'callblast') . '/includes',
-    ),
-    'handlers' => array(
-      'callblast_handler_field_callblast_call_callblast_title' => array(
-        'parent' => 'views_handler_field',
-      ),
-    ),
-  );
-}
- 
-//------------------//
-// End Views hooks 
-//------------------//
 
 /**
  * Implementation of hook_form_alter().
