@@ -28,3 +28,17 @@ $str = '%h';
 $rc = $s->evalString($str);
 echo("\neval $str: $rc\n");
 
+echo("\n--- New test ---\n");
+$s->setVar('input_digits','*****');
+$s->setVar('zip_code','%input_digits');
+$str = 'Say: %zip_code';
+$rc = $s->evalString($str);
+echo("\neval $str: $rc\n");
+$str = '^get_forecast(%zip_code)';
+$rc = $s->evalString($str);
+echo("\neval $str: $rc\n");
+
+
+function get_forecast($str) {
+  return 'la la la';
+}

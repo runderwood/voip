@@ -108,28 +108,54 @@ class VoipScript {
     do {
       $value = "\$vars['\$1']";
       $quoted_value = "'\"' . $value . '\"'";
+/**** Original
       $replacement = "
           ((!$value)
             ? 'NULL'
-            : ((\$vars['\$1'][0] == '^')
-                ? \$this->evalString($value)
-                : (is_numeric($value)
-                    ? $value
-                    : ($count
+            : (is_numeric($value)
+                 ? $value
+                 : ((\$vars['\$1'][0] == '^')
+                     ? \$this->evalString($value)
+                     : (('$string[0]' != '^')
                          ? $value
-                         : $quoted_value
+                         : ($count 
+                             ? $value
+                             : $quoted_value
+                          )
                       )
                   )
               )
           )";
+*****/
+      $replacement = "
+          ((!$value)
+            ? 'NULL'
+                 : ((\$vars['\$1'][0] == '^')
+                     ? \$this->evalString($value)
+                     : (('$string[0]' != '^')
+                         ? $value
+                         : ($count 
+                             ? $value
+                             : $quoted_value
+                          )
+                      )
+                  )
+          )";
       $val = preg_replace($pattern, $replacement, $string, -1, $count);
       $string = $val;
+watchdog('voipscript', "val: $val");
+//echo("\nval: $val\n");
     } while ($count);
 
     //check if $val contains a function or expression to be processed
     if($val[0] == '^') {
       $expression = substr($val,1);
+//ob_start();
       $val = eval("return ($expression);");
+//$output = ob_get_contents();
+//ob_end_clean();
+watchdog('voipscript',"\nexpression: return ($expression); output: $output\n");
+//echo("\nexpression: return ($expression); output: $output\n");
     }
     return $val;
   }
