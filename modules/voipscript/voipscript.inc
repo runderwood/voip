@@ -103,30 +103,12 @@ class VoipScript {
     // replace placeholders by the contents of the associated variable name
     // since variables might refer to other variables, run the loop until all
     // replacements are done.
+/**** Original
     $pattern = "/%(\w+)/e";
     $count = 0;
     do {
       $value = "\$vars['\$1']";
       $quoted_value = "'\"' . $value . '\"'";
-/**** Original
-      $replacement = "
-          ((!$value)
-            ? 'NULL'
-            : (is_numeric($value)
-                 ? $value
-                 : ((\$vars['\$1'][0] == '^')
-                     ? \$this->evalString($value)
-                     : (('$string[0]' != '^')
-                         ? $value
-                         : ($count 
-                             ? $value
-                             : $quoted_value
-                          )
-                      )
-                  )
-              )
-          )";
-*****/
       $replacement = "
           ((!$value)
             ? 'NULL'
@@ -143,9 +125,31 @@ class VoipScript {
           )";
       $val = preg_replace($pattern, $replacement, $string, -1, $count);
       $string = $val;
-watchdog('voipscript', "val: $val");
-//echo("\nval: $val\n");
+//watchdog('voipscript', "val: $val");
+echo("\nval: $val\n");
     } while ($count);
+*****/
+/**** Approach that uses strtr()
+    // NOTE: the following solution implements raw replacements. one has to escape string values with "" to prevent syntax errors...
+    // generate the replace pairs // TODO: only do this when needed
+    $replace_pairs = array();
+    foreach($vars as $name => $value){
+      $key = '%' . $name;
+      $replace_pairs[$key] = $value;
+    }
+
+    // replace placeholders by their associated variable values
+    do {
+      $old_string = $string;
+      $string = strtr($string, $replace_pairs);
+    } while(strcmp($old_string, $string));
+
+   // now replace remaining placeholders by NULL
+   $pattern = "/%(\w+)/";
+   $replacement = 'NULL';
+   $string = preg_replace($pattern, $replacement, $string);
+
+*****/
 
     //check if $val contains a function or expression to be processed
     if($val[0] == '^') {
@@ -154,8 +158,8 @@ watchdog('voipscript', "val: $val");
       $val = eval("return ($expression);");
 //$output = ob_get_contents();
 //ob_end_clean();
-watchdog('voipscript',"\nexpression: return ($expression); output: $output\n");
-//echo("\nexpression: return ($expression); output: $output\n");
+//watchdog('voipscript',"\nexpression: return ($expression); output: $output\n");
+echo("\nexpression: return ($expression); output: $output\n");
     }
     return $val;
   }
