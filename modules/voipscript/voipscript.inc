@@ -99,69 +99,8 @@ class VoipScript {
   //   contains characters such as a space, math sign, etc... It might also
   //   produce undesirable results if the variable starts with 0.
   function evalString($string) {
-    $vars = $this->variables;
-    // replace placeholders by the contents of the associated variable name
-    // since variables might refer to other variables, run the loop until all
-    // replacements are done.
-/**** Original
-    $pattern = "/%(\w+)/e";
-    $count = 0;
-    do {
-      $value = "\$vars['\$1']";
-      $quoted_value = "'\"' . $value . '\"'";
-      $replacement = "
-          ((!$value)
-            ? 'NULL'
-                 : ((\$vars['\$1'][0] == '^')
-                     ? \$this->evalString($value)
-                     : (('$string[0]' != '^')
-                         ? $value
-                         : ($count 
-                             ? $value
-                             : $quoted_value
-                          )
-                      )
-                  )
-          )";
-      $val = preg_replace($pattern, $replacement, $string, -1, $count);
-      $string = $val;
-//watchdog('voipscript', "val: $val");
-echo("\nval: $val\n");
-    } while ($count);
-*****/
-/**** Approach that uses strtr()
-    // NOTE: the following solution implements raw replacements. one has to escape string values with "" to prevent syntax errors...
-    // generate the replace pairs // TODO: only do this when needed
-    $replace_pairs = array();
-    foreach($vars as $name => $value){
-      $key = '%' . $name;
-      $replace_pairs[$key] = $value;
-    }
-
-    // replace placeholders by their associated variable values
-    do {
-      $old_string = $string;
-      $string = strtr($string, $replace_pairs);
-    } while(strcmp($old_string, $string));
-
-   // now replace remaining placeholders by NULL
-   $pattern = "/%(\w+)/";
-   $replacement = 'NULL';
-   $string = preg_replace($pattern, $replacement, $string);
-
-*****/
-
-    //check if $val contains a function or expression to be processed
-    if($val[0] == '^') {
-      $expression = substr($val,1);
-//ob_start();
-      $val = eval("return ($expression);");
-//$output = ob_get_contents();
-//ob_end_clean();
-//watchdog('voipscript',"\nexpression: return ($expression); output: $output\n");
-echo("\nexpression: return ($expression); output: $output\n");
-    }
-    return $val;
+    $variables = $this->variables;
+    $rc = self::_expand_variables($string, $variables);
   }
 
   function isError(){
@@ -374,6 +313,61 @@ echo("\nexpression: return ($expression); output: $output\n");
   // extend the script API to include additional commands
   protected function addCommand($command) {
     $this->commands[] = $command;
+  }
+
+  /**
+   * Private methods
+   */
+  private static function _expand_variables($string, $variables, $add_quotes=NULL) {
+//watchdog('voipscript', "expand_variables($string, $variables, $add_quotes)\n");
+echo("\nexpand_variables($string, $variables, $add_quotes)\n");
+    $pattern = "/%(\w+)/e";
+
+    if(is_null($add_quotes)){
+      $add_quotes = ($string[0] == '^') ? TRUE : FALSE;
+    }
+    $add_quotes = ($add_quotes)? 'TRUE' : 'FALSE';
+    $replacement = "VoipScript::_replace_variable(\$1, \$variables, \$add_quotes);" ;
+
+    $count = 0;
+    do {
+      $val = preg_replace($pattern, $replacement, $string, -1, $count);
+      $string = $val;
+//watchdog('voipscript', "val: $val");
+echo("\nval: $val\n");
+    }
+    while($count);
+
+    //check if $val contains a function or expression to be processed
+    if($val[0] == '^') {
+      $expression = substr($val,1);
+      $val = eval("return ($expression);");
+//watchdog('voipscript',"\nexpression: return ($expression); \n");
+echo("\nexpression: return ($expression); \n");
+    }
+  
+    return $val;
+  }
+
+  private static function _replace_variable($var_name, $variables, $add_quotes) {
+//watchdog('voipscript', "\nin _replace_variable($var_name, $variables, $add_quotes)\n");
+echo("\nin _replace_variable($var_name, $variables, $add_quotes)\n");
+    $var_value = $variables[$var_name];
+
+    if(!$var_value) {
+      $replacement = 'NULL';
+    }
+    else if($var_value[0] == '^') {
+      $replacement = VoipScript::_expand_variables($var_value, $variables, $add_quotes);
+    }
+    else if($add_quotes) {
+      $replacement = "'$var_value'";
+    }
+    else {
+      $replacement = $var_value;
+    }
+
+    return $replacement;
   }
 
 }
