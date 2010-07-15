@@ -11,139 +11,7 @@ foreach (array('voiptest_weather.inc') as $file) {
 /**
  * Implementation of hook_voipcall_load_script()
  */
-function voiptest_voipcall_load_script($voipcall, $script_name) {
-// TO DO: rename this function and convert the script
-  if($script_name == 'voiptest_test') {
-    $script = array();
-    $script[] = array(
-      VOIPCALL_CMD_ID => VOIPCALL_LABEL,
-      VOIPCALL_CMD_BODY => array(
-        'label_name' => array(VOIPCALL_VAL => 'start'),
-      ),
-    );
-    $script[] = array(
-      VOIPCALL_CMD_ID => VOIPCALL_SAY,
-      VOIPCALL_CMD_BODY => array(
-        'text' => array(VOIPCALL_VAL => t("Welcome to the Voip Drupal platform!")),
-      ),
-    );
-    $script[] = array(
-      VOIPCALL_CMD_ID => VOIPCALL_LABEL,
-      VOIPCALL_CMD_BODY => array(
-        'label_name' => array(VOIPCALL_VAL => 'gather'),
-      ),
-    );
-    $script[] = array(
-      VOIPCALL_CMD_ID => VOIPCALL_GATHER,
-      VOIPCALL_CMD_BODY => array(
-        'text' => array(VOIPCALL_VAL => t("To connect with the system developers, press 1.  To hangup, press the pound key.")),
-//        'url' => array(VOIPCALL_VAL => 'http://demo.twilio.com/hellomonkey/monkey.mp3'),
-        'num_digits' => array(VOIPCALL_VAL => 1),
-        'end_key' => array(VOIPCALL_VAL => ""),
-      ),
-    );
-    $script[] = array(
-      VOIPCALL_CMD_ID => VOIPCALL_SAY,
-      VOIPCALL_CMD_BODY => array(
-        'text' => array(VOIPCALL_VAL => "You pressed: "),
-      ),
-    );
-    $script[] = array(
-      VOIPCALL_CMD_ID => VOIPCALL_SAY,
-      VOIPCALL_CMD_BODY => array(
-        'text' => array(VOIPCALL_VAR => "gather_digits"),
-      ),
-    );
-    $script[] = array(
-      VOIPCALL_CMD_ID => VOIPCALL_SET,
-      VOIPCALL_CMD_BODY => array(
-        'var_name' => array(VOIPCALL_VAL => "user input"),
-        'var_value' => array(VOIPCALL_VAR => "gather_digits"),
-      ),
-    );
-    $script[] = array(
-      VOIPCALL_CMD_ID => VOIPCALL_SAY,
-      VOIPCALL_CMD_BODY => array(
-        'text' => array(VOIPCALL_VAL => "The variable 'user input' is now set to "),
-      ),
-    );
-    $script[] = array(
-      VOIPCALL_CMD_ID => VOIPCALL_SAY,
-      VOIPCALL_CMD_BODY => array(
-        'text' => array(VOIPCALL_VAR => "user input"),
-      ),
-    );
-    $script[] = array(
-      VOIPCALL_CMD_ID => VOIPCALL_GOTOIF,
-      VOIPCALL_CMD_BODY => array(
-        'label_name' => array(VOIPCALL_VAL => 'end call'),
-        // Note: variable names have to be enclosed in between '@<'and '>@'
-        'expression' => array(VOIPCALL_EVAL => "@<gather_digits>@ == '#'"),
-      ),
-    );
-    $script[] = array(
-      VOIPCALL_CMD_ID => VOIPCALL_GOTOIF,
-      VOIPCALL_CMD_BODY => array(
-        'label_name' => array(VOIPCALL_VAL => 'no input received'),
-        // Note: variable names have to be enclosed in between '@<'and '>@'
-        'expression' => array(VOIPCALL_EVAL => "@<gather_digits>@ == " . VoipScript::NO_INPUT),
-      ),
-    );
-    $script[] = array(
-      VOIPCALL_CMD_ID => VOIPCALL_SAY,
-      VOIPCALL_CMD_BODY => array(
-        'text' => array(VOIPCALL_VAL => "Dialing Leo's cellphone number "),
-      ),
-    );
-/****
-    $script[] = array(
-      VOIPCALL_CMD_ID => VOIPCALL_DIAL,
-      VOIPCALL_CMD_BODY => array(
-        'number' => array(VOIPCALL_VAL => "6177920995"),
-      ),
-    );
-****/
-    $script[] = array(
-      VOIPCALL_CMD_ID => VOIPCALL_GOTO,
-      VOIPCALL_CMD_BODY => array(
-        'label_name' => array(VOIPCALL_VAL => 'start'),
-      ),
-    );
-    $script[] = array(
-      VOIPCALL_CMD_ID => VOIPCALL_LABEL,
-      VOIPCALL_CMD_BODY => array(
-        'label_name' => array(VOIPCALL_VAL => 'no input received'),
-      ),
-    );
-    $script[] = array(
-      VOIPCALL_CMD_ID => VOIPCALL_SAY,
-      VOIPCALL_CMD_BODY => array(
-        'text' => array(VOIPCALL_VAL => "No input received. Please try again."),
-      ),
-    );
-    $script[] = array(
-      VOIPCALL_CMD_ID => VOIPCALL_GOTO,
-      VOIPCALL_CMD_BODY => array(
-        'label_name' => array(VOIPCALL_VAL => 'gather'),
-      ),
-    );
-    $script[] = array(
-      VOIPCALL_CMD_ID => VOIPCALL_LABEL,
-      VOIPCALL_CMD_BODY => array(
-        'label_name' => array(VOIPCALL_VAL => 'end call'),
-      ),
-    );
-    $script[] = array(
-      VOIPCALL_CMD_ID => VOIPCALL_SAY,
-      VOIPCALL_CMD_BODY => array(
-       'text' => array(VOIPCALL_VAL => "Bye bye."),
-       ),
-    );
-    $script[] = array(
-      VOIPCALL_CMD_ID => VOIPCALL_HANGUP
-    );
-  }
-
+function XXXXXX_voipcall_load_script($voipcall, $script_name) {
 
   if($script_name == 'voiptest_record') {
     $script = array();
@@ -304,6 +172,9 @@ function voiptest_voipcall_load_script($voipcall, $script_name) {
 }
 
 
+/*
+ * Implementation of hook_voipscript_load_script()
+ */
 function voiptest_voipscript_load_script($script_name) {
   if($script_name == 'voiptest_weather_report') {
     $script = _voiptest_get_weather_report();
@@ -323,10 +194,54 @@ function voiptest_voipscript_load_script($script_name) {
     $script->addReturn();
   }
 
+  if($script_name == 'voiptest_test') {
+    $script = _voiptest_get_test_script();
+  }
+
   return $script;
 }
 
 
+function _voiptest_get_test_script() {
+    $script = new VoipScript('voiptest_test');
+
+    $script->addLabel('start');
+    $script->addSay(t("Welcome to the Voip Drupal platform!"));
+
+    $script->addLabel('get input');
+
+    $text = t("To connect with the system developers, press 1.  To hangup, press the pound key.");
+    $url = ''; // 'http://demo.twilio.com/hellomonkey/monkey.mp3';
+    $timeout = 5;
+    $end_key = '';
+    $num_digits = 1;
+    $script->addGetInput($text, $url, $timeout, $end_key, $num_digits);
+    $script->addSay('You pressed: %input_digits');
+    $script->addSet('user_input', '%input_digits');
+    $script->addSay('The variable \'user input\' is now set to %user_input');
+
+    $script->addGotoIf('end call', "^%input_digits == '#'");
+
+    $script->addGotoIf('no input received', "^%input_digits == " . VoipScript::NO_INPUT);
+
+//TODO: ask caller to input a 10-digit number
+    $script->addSay('Dialing Leo\'s cellphone number');
+/****
+$number = '6177920995';
+    $script->addDial($number);
+****/
+    $script->addGoto('start');
+
+    $script->addLabel('no input received');
+    $script->addSay('No input received. Please try again.');
+    $script->addGoto('get input');
+
+    $script->addLabel('end call');
+    $script->addSay('Bye bye');
+    $script->addHangup();
+
+    return $script;
+  }
 /**
  * Callback function associated with the script voiptest_record.  It is called whenever that script records a new entry from the user.
  */
