@@ -21,6 +21,7 @@ function voiptest_voipscript_load_script($script_name) {
     $script->addSay('script a');
     $script->addGosub('voiptest_gosub_test_b');
     $script->addSay('back in script a');
+    $script->addSay('bye bye');
     $script->addHangup();
   }
 

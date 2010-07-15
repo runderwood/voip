@@ -271,9 +271,8 @@ class VoipScript {
     if ($script_state) {
       $this->name = $script_state['name'];
       $this->commands = $script_state['commands'];
+      // Note: index is already pointing to the next command to be executed
       $this->index = $script_state['index'];
-      // get ready to execute the next command in the script
-      $this->index++;
     }
     else {
       // invalid return command
