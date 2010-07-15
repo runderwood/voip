@@ -433,6 +433,7 @@ watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
                             . '" />';
           $rc = TRUE;
           $processing = FALSE;
+watchdog('voiptwilio', "Record command: $response");
           break;
 
         case 'VoipCmdReturn':
