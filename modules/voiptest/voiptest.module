@@ -119,8 +119,7 @@ function _voiptest_get_record_script() {
   $script->addSet('callback_result',
     '^_voiptest_record_callback(%call_id, %recording_url, %recording_duration)');
   $script->addSay('The callback returned: %callback_result');
-
-  $script->addHangup();
+  $script->addGoto('end call');
 
   $script->addLabel('no input received');
   $script->addSay("No input received. Please try again.");

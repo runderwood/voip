@@ -280,7 +280,7 @@ watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
 
         case 'VoipCmdDial';
           $menu_path = 'voip/twilio/callhandler';
-          $call_id = $variables['call_id'];
+          $call_id = $script->evalString($script->getVar('call_id'));
           $response_url = $menu_path . '/' . $call_id . '/process_dial';
           $action = url($response_url, array('absolute' => TRUE));
           $method = 'POST';
@@ -289,7 +289,8 @@ watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
           $timeout = $script->evalString($cmd->getParam('timeout', 30));
           // TODO: implement the hangupOnStar feature?
           $time_limit = $script->evalString($cmd->getParam('time_limit', '14400'));
-          $caller_id = $script->evalString($cmd->getParam('caller_id', $script->getVar('caller_number'))); 
+          $caller_number = $script->evalString($script->getVar('caller_number'));
+          $caller_id = $script->evalString($cmd->getParam('caller_id', $caller_number)); 
           $response .= '<Dial action="' . $action
                             . '" method="' . $method
                             . '" timeout="' . $timeout
@@ -304,7 +305,7 @@ watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
 
         case 'VoipCmdGetInput':
           $menu_path = 'voip/twilio/callhandler';
-          $call_id = $script->getVar('call_id');
+          $call_id = $script->evalString($script->getVar('call_id'));
           $response_url = $menu_path . '/' . $call_id . '/process_gather';
           $action = url($response_url, array('absolute' => TRUE));
           $method = 'POST';
@@ -415,7 +416,7 @@ watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
 
         case 'VoipCmdRecord':
           $menu_path = 'voip/twilio/callhandler';
-          $call_id = $variables['call_id'];
+          $call_id = $script->evalString($script->getVar('call_id'));
           $response_url = $menu_path . '/' . $call_id . '/process_record';
           $action = url($response_url, array('absolute' => TRUE));
           $method = 'POST';
@@ -433,7 +434,7 @@ watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
                             . '" />';
           $rc = TRUE;
           $processing = FALSE;
-watchdog('voiptwilio', "Record command: $response");
+watchdog('voiptwilio', "Record command: " . print_r($cmd, true) . ", response: " . print_r($response, true));
           break;
 
         case 'VoipCmdReturn':
@@ -531,11 +532,8 @@ function _voiptwilio_ping($server_config) {
 
 
 /**
- * Establish a new call by dialing the given number and connecting it to the given script
- *
- *   @param array $options is an array containing, among other things, 'variables' to be set in the new channels
- * 
- *   @return XXXXXX the call. Check voip_error() for processing errors.
+ * Establish a new call by dialing the number in the voipcall object and
+ * executing the script associated with that object.
  */
 function _voiptwilio_dial_out($server_config, $voipcall) {
 //dsm('In twilio dial_out');
