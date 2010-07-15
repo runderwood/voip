@@ -32,7 +32,7 @@ function _voiptwilio_call_handler($call_id=NULL, $response_action=NULL) {
 
 $msg = "in voiptwilio_call_handler() with call_id: $call_id, response_action: $response_action, and _REQUEST: " . print_r($_REQUEST, TRUE);
 $vars = array();
-watchdog('voiptwilio', $msg, $vars, WATCHDOG_INFO);
+//watchdog('voiptwilio', $msg, $vars, WATCHDOG_INFO);
 //dsm($msg);
 
   // validate $_REQUEST['AccountSid'] to avoid hack attempts
@@ -223,7 +223,7 @@ function _voiptwilio_script_handler($voipcall) {
 //dsm('entering voiptwilio_script_handler()');
 //dsm($voipcall);
 $msg = 'Entering script_handler with voipcall: ' . print_r($voipcall,true);
-watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
+//watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
 
   if(is_object($voipcall)){
     $voipcall = (array)$voipcall;
@@ -434,7 +434,6 @@ watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
                             . '" />';
           $rc = TRUE;
           $processing = FALSE;
-watchdog('voiptwilio', "Record command: " . print_r($cmd, true) . ", response: " . print_r($response, true));
           break;
 
         case 'VoipCmdReturn':
@@ -453,8 +452,6 @@ watchdog('voiptwilio', "Record command: " . print_r($cmd, true) . ", response: "
         case 'VoipCmdSay':
           $text = $script->evalString($cmd->getParam('text'));
           $response .= "<Say>$text</Say>";
-$script_array = print_r($script, true);
-watchdog('voiptwilio', "SAY: $response, from script: $script_array");
           break;
 
         case 'VoipCmdSet';
@@ -474,7 +471,7 @@ watchdog('voiptwilio', "SAY: $response, from script: $script_array");
   $voipcall = voipcall_save($voipcall);
 
 $msg = 'Leaving script_handler with voipcall: ' . print_r($voipcall,true) . ", and response: $response";
-watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
+//watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
 
   // send response back to Twilio
   if($response) {

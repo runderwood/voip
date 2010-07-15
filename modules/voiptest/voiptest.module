@@ -65,11 +65,9 @@ function _voiptest_get_test_script() {
     $script->addGotoIf('no input received', "^%input_digits == " . VoipScript::NO_INPUT);
 
 //TODO: ask caller to input a 10-digit number
-    $script->addSay('Dialing Leo\'s cellphone number');
-/****
-$number = '6177920995';
+    $script->addSay('Dialing...'); 
+    $number = '1234567890';
     $script->addDial($number);
-****/
     $script->addGoto('start');
 
     $script->addLabel('no input received');
@@ -130,7 +128,6 @@ function _voiptest_get_record_script() {
   $script->addHangup();
 
   return $script;
-
 }
 
 /**
