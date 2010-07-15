@@ -445,6 +445,7 @@ $msg = 'Entering script_handler with voipcall: ' . print_r($voipcall,true);
             $rc = FALSE;
             $processing = FALSE;
             $found = TRUE;
+            $msg = t('Processing error. Please contact your system administrator.');
             $response .= "<Say>$msg.</Say>";
           }
           break;
