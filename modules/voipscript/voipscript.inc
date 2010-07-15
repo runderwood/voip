@@ -305,7 +305,6 @@ class VoipScript {
 }
 
 
-
 /**
  * Implementation of command-related classes
  */
@@ -330,10 +329,10 @@ class VoipCommand {
 }
     
 
+
 /**
  * Internal functions
  */
-
 
 /**
  * The following function recursively replaces predefined variables from

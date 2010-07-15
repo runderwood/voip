@@ -23,11 +23,11 @@ function _voiptest_get_weather_report() {
   $num_digits = 5;
   $script->addGetInput($text, $url, $timeout, $end_key, $num_digits);
 
-$script->addSay('You pressed: %input_digits');
+//$script->addSay('You pressed: %input_digits');
 
   $script->addSet('zip_code', '%input_digits');
 
-$script->addSay('Zip code is now set to: %zip_code');
+//$script->addSay('Zip code is now set to: %zip_code');
 
 
   // If timeout or invalid zip code
@@ -54,7 +54,7 @@ $script->addSay('Zip code is now set to: %zip_code');
   $num_digits = 1;
   $script->addGetInput($text, $url, $timeout, $end_key, $num_digits);
 
-$script->addSay('You pressed: %input_digits');
+//$script->addSay('You pressed: %input_digits');
 
 
   // process options
