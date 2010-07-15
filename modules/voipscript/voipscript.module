@@ -8,7 +8,7 @@
  */
 
 
-foreach (array('voipscript.features.inc', 'voipscript.inc') as $file) {
+foreach (array('voipscript.features.inc') as $file) {
   require_once($file);
 }
 

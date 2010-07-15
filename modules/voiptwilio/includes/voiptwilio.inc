@@ -289,7 +289,6 @@ watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
           $timeout = $script->evalString($cmd->getParam('timeout', 30));
           // TODO: implement the hangupOnStar feature?
           $time_limit = $script->evalString($cmd->getParam('time_limit', '14400'));
-          $caller_id = voipcall_script_get_parameter_value($command, 'caller_id', $variables, $variables['caller_number']); 
           $caller_id = $script->evalString($cmd->getParam('caller_id', $script->getVar('caller_number'))); 
           $response .= '<Dial action="' . $action
                             . '" method="' . $method
@@ -424,7 +423,7 @@ watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
           $end_key = $script->evalString($cmd->getParam('end_key', '#'));
           $max_length = $script->evalString($cmd->getParam('max_length', 3600));
           // TODO: implement the "transcribe" feature?"
-          $play_beep = voipcall_script_get_parameter_value($command, 'play_beep', $variables, 'true'); 
+          $play_beep = $script->evalString($cmd->getParam('play_beep', 'true'));
           $response .= '<Record action="' . $action
                             . '" method="' . $method
                             . '" timeout="' . $timeout

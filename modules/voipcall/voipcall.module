@@ -7,7 +7,7 @@
  * Implementation of core functionality associated with voip calls
  */
 
-foreach (array('voipcall.features.inc') as $file) {
+foreach (array('voipcall.features.inc', 'voipscripthandler.inc') as $file) {
   require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . $file);
 }
 
@@ -18,16 +18,16 @@ foreach (array('voipcall.features.inc') as $file) {
 /**
  * Possible status of a call
  */
-define('VOIPCALL_ERROR', 'processing error');
-define('VOIPCALL_NOT_CALLED', 'not called'); // the call has yet to be called
+define('VOIPCALL_ERROR', 'processing_error');
+define('VOIPCALL_NOT_CALLED', 'not_called'); // the call has yet to be called
 define('VOIPCALL_DIALING', 'dialing'); // the call is being connected/requested
-define('VOIPCALL_NO_ANSWER', 'no answer');
+define('VOIPCALL_NO_ANSWER', 'no_answer');
 define('VOIPCALL_BUSY', 'busy');
-define('VOIPCALL_INVALID', 'invalid number');
-define('VOIPCALL_IN_PROGRESS', 'in progress'); // the call is in progress
-define('VOIPCALL_ANSWERED_MACHINE', 'answered by machine');
-define('VOIPCALL_ANSWERED_HUMAN', 'answered by human');
-define('VOIPCALL_MACHINE_HANGUP', 'machine hangup'); // call hangup due to machine pickup
+define('VOIPCALL_INVALID', 'invalid_number');
+define('VOIPCALL_IN_PROGRESS', 'in_progress'); // the call is in progress
+define('VOIPCALL_ANSWERED_MACHINE', 'answered_by_machine');
+define('VOIPCALL_ANSWERED_HUMAN', 'answered_by_human');
+define('VOIPCALL_MACHINE_HANGUP', 'machine_hangup'); // call hangup due to machine pickup
 define('VOIPCALL_COMPLETED', 'completed');
 
 
