@@ -4,5 +4,4 @@ description = Enables communication between Drupal and VoIP servers.
 package = Voip Drupal
 core = 6.x
 dependencies[] = services
-dependencies[] = voipscript
 
