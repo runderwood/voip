@@ -6,15 +6,24 @@
  * http://stackoverflow.com/questions/3241070/php-recursive-variable-replacement
  *
  * Notes:
- *   - Variables are prefixed with the character '%'
- *   - Input strings that start with '%' are to be evaluated
- *   - There is no check against circular inclusion, which might simply lead to an infinite loop. (Example: $vars['s'] = '%s'; ..) 
- *   - Booleans are not supported
+ * - Strings that start with '^' are treated as expressions to be evaluated
+ * - Placeholders for script variables start with '%'
+ * - This function is smart enough to process variables referenced by
+ *   other variables
+ * - There is no check against circular inclusion, which might simply lead
+ *   to an infinite loop. (Example: $vars['s'] = '%s'; ..) 
+ * - When defining expressions that include string variables, make sure the
+ *   variable placeholder is enclosed in " or '.  For instance,
+ *     Correct form:   "^print_r('The content is ' . '%msg');"
+ *     Incorrect form: "^print_r('The content is ' . %msg);"
+ *   The incorrect form might produce a parser error if the variable msg
+ *   contains characters such as a space, math sign, etc... It might also
+ *   produce undesirable results if the variable starts with 0.
  */
-function _expand_variables($str, $vars) {
+function _voipscript_expand_variables($str, $vars) {
   $eval = substr($str, 0, 1) == '^';
   $regex = '/\%(\w+)/e';
-  $replacement = "_replace_variable(\$1, \$vars, \$eval);" ;
+  $replacement = "_voipscript_replace_variable(\$1, \$vars, \$eval);" ;
   $res = preg_replace($regex, $replacement ,$str);
   if($eval) {
     ob_start();
@@ -29,9 +38,9 @@ function _expand_variables($str, $vars) {
   return $res;
 }
 
-function _replace_variable($var_name, $vars, $eval) {
+function _voipscript_replace_variable($var_name, $vars, $eval) {
   if(isset($vars[$var_name])) {
-    $expanded = _expand_variables($vars[$var_name], $vars);
+    $expanded = _voipscript_expand_variables($vars[$var_name], $vars);
     if($eval) {
       // Special handling since $str is going to be evaluated ..
       if(!is_numeric($expanded) || (substr($expanded . '', 0, 1)==='0'
@@ -63,22 +72,24 @@ $vars['b'] = '0123';
 $vars['i'] = 'Zip: %j';
 $vars['j'] = "01234";
 
-echo _expand_variables('^1 + %c',$vars);
+echo _voipscript_expand_variables('^1 + %c',$vars);
 echo("\n");
-echo _expand_variables('^%a != NULL',$vars);
+echo _voipscript_expand_variables('^%a != NULL',$vars);
 echo("\n");
-echo _expand_variables('^3+%f + 3',$vars);
+echo _voipscript_expand_variables('^3+%f + 3',$vars);
 echo("\n");
-echo _expand_variables('%h',$vars);
+echo _voipscript_expand_variables('%h',$vars);
 echo("\n");
-echo _expand_variables('Your code is: %code',$vars);
+echo _voipscript_expand_variables('Your code is: %code',$vars);
 echo("\n");
-echo _expand_variables('%i', $vars);
+echo _voipscript_expand_variables('%i', $vars);
 echo("\n");
-echo _expand_variables('Some info: %i', $vars);
+echo _voipscript_expand_variables('Some info: %i', $vars);
 echo("\n");
-echo _expand_variables('My name %i is %d', $vars);
+echo _voipscript_expand_variables('My name %i is %d', $vars);
 echo("\n");
-echo _expand_variables('^xyz(%i,)', $vars);
+echo _voipscript_expand_variables('^(%d == FALSE)', $vars);
+echo("\n");
+echo _voipscript_expand_variables('^xyz(%i,)', $vars);
 echo("\n");
 
