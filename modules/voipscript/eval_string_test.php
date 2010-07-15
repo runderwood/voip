@@ -1,34 +1,45 @@
 <?php
 
+/**
+ * The following function recursively replaces predefined variables from
+ * inside the given string.  It was based on code made available at 
+ * http://stackoverflow.com/questions/3241070/php-recursive-variable-replacement
+ *
+ * Notes:
+ *   - Variables are prefixed with the character '%'
+ *   - Input strings that start with '%' are to be evaluated
+ *   - There is no check against circular inclusion, which might simply lead to an infinite loop. (Example: $vars['s'] = '%s'; ..) 
+ *   - Booleans are not supported
+ */
 function _expand_variables($str, $vars) {
-    $eval = substr($str, 0, 1) == '^';
-    $regex = '/\%(\w+)/e';
-    $replacement = "_replace_variable(\$1, \$vars, \$eval);" ;
-    $res = preg_replace($regex, $replacement ,$str);
-    if($eval) {
-        ob_start();
-        $expr = substr($res, 1);
-        if(eval('$res = ' . $expr . ';')===false) {
-            ob_end_clean();
-            die('Invalid PHP-Expression: '.$expr);
-//            watchdog('voipscript', 'Invalid PHP expression: @expr', array('@expr' => $expr), WATCHDOG_ERROR);
-        }
-        ob_end_clean();
+  $eval = substr($str, 0, 1) == '^';
+  $regex = '/\%(\w+)/e';
+  $replacement = "_replace_variable(\$1, \$vars, \$eval);" ;
+  $res = preg_replace($regex, $replacement ,$str);
+  if($eval) {
+    ob_start();
+    $expr = substr($res, 1);
+    if(eval('$res = ' . $expr . ';')===false) {
+      ob_end_clean();
+      die('Invalid PHP-Expression: '.$expr);
+//      watchdog('voipscript', 'Invalid PHP expression: @expr', array('@expr' => $expr), WATCHDOG_ERROR);
     }
-    return $res;
+    ob_end_clean();
+  }
+  return $res;
 }
 
 function _replace_variable($var_name, $vars, $eval) {
   if(isset($vars[$var_name])) {
     $expanded = _expand_variables($vars[$var_name], $vars);
-      if($eval) {
-        // Special handling since $str is going to be evaluated ..
-        if(!is_numeric($expanded) || (substr($expanded . '', 0, 1)==='0'
+    if($eval) {
+      // Special handling since $str is going to be evaluated ..
+      if(!is_numeric($expanded) || (substr($expanded . '', 0, 1)==='0'
           && strpos($expanded . '', '.')===false)) {
-          $expanded = "'$expanded'";
+        $expanded = "'$expanded'";
       }
     }
-      return $expanded;
+    return $expanded;
   } else {
     // Variable does not exist in $vars array
     if($eval) {
