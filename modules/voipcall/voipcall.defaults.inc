@@ -539,6 +539,56 @@ The only events that do not activate the hangup script are the ones that lead to
     ),
   );
 
+  // Exported field: field_voipcall_script
+  $fields[] = array(
+    'field_name' => 'field_voipcall_script',
+    'type_name' => 'voipcall',
+    'display_settings' => array(
+      'label' => array(
+        'format' => 'above',
+        'exclude' => 0,
+      ),
+      'teaser' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      'full' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      '4' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+    ),
+    'widget_active' => '1',
+    'type' => 'text',
+    'required' => '0',
+    'multiple' => '0',
+    'module' => 'text',
+    'active' => '1',
+    'text_processing' => '0',
+    'max_length' => '',
+    'allowed_values' => '',
+    'allowed_values_php' => '',
+    'widget' => array(
+      'rows' => '10',
+      'size' => 60,
+      'default_value' => array(
+        '0' => array(
+          'value' => '',
+          '_error_element' => 'default_value_widget][field_voipcall_script][0][value',
+        ),
+      ),
+      'default_value_php' => NULL,
+      'label' => 'Script',
+      'weight' => '18',
+      'description' => 'The script associated with the call.',
+      'type' => 'text_textarea',
+      'module' => 'text',
+    ),
+  );
+
   // Exported field: field_voipcall_script_commands
   $fields[] = array(
     'field_name' => 'field_voipcall_script_commands',
@@ -929,6 +979,7 @@ The only events that do not activate the hangup script are the ones that lead to
     t('Error Message'),
     t('Hangup Script'),
     t('Process Response'),
+    t('Script'),
     t('Script Commands'),
     t('Script Index'),
     t('Script Name'),
