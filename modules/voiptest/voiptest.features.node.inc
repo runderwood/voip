@@ -3,10 +3,10 @@
 /**
  * Helper to implementation of hook_node_info().
  */
-function _voipscript_node_info() {
+function _voiptest_node_info() {
   $items = array(
-    'voipscript' => array(
-      'name' => t('Voip Script'),
+    'voiptest' => array(
+      'name' => t('Voip Test'),
       'module' => 'features',
       'description' => t('Dialplan script used in Voip Drupal calls.'),
       'has_title' => '1',

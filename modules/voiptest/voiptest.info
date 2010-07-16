@@ -1,6 +1,12 @@
-; $Id$
-name = Voip Test Module 
-description = Tests Voip Drupal hooks
-package = Voip Drupal
-core = 6.x
-
+core = "6.x"
+dependencies[] = "features"
+dependencies[] = "text"
+dependencies[] = "views"
+description = "Helps test scripts associated with the Voip Drupal platform."
+features[content][] = "voiptest-field_voiptest_code"
+features[node][] = "voiptest"
+features[views][] = "voiptest_list"
+name = "Voip Test"
+package = "Voip Drupal"
+project = "voiptest"
+version = "6.x-1.0"

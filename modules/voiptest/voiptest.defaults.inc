@@ -3,13 +3,13 @@
 /**
  * Helper to implementation of hook_content_default_fields().
  */
-function _voipscript_content_default_fields() {
+function _voiptest_content_default_fields() {
   $fields = array();
 
-  // Exported field: field_voipscript_code
+  // Exported field: field_voiptest_code
   $fields[] = array(
-    'field_name' => 'field_voipscript_code',
-    'type_name' => 'voipscript',
+    'field_name' => 'field_voiptest_code',
+    'type_name' => 'voiptest',
     'display_settings' => array(
       'label' => array(
         'format' => 'above',
@@ -44,13 +44,13 @@ function _voipscript_content_default_fields() {
       'default_value' => array(
         '0' => array(
           'value' => '$script = new VoipScript(\'your script name here\');',
-          '_error_element' => 'default_value_widget][field_voipscript_code][0][value',
+          '_error_element' => 'default_value_widget][field_voiptest_code][0][value',
         ),
       ),
       'default_value_php' => NULL,
       'label' => 'Script code',
       'weight' => '-4',
-      'description' => 'Fill in the variable <i>$script</i> above with the code for your script. That variable will be returned whenever a module requests your script name via <i>hook_voipscript_load_script($script_name)</i>.',
+      'description' => 'Fill in the variable <i>$script</i> above with the code for your script. That variable will be returned whenever a module requests your script name via <i>hook_voiptest_load_script($script_name)</i>.',
       'type' => 'text_textarea',
       'module' => 'text',
     ),

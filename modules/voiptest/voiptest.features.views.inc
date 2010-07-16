@@ -3,12 +3,12 @@
 /**
  * Helper to implementation of hook_views_default_views().
  */
-function _voipscript_views_default_views() {
+function _voiptest_views_default_views() {
   $views = array();
 
-  // Exported view: voipscript_list
+  // Exported view: voiptest_list
   $view = new view;
-  $view->name = 'voipscript_list';
+  $view->name = 'voiptest_list';
   $view->description = 'Displays a list of voip scripts.';
   $view->tag = '';
   $view->view_php = '';
@@ -16,14 +16,14 @@ function _voipscript_views_default_views() {
   $view->is_cacheable = FALSE;
   $view->api_version = 2;
   $view->disabled = FALSE; /* Edit this to true to make a default view disabled initially */
-  $handler = $view->new_display('default', 'voipscript_list', 'default');
+  $handler = $view->new_display('default', 'voiptest_list', 'default');
   $handler->override_option('fields', array(
     'title' => array(
       'id' => 'title',
       'table' => 'node',
       'field' => 'title',
     ),
-    'field_voipscript_code_value' => array(
+    'field_voiptest_code_value' => array(
       'label' => 'Script code',
       'alter' => array(
         'alter_text' => 0,
@@ -56,9 +56,9 @@ function _voipscript_views_default_views() {
         'multiple_reversed' => FALSE,
       ),
       'exclude' => 0,
-      'id' => 'field_voipscript_code_value',
-      'table' => 'node_data_field_voipscript_code',
-      'field' => 'field_voipscript_code_value',
+      'id' => 'field_voiptest_code_value',
+      'table' => 'node_data_field_voiptest_code',
+      'field' => 'field_voiptest_code_value',
       'relationship' => 'none',
     ),
     'name' => array(
@@ -112,7 +112,7 @@ function _voipscript_views_default_views() {
     'type' => array(
       'operator' => 'in',
       'value' => array(
-        'voipscript' => 'voipscript',
+        'voiptest' => 'voiptest',
       ),
       'group' => '0',
       'exposed' => FALSE,
@@ -132,7 +132,7 @@ function _voipscript_views_default_views() {
   $handler->override_option('cache', array(
     'type' => 'none',
   ));
-  $handler->override_option('title', 'Voip Scripts');
+  $handler->override_option('title', 'Voip Test');
   $handler->override_option('use_more', 1);
   $handler->override_option('use_more_always', 0);
   $handler->override_option('style_plugin', 'table');
@@ -143,7 +143,7 @@ function _voipscript_views_default_views() {
     'order' => 'asc',
     'columns' => array(
       'title' => 'title',
-      'field_voipscript_code_value' => 'field_voipscript_code_value',
+      'field_voiptest_code_value' => 'field_voiptest_code_value',
       'name' => 'name',
       'changed' => 'changed',
     ),
@@ -152,7 +152,7 @@ function _voipscript_views_default_views() {
         'sortable' => 1,
         'separator' => '',
       ),
-      'field_voipscript_code_value' => array(
+      'field_voiptest_code_value' => array(
         'sortable' => 0,
         'separator' => '',
       ),
@@ -168,10 +168,10 @@ function _voipscript_views_default_views() {
     'default' => 'title',
   ));
   $handler = $view->new_display('page', 'Page', 'page_1');
-  $handler->override_option('path', 'voip/voipscripts');
+  $handler->override_option('path', 'voip/voiptests');
   $handler->override_option('menu', array(
     'type' => 'normal',
-    'title' => 'Voip Scripts',
+    'title' => 'Voip Test',
     'description' => 'List voip scripts already created in the system',
     'weight' => '0',
     'name' => 'navigation',

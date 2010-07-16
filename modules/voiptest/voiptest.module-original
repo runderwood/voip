@@ -1,64 +1,17 @@
 <?php
 /**
- * @file Helps test scripts associated with the Voip Drupal platform
+ * @file test Voip Drupal hooks.
  */ 
 
 foreach (array('voiptest_weather.inc') as $file) {
   require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'includes' . DIRECTORY_SEPARATOR . $file);
 }
 
-foreach (array('voiptest.features.inc') as $file) {
-  require_once($file);
-}
 
-/**
+/*
  * Implementation of hook_voipscript_load_script()
  */
 function voiptest_voipscript_load_script($script_name) {
-  $script = NULL;
-  $param = array('type' => 'voiptest', 'title' => $script_name, 'status' => 1);
-  $script_node = node_load($param);
-  if($script_node) {
-dsm($script_node, '$script_node');
-    $script_code = $script_node->field_voiptest_code[0]['value'];
-dsm($script_code, '$script_code');
-    ob_start();
-    if(eval("$script_code")===false) {
-      ob_end_clean();
-      watchdog('voiptest', 'PHP syntax error in script: @script', array('@script' => $script_code), WATCHDOG_ERROR);
-      return;
-    }
-    ob_end_clean();
-  }
-  else {
-    $script = _voiptest_load_sample_scripts($script_name);
-  }
-  return $script;
-}
-
-/**
- * Implementation of hook_validate()
- */
-function voiptest_validate($node, &$form) {
-// TODO: why this function is not called?
-  $script_code = $node->field_voiptest_code[0]['value'];
-dsm($script_code, '$script_code');
-  ob_start();
-  if(eval("$script_code")===false) {
-    ob_end_clean();
-    form_set_error('field_voiptest_code',
-        t('PHP syntax error in script: @script',
-          array('@script' => $script_code)));
-  }
-  ob_end_clean();
-}
-
-
-
-/*
- * Sample scripts that highlight Voip Drupal capabilities
- */
-function _voiptest_load_sample_scripts($script_name) {
   if($script_name == 'voiptest_weather_report') {
     $script = _voiptest_get_weather_report();
   }
