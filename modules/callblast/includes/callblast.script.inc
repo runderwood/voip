@@ -13,50 +13,13 @@ function callblast_voipscript_load_script($script_name) {
 
   switch ($script_name) {
     case 'callblast_message':
-      // play message attached to callblast node
-      // message 0
-      $script = array();
-/********
-    $script[] = array(
-      VOIPCALL_CMD_ID => VOIPCALL_SAY,
-      VOIPCALL_CMD_BODY => array(
-        'text' => array(VOIPCALL_VAL => "The variable 'call_status' is now set to "),
-      ),
-    );
-    $script[] = array(
-      VOIPCALL_CMD_ID => VOIPCALL_SAY,
-      VOIPCALL_CMD_BODY => array(
-        'text' => array(VOIPCALL_VAR => "call_status"),
-      ),
-    );
-    $script[] = array(
-      VOIPCALL_CMD_ID => VOIPCALL_SAY,
-      VOIPCALL_CMD_BODY => array(
-        'text' => array(VOIPCALL_VAL => "The variable 'dial_status' is now set to "),
-      ),
-    );
-    $script[] = array(
-      VOIPCALL_CMD_ID => VOIPCALL_SAY,
-      VOIPCALL_CMD_BODY => array(
-        'text' => array(VOIPCALL_VAR => "dial_status"),
-      ),
-    );
-****/
       $script[] = array(
         VOIPCALL_CMD_ID => VOIPCALL_LABEL,
         VOIPCALL_CMD_BODY => array(
           'label_name' => array(VOIPCALL_VAL => 'start'),
         ),
       );
-/****
-      $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_PLAY,
-        VOIPCALL_CMD_BODY => array(
-                       'url' => array(VOIPCALL_VAR => 'message_url'),
-        ),
-      );
-****/
-//-----------
+
      // play the main message/announcement
       $script[] = array(
         VOIPCALL_CMD_ID => VOIPCALL_GATHER,
