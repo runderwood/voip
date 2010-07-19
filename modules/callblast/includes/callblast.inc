@@ -129,7 +129,9 @@ function callblast_save_voipcalls($list, $node) {
   $details['caller name'] = $node->field_callblast_caller_name[0]['value'];
   $details['parent node'] = $node->nid; // TODO delete?
   $details['scheduled start'] = $node->field_callblast_scheduled_start[0]['value'];
-  $details['script_name'] = 'callblast_message'; 
+  // load voip script
+  $script = VoipScript::loadScript('callblast_message');
+  $details['script'] = $script;
 
   // store URL to audio message in script_variable
   $url_tmp = $node->field_callblast_audio_file[0]['filepath'];

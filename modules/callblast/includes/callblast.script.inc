@@ -8,7 +8,9 @@
  * Implementation of hook_voipcall_load_script()
  * 
  */
-function callblast_voipcall_load_script($voipcall, $script_name) {
+function callblast_voipscript_load_script($script_name) {
+  $script = new VoipScript($script_name);
+
   switch ($script_name) {
     case 'callblast_message':
       // play message attached to callblast node
