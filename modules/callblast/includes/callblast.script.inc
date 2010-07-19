@@ -66,25 +66,8 @@ function callblast_voipscript_load_script($script_name, $vars) {
       $script->addGotoIf('forward', "(^%input_digits == '0') && @<forward_to_number>@");
       // go to one 
       $script->addGotoIf('one', "(^%input_digits == '1') && @<one_url>@");
-      $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_GOTOIF,
-        VOIPCALL_CMD_BODY => array(
-          'label_name' => array(VOIPCALL_VAL => 'one'),
-          // Note: variable names have to be enclosed in between '@<'and '>@'
-          'expression' => array(VOIPCALL_EVAL => "(@<gather_digits>@ == '1') && @<one_url>@"),
-        ),
-      );
-
       // go to two 
-      $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_GOTOIF,
-        VOIPCALL_CMD_BODY => array(
-          'label_name' => array(VOIPCALL_VAL => 'two'),
-          // Note: variable names have to be enclosed in between '@<'and '>@'
-          'expression' => array(VOIPCALL_EVAL => "(@<gather_digits>@ == '2') && @<two_url>@"),
-        ),
-      );
-
+      $script->addGotoIf('two', "(^%input_digits == '2') && @<two_url>@");
       // go to three 
       $script[] = array(
         VOIPCALL_CMD_ID => VOIPCALL_GOTOIF,
