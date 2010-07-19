@@ -121,26 +121,11 @@ function callblast_voipscript_load_script($script_name, $vars) {
       // go back to "options" menu
       $script->addGoto('options');
 
-     // option/message six
-      $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_LABEL,
-        VOIPCALL_CMD_BODY => array(
-          'label_name' => array(VOIPCALL_VAL => 'six'),
-        ),
-      );
-      $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_PLAY,
-        VOIPCALL_CMD_BODY => array(
-                       'url' => array(VOIPCALL_VAR => 'six_url'),
-        ),
-      );
+      // option/message six
+      $script->addLabel('six');
+      $script->addPlay($vars['six_url']);
       // go back to "options" menu
-      $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_GOTO,
-        VOIPCALL_CMD_BODY => array(
-          'label_name' => array(VOIPCALL_VAL => 'options'),
-        ),
-      );
+      $script->addGoto('options');
 
       // option/message seven
       $script[] = array(
