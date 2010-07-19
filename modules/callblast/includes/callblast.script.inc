@@ -75,15 +75,7 @@ function callblast_voipscript_load_script($script_name, $vars) {
       // go to five
       $script->addGotoIf('five', "(^%input_digits == '5') && @<five_url>@");
       // go to six
-      $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_GOTOIF,
-        VOIPCALL_CMD_BODY => array(
-          'label_name' => array(VOIPCALL_VAL => 'six'),
-          // Note: variable names have to be enclosed in between '@<'and '>@'
-          'expression' => array(VOIPCALL_EVAL => "@<gather_digits>@ == '6'"),
-          'expression' => array(VOIPCALL_EVAL => "(@<gather_digits>@ == '6') && @<six_url>@"),
-        ),
-      );
+      $script->addGotoIf('six', "(^%input_digits == '6') && @<six_url>@");
       
       // go to seven
       $script[] = array(
