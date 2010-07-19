@@ -40,20 +40,12 @@ function callblast_voipscript_load_script($script_name, $vars) {
       $end_key = '';
       $num_digits = 1;
       $script->addGetInput($text, $url, $timeout, $end_key, $num_digits);
+        // If user presses a button during the main message, handle the options
+        $script->addGotoIf('process_options', "^%input_digits == '" . VoipScript::NO_INPUT . "'");
+        // If no options message provided, hangup
+        $script->addGotoIf('end_call', "^%input_digits == '!@<options_url>@'");
 
 
-
-      // If user presses a button during the main message, handle the options
-      $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_GOTOIF,
-        VOIPCALL_CMD_BODY => array(
-          'label_name' => array(VOIPCALL_VAL => 'process_options'),
-          // Note: variable names have to be enclosed in between '@<'and '>@'
-          'expression' => array(VOIPCALL_EVAL => "@<gather_digits>@ != '" . VOIPCALL_NO_INPUT . "'"),
-        ),
-      );
-
-      // If no options message provided, hangup
       $script[] = array(
         VOIPCALL_CMD_ID => VOIPCALL_GOTOIF,
         VOIPCALL_CMD_BODY => array(
