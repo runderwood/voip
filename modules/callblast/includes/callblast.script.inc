@@ -48,6 +48,12 @@ function callblast_voipscript_load_script($script_name, $vars) {
         $script->addGotoIf('end_call', "@<dial_status>@ == '" . VOIPCALL_ANSWERED_MACHINE . "'");
       // play options
       $script->addLabel('options');
+      $text = '';
+      $url = $vars['options_url'];
+      $timeout = 1;
+      $end_key = '';
+      $num_digits = 1;
+      $script->addGetInput($text, $url, $timeout, $end_key, $num_digits);
 
       $script[] = array(
         VOIPCALL_CMD_ID => VOIPCALL_GATHER,
