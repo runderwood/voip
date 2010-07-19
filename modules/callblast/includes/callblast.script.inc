@@ -61,14 +61,7 @@ function callblast_voipscript_load_script($script_name, $vars) {
       // * replay previous message 
       $script->addGotoIf('start', "^%input_digits == '*'");
       // #, end call
-      $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_GOTOIF,
-        VOIPCALL_CMD_BODY => array(
-          'label_name' => array(VOIPCALL_VAL => 'end call'),
-          // Note: variable names have to be enclosed in between '@<'and '>@'
-          'expression' => array(VOIPCALL_EVAL => "@<gather_digits>@ == '#'"),
-        ),
-      );
+      $script->addGotoIf('end_call', "^%input_digits == '#'");
 
       // 0, go to call forwarding
       $script[] = array(
