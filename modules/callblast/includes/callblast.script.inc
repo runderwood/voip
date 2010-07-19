@@ -54,23 +54,8 @@ function callblast_voipscript_load_script($script_name, $vars) {
       $end_key = '';
       $num_digits = 1;
       $script->addGetInput($text, $url, $timeout, $end_key, $num_digits);
-
-      $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_GATHER,
-        VOIPCALL_CMD_BODY => array(
-          'url' => array(VOIPCALL_VAR => 'options_url'),
-          'num_digits' => array(VOIPCALL_VAL => 1),
-          'end_key' => array(VOIPCALL_VAL => ""),
-        ),
-      );
-
       // process options
-      $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_LABEL,
-        VOIPCALL_CMD_BODY => array(
-          'label_name' => array(VOIPCALL_VAL => 'process_options'),
-        ),
-      );
+      $script->addLabel('process_options');
 
       // Go to user's selected option.
       // * replay previous message 
