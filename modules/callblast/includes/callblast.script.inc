@@ -63,9 +63,9 @@ function callblast_voipscript_load_script($script_name, $vars) {
       // #, end call
       $script->addGotoIf('end_call', "^%input_digits == '#'");
       // 0, go to call forwarding
-      $script->addGotoIf('forward', "^%input_digits == '0' && @<forward_to_number>@");
-
+      $script->addGotoIf('forward', "(^%input_digits == '0') && @<forward_to_number>@");
       // go to one 
+      $script->addGotoIf('one', "(^%input_digits == '1') && @<one_url>@");
       $script[] = array(
         VOIPCALL_CMD_ID => VOIPCALL_GOTOIF,
         VOIPCALL_CMD_BODY => array(
