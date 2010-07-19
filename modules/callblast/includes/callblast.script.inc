@@ -13,13 +13,9 @@ function callblast_voipscript_load_script($script_name) {
 
   switch ($script_name) {
     case 'callblast_message':
-      $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_LABEL,
-        VOIPCALL_CMD_BODY => array(
-          'label_name' => array(VOIPCALL_VAL => 'start'),
-        ),
-      );
-
+   
+      $script->addLabel('start');
+      
      // play the main message/announcement
       $script[] = array(
         VOIPCALL_CMD_ID => VOIPCALL_GATHER,
