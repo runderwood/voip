@@ -80,31 +80,11 @@ function callblast_voipscript_load_script($script_name, $vars) {
       $script->addGotoIf('seven', "(^%input_digits == '7') && @<seven_url>@");
       // go to eight
       $script->addGotoIf('eight', "(^%input_digits == '8') && @<eight_url>@");
-
       // go to nine
-      $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_GOTOIF,
-        VOIPCALL_CMD_BODY => array(
-          'label_name' => array(VOIPCALL_VAL => 'nine'),
-          // Note: variable names have to be enclosed in between '@<'and '>@'
-          'expression' => array(VOIPCALL_EVAL => "@<gather_digits>@ == '9'"),
-          'expression' => array(VOIPCALL_EVAL => "(@<gather_digits>@ == '9') && @<nine_url>@"),
-        ),
-      );
-
+      $script->addGotoIf('nine', "(^%input_digits == '9') && @<nine_url>@");
       // If invalid option selected, go back to the options menu
-      $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_SAY,
-        VOIPCALL_CMD_BODY => array(
-          'text' => array(VOIPCALL_VAL => "Invalid option selected. Please try again."),
-        ),
-      );
-      $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_GOTO,
-        VOIPCALL_CMD_BODY => array(
-          'label_name' => array(VOIPCALL_VAL => 'options'),
-        ),
-      );
+      $script->addSay("Invalid option selected. Please try again.");
+      $script->addGoto('options');
 
       // 0, forward call
       $script[] = array(
