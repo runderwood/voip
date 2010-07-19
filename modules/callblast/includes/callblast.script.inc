@@ -44,26 +44,9 @@ function callblast_voipscript_load_script($script_name, $vars) {
         $script->addGotoIf('process_options', "^%input_digits == '" . VoipScript::NO_INPUT . "'");
         // If no options message provided, hangup
         $script->addGotoIf('end_call', "^%input_digits == '!@<options_url>@'");
+        // If the call has been answered by a machine, skip the options and hangup
+        $script->addGotoIf('end_call', "@<dial_status>@ == '" . VOIPCALL_ANSWERED_MACHINE . "'");
 
-
-      $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_GOTOIF,
-        VOIPCALL_CMD_BODY => array(
-          'label_name' => array(VOIPCALL_VAL => 'end call'),
-          // Note: variable names have to be enclosed in between '@<'and '>@'
-          'expression' => array(VOIPCALL_EVAL => "!@<options_url>@"),
-        ),
-      );
-
-      // If the call has been answered by a machine, skip the options and hangup
-      $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_GOTOIF,
-        VOIPCALL_CMD_BODY => array(
-          'label_name' => array(VOIPCALL_VAL => 'end call'),
-          // Note: variable names have to be enclosed in between '@<'and '>@'
-          'expression' => array(VOIPCALL_EVAL => "@<dial_status>@ == '" . VOIPCALL_ANSWERED_MACHINE . "'"),
-        ),
-      );
 
       // play options
       $script[] = array(
