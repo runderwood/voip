@@ -92,25 +92,10 @@ function callblast_voipscript_load_script($script_name, $vars) {
       $script->addDial($vars['forward_to_number']);
 
       // option/message one
-      $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_LABEL,
-        VOIPCALL_CMD_BODY => array(
-          'label_name' => array(VOIPCALL_VAL => 'one'),
-        ),
-      );
-      $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_PLAY,
-        VOIPCALL_CMD_BODY => array(
-                       'url' => array(VOIPCALL_VAR => 'one_url'),
-        ),
-      );
+      $script->addLabel('one');
+      $script->addPlay($vars['one_url']);
       // go back to "options" menu
-      $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_GOTO,
-        VOIPCALL_CMD_BODY => array(
-          'label_name' => array(VOIPCALL_VAL => 'options'),
-        ),
-      );
+      $script->addGoto('options');
 
       // option/message two 
       $script[] = array(
