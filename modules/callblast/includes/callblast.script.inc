@@ -46,15 +46,9 @@ function callblast_voipscript_load_script($script_name, $vars) {
         $script->addGotoIf('end_call', "^%input_digits == '!@<options_url>@'");
         // If the call has been answered by a machine, skip the options and hangup
         $script->addGotoIf('end_call', "@<dial_status>@ == '" . VOIPCALL_ANSWERED_MACHINE . "'");
-
-
       // play options
-      $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_LABEL,
-        VOIPCALL_CMD_BODY => array(
-          'label_name' => array(VOIPCALL_VAL => 'options'),
-        ),
-      );
+      $script->addLabel('options');
+
       $script[] = array(
         VOIPCALL_CMD_ID => VOIPCALL_GATHER,
         VOIPCALL_CMD_BODY => array(
