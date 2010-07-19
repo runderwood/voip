@@ -87,24 +87,9 @@ function callblast_voipscript_load_script($script_name, $vars) {
       $script->addGoto('options');
 
       // 0, forward call
-      $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_LABEL,
-        VOIPCALL_CMD_BODY => array(
-          'label_name' => array(VOIPCALL_VAL => 'forward'),
-        ),
-      );
-      $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_SAY,
-        VOIPCALL_CMD_BODY => array(
-          'text' => array(VOIPCALL_VAL => "Dialing. Please wait."),
-        ),  
-      );
-      $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_DIAL,
-        VOIPCALL_CMD_BODY => array(
-          'number' => array(VOIPCALL_VAR => 'forward_to_number'),
-        ),
-      );
+      $script->addLabel('process_options');
+      $script->addSay("Dialing. Please wait.");
+      $script->addDial($vars['forward_to_number']);
 
       // option/message one
       $script[] = array(
