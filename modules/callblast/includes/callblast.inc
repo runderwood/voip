@@ -129,11 +129,8 @@ function callblast_save_voipcalls($list, $node) {
   $details['caller name'] = $node->field_callblast_caller_name[0]['value'];
   $details['parent node'] = $node->nid; // TODO delete?
   $details['scheduled start'] = $node->field_callblast_scheduled_start[0]['value'];
-  // load voip script
-  $script = VoipScript::loadScript('callblast_message');
-  $details['script'] = $script;
 
-  // store URL to audio message in script_variable
+  // URL to audio message, to be passed to VoipScript when script loads
   $url_tmp = $node->field_callblast_audio_file[0]['filepath'];
   $message_url = ($url_tmp)? $base_url.'/'.drupal_urlencode(check_url($url_tmp)) : NULL;
 
@@ -180,8 +177,8 @@ function callblast_save_voipcalls($list, $node) {
   $url_tmp = $node->field_callblast_audio_nine[0]['filepath'];
   $nine_url = ($url_tmp)? $base_url.'/'.drupal_urlencode(check_url($url_tmp)) : NULL;
 
-  // store voipcall variables
-  $details['script_variables'] = array(
+  // pass $vars as parameters to VoipScript
+  $vars = array(
     'message_url' => $message_url, 
     'forward_to_number' => $forward_to_number,
     'options_url' => $options_url,
@@ -195,6 +192,11 @@ function callblast_save_voipcalls($list, $node) {
     'eight_url' => $eight_url,
     'nine_url' => $nine_url,
   );
+
+  // load voip script
+  $script = VoipScript::loadScript('callblast_message', $vars);
+  $details['script'] = $script;
+
 
   // save up voipcall nodes from $list
   $i = 0;

@@ -7,24 +7,41 @@
 /**
  * Implementation of hook_voipcall_load_script()
  * 
+ * @param $script_name 
+ *  string
+ * 
+ * @param $vars
+ *   $vars = array(
+ *     'message_url' => $message_url, 
+ *     'forward_to_number' => $forward_to_number,
+ *     'options_url' => $options_url,
+ *     'one_url' => $one_url,
+ *     'two_url' => $two_url,
+ *     'three_url' => $three_url,
+ *     'four_url' => $four_url,
+ *     'five_url' => $five_url,
+ *     'six_url' => $six_url,
+ *     'seven_url' => $seven_url,
+ *     'eight_url' => $eight_url,
+ *     'nine_url' => $nine_url,
+ *   );  
  */
-function callblast_voipscript_load_script($script_name) {
+function callblast_voipscript_load_script($script_name, $vars) {
   $script = new VoipScript($script_name);
 
   switch ($script_name) {
     case 'callblast_message':
-   
+      // start here
       $script->addLabel('start');
-      
-     // play the main message/announcement
-      $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_GATHER,
-        VOIPCALL_CMD_BODY => array(
-          'url' => array(VOIPCALL_VAR => 'message_url'),
-          'num_digits' => array(VOIPCALL_VAL => 1),
-          'timeout' => array(VOIPCALL_VAL => 1),
-        ),
-      );
+      // play main message      
+      $text = '';
+      $url = $vars['message_url'];
+      $timeout = 1;
+      $end_key = '';
+      $num_digits = 1;
+      $script->addGetInput($text, $url, $timeout, $end_key, $num_digits);
+
+
 
       // If user presses a button during the main message, handle the options
       $script[] = array(
@@ -35,8 +52,6 @@ function callblast_voipscript_load_script($script_name) {
           'expression' => array(VOIPCALL_EVAL => "@<gather_digits>@ != '" . VOIPCALL_NO_INPUT . "'"),
         ),
       );
-
-//-----------
 
       // If no options message provided, hangup
       $script[] = array(
