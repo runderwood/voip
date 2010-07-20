@@ -140,37 +140,15 @@ function callblast_voipscript_load_script($script_name, $vars) {
       $script->addGoto('options');
 
       // option/message nine
-      $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_LABEL,
-        VOIPCALL_CMD_BODY => array(
-          'label_name' => array(VOIPCALL_VAL => 'nine'),
-        ),
-      );
-      $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_PLAY,
-        VOIPCALL_CMD_BODY => array(
-                       'url' => array(VOIPCALL_VAR => 'nine_url'),
-        ),
-      );
+      $script->addLabel('nine');
+      $script->addPlay($vars['nine_url']);
       // go back to "options" menu
-      $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_GOTO,
-        VOIPCALL_CMD_BODY => array(
-          'label_name' => array(VOIPCALL_VAL => 'options'),
-        ),
-      );
+      $script->addGoto('options');
 
       // end call (hang up)
-      $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_LABEL,
-        VOIPCALL_CMD_BODY => array(
-          'label_name' => array(VOIPCALL_VAL => 'end call'),
-        ),
-      );
-      $script[] = array(
-        VOIPCALL_CMD_ID => VOIPCALL_HANGUP
-      );
-
+      $script->addLabel('end_call');
+      $script->addHangup();    
+    
     break;
   }
 
