@@ -43,10 +43,10 @@ class VoipScript {
     $this->error_message = NULL;
   }
 
-  public static function loadScript($script_name){
+  public static function loadScript($script_name, $params = NULL){
     $rc = NULL;
     $script_tmp = new VoipScript($script_name);
-    $script_tmp->runLoad($script_name);
+    $script_tmp->runLoad($script_name, $params);
     if(!$script_tmp->isError()) {
       $rc = $script_tmp;
     }
@@ -230,15 +230,44 @@ class VoipScript {
     return $rc;
   }
 
-  function runLoad($script_name) {
+  /**
+   * @param $script_name
+   *  string, name of script to be loaded
+   * 
+   * @param $params
+   *  array, optional parameters 
+   *  to be passed to implementations of hook_voipscript_load_script
+   */
+  function runLoad($script_name, $params = NULL) {
     $rc = TRUE;
     $found = FALSE;
+
+    // Invoke hook_voipscript_load_script() giving modules the 
+    // opportunity to return a custom script. 
+/*****
+    $new_script = module_invoke_all('voipscript_load_script', $script_name, $params);
+    if(isset($new_script)) {
+      $found = TRUE;
+      // loads new name and commands
+      $this->name = $new_script->getName();
+      $this->commands = $new_script->getCommands();
+      $this->index = 0;
+      // override variables with the same name and preserve the others
+      $this->variables = array_merge($this->variables, $new_script->getVariables());
+      // preserve the stack as is
+        // $this->stack = array();
+      $this->is_error = FALSE;
+      // scripts must have unique names. end here.
+    }
+// *******/
+
+// todo Consider replacing hook invocation below with conventional hook invocation above. As it is now, module_invoke_all() isn't working right. I'm not sure why yet.
 
     // evoke hook_voipscript_load_script() giving modules the opportunity to return a
     // custom script
     foreach (module_implements('voipscript_load_script') as $module) {
       $function = $module .'_'. 'voipscript_load_script';
-      $new_script = call_user_func($function, $script_name);
+      $new_script = call_user_func($function, $script_name, $params);
       if(isset($new_script)) {
         $found = TRUE;
         // loads new name and commands
@@ -254,6 +283,7 @@ class VoipScript {
         break;
       }
     }
+// ************/
 
     if(!$found) {
       // no script found with the given name

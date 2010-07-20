@@ -197,7 +197,6 @@ function callblast_save_voipcalls($list, $node) {
   $script = VoipScript::loadScript('callblast_message', $vars);
   $details['script'] = $script;
 
-
   // save up voipcall nodes from $list
   $i = 0;
   $count = count($list);
