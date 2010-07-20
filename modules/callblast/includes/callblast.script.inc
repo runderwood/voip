@@ -87,7 +87,7 @@ function callblast_voipscript_load_script($script_name, $vars) {
       $script->addGoto('options');
 
       // 0, forward call
-      $script->addLabel('process_options');
+      $script->addLabel('forward');
       $script->addSay("Dialing. Please wait.");
       $script->addDial($vars['forward_to_number']);
 
