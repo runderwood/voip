@@ -9,7 +9,7 @@
 //-----------------------------------------------------------------------------
 // Include files
 //-----------------------------------------------------------------------------
-foreach (array('voiptwilio.inc') as $file) {
+foreach (array('voiptwilio.inc', 'voiptwilioserver.inc') as $file) {
   require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'includes' . DIRECTORY_SEPARATOR . $file);
 }
 

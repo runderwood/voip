@@ -203,6 +203,7 @@ $vars = array();
   }
 
   // update the voipcall node with the new values
+  // TODO: make sure the voipcall node is only saved when really needed, ie. when one of its internal values changed from a previous stage
   $call = voipcall_save($call);
 
   // process the call script

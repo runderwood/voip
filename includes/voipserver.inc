@@ -4,7 +4,7 @@
 
 /**
  * @file
- * Implementation of the VoipServer class
+ * Implementation of the VoipServer and VoipHangupException classes
  */
 
 foreach (array('voipscript.inc') as $file) {
@@ -39,6 +39,13 @@ abstract class VoipServer {
 
 
   /*
+   * API methods
+   */
+
+  abstract function ping();
+
+
+  /*
    * Implementation of script commands
    */
 
@@ -58,3 +65,12 @@ abstract class VoipServer {
   abstract function runSay($call_id, $text, $voice=NULL, $language=NULL);
 
 }
+
+
+  /* VoipServer classes throws VoipHangupException whenever a call hangup is 
+   * detected during the execution of script commands.   
+   * The 'message' field of the exception contains the id of the call being hangup
+   */
+  class VoipHangupException extends Exception {}
+
+
