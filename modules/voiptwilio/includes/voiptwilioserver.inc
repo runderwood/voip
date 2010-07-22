@@ -85,7 +85,7 @@ class VoipTwilioServer extends VoipServer {
     $command .= '<Number>' . $number . '</Number>';
     $command .= '</Dial>';
     $rc = $this->send_command($call_id, $command, TRUE);
-    // TODO: process response from dial command here
+// TODO: process response from dial command here (check for hangups, etc.)
     return $rc;
   }
 
