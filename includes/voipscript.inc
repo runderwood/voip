@@ -20,7 +20,6 @@ foreach (array('voipserver.inc') as $file) {
         
 class VoipScript {
   protected $name;
-  protected $variables; 
   protected $call_id;
   protected $server;
             
@@ -29,10 +28,9 @@ class VoipScript {
    * Constructors
    */
 
-  function __construct($name, $call_id, $variables=array()) {
+  function __construct($name, $call_id) {
     $this->name = $name;
     $this->call_id = $call_id;
-    $this->variables = $variables;
 // TODO: determine voipserver to be used
 $account_sid = 'AC4b3755d057cb03b16bbf471916f9e460';
 $auth_token = '8a2d20e93cf5bfa242cce7bdc242bb43';
@@ -81,14 +79,6 @@ $this->server = new VoipTwilioServer($account_sid, $auth_token);
 
   function getCallId() {
     return $this->call_id;
-  }
-
-  function getVar($name) {
-    return $this->variables[$name];
-  }
-
-  function setVar($name, $value) {
-    $this->variables[$name] = $value;
   }
 
   /*

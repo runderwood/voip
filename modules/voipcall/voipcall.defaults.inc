@@ -589,6 +589,106 @@ The only events that do not activate the hangup script are the ones that lead to
     ),
   );
 
+  // Exported field: field_voipcall_script_name
+  $fields[] = array(
+    'field_name' => 'field_voipcall_script_name',
+    'type_name' => 'voipcall',
+    'display_settings' => array(
+      'label' => array(
+        'format' => 'above',
+        'exclude' => 0,
+      ),
+      'teaser' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      'full' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      '4' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+    ),
+    'widget_active' => '1',
+    'type' => 'text',
+    'required' => '0',
+    'multiple' => '0',
+    'module' => 'text',
+    'active' => '1',
+    'text_processing' => '0',
+    'max_length' => '',
+    'allowed_values' => '',
+    'allowed_values_php' => '',
+    'widget' => array(
+      'rows' => 5,
+      'size' => '60',
+      'default_value' => array(
+        '0' => array(
+          'value' => '',
+          '_error_element' => 'default_value_widget][field_voipcall_script_name][0][value',
+        ),
+      ),
+      'default_value_php' => NULL,
+      'label' => 'Script name',
+      'weight' => '19',
+      'description' => 'Name of the voip script to be used whenever the call is completed.  It has to be associated with a function called <script_name>_voipscript().',
+      'type' => 'text_textfield',
+      'module' => 'text',
+    ),
+  );
+
+  // Exported field: field_voipcall_script_variables
+  $fields[] = array(
+    'field_name' => 'field_voipcall_script_variables',
+    'type_name' => 'voipcall',
+    'display_settings' => array(
+      'label' => array(
+        'format' => 'above',
+        'exclude' => 0,
+      ),
+      'teaser' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      'full' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      '4' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+    ),
+    'widget_active' => '1',
+    'type' => 'text',
+    'required' => '0',
+    'multiple' => '0',
+    'module' => 'text',
+    'active' => '1',
+    'text_processing' => '0',
+    'max_length' => '',
+    'allowed_values' => '',
+    'allowed_values_php' => '',
+    'widget' => array(
+      'rows' => 5,
+      'size' => '60',
+      'default_value' => array(
+        '0' => array(
+          'value' => '',
+          '_error_element' => 'default_value_widget][field_voipcall_script_variables][0][value',
+        ),
+      ),
+      'default_value_php' => NULL,
+      'label' => 'Script Variables',
+      'weight' => '20',
+      'description' => 'Stores variables associated with the execution of the call script.',
+      'type' => 'text_textfield',
+      'module' => 'text',
+    ),
+  );
+
   // Exported field: field_voipcall_source
   $fields[] = array(
     'field_name' => 'field_voipcall_source',
@@ -764,6 +864,8 @@ The only events that do not activate the hangup script are the ones that lead to
     t('Hangup Script'),
     t('Process Response'),
     t('Script'),
+    t('Script Variables'),
+    t('Script name'),
     t('Start time'),
   );
 

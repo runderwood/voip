@@ -35,6 +35,8 @@ $vars = array();
 //watchdog('voiptwilio', $msg, $vars, WATCHDOG_INFO);
 //dsm($msg);
 
+  $is_new_call = FALSE;
+
   // validate $_REQUEST['AccountSid'] to avoid hack attempts
   $server = voip_servers('server', 'twilio');
   $account_sid = $server['configuration']['voiptwilio_account_sid'];
@@ -57,6 +59,7 @@ $vars = array();
 
     // create a new node for the call
     $call = (array)voipcall_save($call);
+    $is_new_call = TRUE;
   }
   else {
     // load the variables already associated with the call, if any
@@ -84,7 +87,7 @@ $vars = array();
   if(isset($_REQUEST['CalledZip'])) $call_location['calldr_zip'] = $_REQUEST['CalledZip'];
   if(isset($_REQUEST['CalledCountry'])) $call_location['called_country'] = $_REQUEST['CalledCountry'];
   if($call_location) {
-    $call['script']->setVar('call_location', $call_location);
+    $call['script_variables']['call_location'] = $call_location;
   }
 
   $hangup = FALSE;
@@ -138,26 +141,26 @@ $vars = array();
         break;
       case 'fail': // From: REST API - making calls
       case 'failed': // From: TwiML Reference - Dial verb
-        $call['script']->setVar('dial_status', VOIPCALL_ERROR);
+        $call['script_variables']['dial_status'] = VOIPCALL_ERROR;
         break;
       case 'answered':
-        $call['script']->setVar('dial_status', VOIPCALL_IN_PROGRESS);
+        $call['script_variables']['dial_status'] = VOIPCALL_IN_PROGRESS;
         break;
       case 'busy':
-        $call['script']->setVar('dial_status', VOIPCALL_BUSY);
+        $call['script_variables']['dial_status'] = VOIPCALL_BUSY;
         break;
       case 'no-answer':
-        $call['script']->setVar('dial_status', VOIPCALL_NO_ANSWER);
+        $call['script_variables']['dial_status'] = VOIPCALL_NO_ANSWER;
         break;
       // NOTE: apparently, Twilio does not detect answering machines with the TwiML Dial verb.  The following error codes are only valid for making calls via REST API
       case 'answered-machine':
-        $call['script']->setVar('dial_status', VOIPCALL_ANSWERED_MACHINE);
+        $call['script_variables']['dial_status'] = VOIPCALL_ANSWERED_MACHINE;
         break;
       case 'answered-human':
-        $call['script']->setVar('dial_status', VOIPCALL_ANSWERED_HUMAN);
+        $call['script_variables']['dial_status'] = VOIPCALL_ANSWERED_HUMAN;
         break;
       case 'hangup-machine':
-        $call['script']->setVar('dial_status', VOIPCALL_MACHINE_HANGUP);
+        $call['script_variables']['dial_status'] = VOIPCALL_MACHINE_HANGUP;
         break;
     }
   }
@@ -176,14 +179,16 @@ $vars = array();
         // updated a few lines above
         break;
       case 'process_gather':
-        $call['script']->setVar('input_digits', $_REQUEST['Digits']);
+        $call['script_variables']['input_digits'] = $_REQUEST['Digits'];
         break;
       case 'process_record':
         // Note: I'm adding an '.mp3' at the end of the url to make sure we use the mp3 file (check http://www.twilio.com/docs/demos/voicerecorder)
-        $call['script']->setVar('recording_url', $_REQUEST['RecordingUrl'] . '.mp3');
-        $call['script']->setVar('recording_duration', $_REQUEST['Duration']);
-        $call['script']->setVar('recording_file_size', $_REQUEST['RecordingFileSize']);
-        $call['script']->setVar('recording_digits', $_REQUEST['Digits']);
+        $recording_info = array();
+        $recording_info['url'] = $_REQUEST['RecordingUrl'] . '.mp3';
+        $recording_info['duration'] = $_REQUEST['Duration'];
+        $recording_info['file_size'] = $_REQUEST['RecordingFileSize'];
+        $recording_info['digits'] = $_REQUEST['Digits'];
+        $call['script_variables']['recording_info'] = $recording_info;
         break;
     }
   }
@@ -208,7 +213,25 @@ $vars = array();
   $call = voipcall_save($call);
 
   // process the call script
-  $rc = _voiptwilio_script_handler($call);
+//  $rc = _voiptwilio_script_handler($call);
+  if($is_new_call) {
+    try {
+      $script_name = 'voipscript_test';
+      $call_id = '1234';
+      $rc = VoipScript::runScript($script_name, $call_id);
+    }
+    catch (VoipScriptException $e) {
+      $msg = 'Error processing script @script_name with call id @call_id: @error_msg';
+      $params = array('@script_name' => $script_name,
+                      '@call_id' => $call_id,
+                      '@error_msg' => $e->getMessage());
+      voipcall_processing_error('voiptwilio', $voipcall, $msg, $params);
+    }
+  }
+  else {
+    // send call info to be processed by ongoing call script
+    VoipScript::sendData($call_id, $call);
+  }
 
   return;  // NOTE: this function MUST not return any value.  If it does, the
            //       output to Twilio will get messed up with Drupal hmtl...

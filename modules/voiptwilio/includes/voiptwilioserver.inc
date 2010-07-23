@@ -25,6 +25,7 @@ class VoipTwilioServer extends VoipServer {
 
   protected $max_execution_time;
 
+  protected static $skip_headers = array();
 
   /*
    * Constructors
@@ -98,7 +99,8 @@ class VoipTwilioServer extends VoipServer {
       if($is_hangup) {
         throw new VoipHangupException($call_id);
       }
-      $dial_status =  $call['script']->getVar('dial_status');
+      $variables = unserialize($voipcall['field_voipcall_script_variables'][0]['value']);
+      $dial_status =  $variables['dial_status'];
       $rc = $dial_status;
     }
     return $rc;
@@ -154,7 +156,8 @@ class VoipTwilioServer extends VoipServer {
       if($is_hangup) {
         throw new VoipHangupException($call_id);
       }
-      $input_digits =  $call['script']->getVar('input_digits');
+      $variables = unserialize($voipcall['field_voipcall_script_variables'][0]['value']);
+      $input_digits =  $variables['input_digits'];
       $rc = $input_digits;
     }
     return $rc;
@@ -213,11 +216,8 @@ class VoipTwilioServer extends VoipServer {
         throw new VoipHangupException($call_id);
       }
       else {
-        $recording_info = array();
-        $recoding_info['url'] = $voipcall['script']->getVar('recording_url');
-        $recoding_info['duration'] = $voipcall['script']->getVar('recording_duration');
-        $recoding_info['file_size'] = $voipcall['script']->getVar('recording_file_size');
-        $recoding_info['digits'] = $voipcall['script']->getVar('recording_digits');
+        $variables = unserialize($voipcall['field_voipcall_script_variables'][0]['value']);
+        $recording_info = $variables['recording_info'];
         $rc = $recording_info;
       }
     }
@@ -247,7 +247,10 @@ class VoipTwilioServer extends VoipServer {
 
     $rc = TRUE;
 
-    $output .= '<?xml version="1.0" encoding="UTF-8" ?>';
+    if(!self::$skip_headers[$call_id]) {
+      $output .= '<?xml version="1.0" encoding="UTF-8" ?>';
+      self::$skip_headers[$call_id] = TRUE;
+    }
     $output .= '<Response>';
     $output .= $command;
     $output .= '</Response>';
@@ -257,7 +260,7 @@ class VoipTwilioServer extends VoipServer {
     print $output;
 
     if($timeout_results) {
-      $rc = self::get_results($call_id, $timeout_results);
+      $rc = self::getData($call_id, $timeout_results);
     }
 
     // reset the PHP timeout timer to its original limit
@@ -271,7 +274,7 @@ class VoipTwilioServer extends VoipServer {
    * Methods that handle communication with voiptwilio_call_handler()
    */
 
-  public static function send_results($call_id, $result) {
+  public static function sendData($call_id, $result) {
     $var_name = 'voiptwilio_' . $call_id;
     $db_id = queryable_variables_set($var_name, $result);
     return $db_id;
@@ -279,7 +282,7 @@ class VoipTwilioServer extends VoipServer {
 
 // TODO: the following function should be protected
   // Note: $max_time is to be given in 1/100 units of a second
-  static function get_results($call_id, $max_time=100) {
+  static function getData($call_id, $max_time=100) {
     $result = NULL;
     $var_name = 'voiptwilio_' . $call_id;
     $processing = TRUE;

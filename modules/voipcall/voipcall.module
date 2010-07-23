@@ -49,8 +49,8 @@ define('VOIPCALL_COMPLETED', 'completed');
  *    'caller_number', the caller number
  *    'caller_name', the caller name
  *    'call_status', the status of the call. Check constants.
- *    'script', the dialplan script to be executed during the call
- *    'hangup_script', the script to be invoked in case of hangup
+ *    'script_name', the name of the dialplan script to be executed during the call
+ *    'script_variables', array with variables processed by the script
  *    'uid', the id of the user associated with the script
  *    'source', the server that originated the call ('drupal', 'asterisk', etc.)
  *    'start_time', the start time of the call
@@ -93,8 +93,8 @@ function voipcall_save($details=array()) {
     // initialize script with the default one
     if(!isset($details['script'])) {
       $script_name = voipcall_get_default_script_name();
-      $default_script = VoipScript::loadScript($script_name);
-      $node->field_voipcall_script[0]['value'] = serialize($default_script);
+      $node->field_voipcall_script_name[0]['value'] = $script_name;
+      $node->field_voipcall_script_variables[0]['value'] = serialize(array());
     }
 
   }
@@ -118,9 +118,8 @@ function voipcall_save($details=array()) {
 
   if(isset($details['call_status'])) $node->field_voipcall_status[0]['value'] = $details['call_status'];
 
-  if(isset($details['script'])) $node->field_voipcall_script[0]['value'] =  serialize($details['script']);
-
-  if(isset($details['hangup_script'])) $node->field_voipcall_hangup_script[0]['value'] =  serialize($details['hangup_script']);
+  if(isset($details['script_name'])) $node->field_voipcall_script_name[0]['value'] =  $details['script_name'];
+  if(isset($details['script_variables'])) $node->field_voipcall_script_variables[0]['value'] =  serialize($details['script_variables']);
 
   if(isset($details['source'])) $node->field_voipcall_source[0]['value'] =  $details['source'];
 
