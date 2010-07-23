@@ -23,6 +23,8 @@ class VoipTwilioServer extends VoipServer {
 
   protected $menu_path = 'voip/twilio/callhandler';
 
+  protected $max_execution_time;
+
 
   /*
    * Constructors
@@ -31,6 +33,7 @@ class VoipTwilioServer extends VoipServer {
   function __construct($account_sid, $auth_token) {
     $this->account_sid = $account_sid;
     $this->auth_token = $auth_token;
+    $this->max_execution_time = ini_get('max_execution_time');
   }
 
 
@@ -84,8 +87,23 @@ class VoipTwilioServer extends VoipServer {
                   . '" >';
     $command .= '<Number>' . $number . '</Number>';
     $command .= '</Dial>';
-    $rc = $this->send_command($call_id, $command, TRUE);
-// TODO: process response from dial command here (check for hangups, etc.)
+    $dial_timeout = ($timeout + 1) * 100;
+    $rc = $this->send_command($call_id, $command, $dial_timeout);
+    if(!$rc) {
+      // no response from the server
+      $this->is_error = TRUE;
+      $this->error_message = "Timeout expecting response for dial command in call $call_id";
+    }
+    else {
+      // return the result of the dial command
+      $voipcall = (array) $rc;
+      $is_hangup = voipcall_is_hangup($voipcall);
+      if($is_hangup) {
+        throw new VoipHangupException($call_id);
+      }
+      $dial_status =  $call['script']->getVar('dial_status');
+      $rc = $dial_status;
+    }
     return $rc;
   }
 
@@ -101,9 +119,11 @@ class VoipTwilioServer extends VoipServer {
     $command = '<Gather action="' . $action
                   . '" method="' . $method
                   . '" timeout="' . $timeout
-                  . '" finishOnKey="' . $end_key
-                  . '" numDigits="' . $num_digits
-                  . '" >';
+                  . '" finishOnKey="' . $end_key;
+    if($num_digits){
+      $command .= '" numDigits="' . $num_digits;
+    }
+    $command .= '" >';
     if($text) {
       $command .= '<Say>' . $text . '</Say>';
     }
@@ -112,12 +132,34 @@ class VoipTwilioServer extends VoipServer {
     }
     $command .= '</Gather>';
     // in case of timeout or empty input, set Digits to VoipScript::NO_INPUT
+// TODO: move VoipScript::NO_INPUT to VoipServer
     $action_timeout = $action . '&amp;Digits=' . VoipScript::NO_INPUT;
     $command = '<Redirect method="GET">'
                   . $action_timeout
                   . '</Redirect>';
-    $rc = $this->send_command($call_id, $command, TRUE);
-// TODO: process response from get input here
+    if($num_digits) {
+      $get_input_timeout = $num_digits * $timeout;
+    }
+    else {
+      $get_input_timeout = 120; // don't think people will spend more than 2 minutes entering digits
+    }
+    $get_input_timeout = ($get_input_timeout +1) * 100;
+    $rc = $this->send_command($call_id, $command, $get_input_timeout);
+    if(!$rc) {
+      // no response from the server
+      $this->is_error = TRUE;
+      $this->error_message = "Timeout expecting response for getInput command in call $call_id";
+    }
+    else {
+      // return the result of the getInput command
+      $voipcall = (array) $rc;
+      $is_hangup = voipcall_is_hangup($voipcall);
+      if($is_hangup) {
+        throw new VoipHangupException($call_id);
+      }
+      $input_digits =  $call['script']->getVar('input_digits');
+      $rc = $input_digits;
+    }
     return $rc;
   }
 
@@ -159,10 +201,29 @@ class VoipTwilioServer extends VoipServer {
                    . '" maxLength="' . $max_length
                    . '" playBeep="' . $play_beep
                    . '" />';
-    $rc = $this->send_command($call_id, $command, TRUE);
-
-// TODO: process record response here
-
+    $record_timeout = ($max_length + 1) * 100;
+    $rc = $this->send_command($call_id, $command, $record_timeout);
+    if(!$rc) {
+      // no response from the server
+      $this->is_error = TRUE;
+      $this->error_message = "Timeout expecting response for record command in call $call_id";
+    }
+    else {
+      // return the result of the record command
+      $voipcall = (array) $rc;
+      $is_hangup = voipcall_is_hangup($voipcall);
+      if($is_hangup) {
+        throw new VoipHangupException($call_id);
+      }
+      else {
+        $recording_info = array();
+        $recoding_info['url'] = $voipcall['script']->getVar('recording_url');
+        $recoding_info['duration'] = $voipcall['script']->getVar('recording_duration');
+        $recoding_info['file_size'] = $voipcall['script']->getVar('recording_file_size');
+        $recoding_info['digits'] = $voipcall['script']->getVar('recording_digits');
+        $rc = $recording_info;
+      }
+    }
     return $rc;
   }
 
@@ -182,7 +243,11 @@ class VoipTwilioServer extends VoipServer {
    * Protected methods
    */
 
-  protected function send_command($call_id, $command, $get_results=FALSE) {
+  protected function send_command($call_id, $command, $timeout_results=0) {
+    // stop PHP script processing timer
+    set_time_limit(0);
+    // TODO: how to prevent Apache from timing out?
+
     $rc = TRUE;
 
     $output .= '<?xml version="1.0" encoding="UTF-8" ?>';
@@ -195,10 +260,14 @@ class VoipTwilioServer extends VoipServer {
     print $output;
 
 dsm($output, 'sending $output: ');
-    if($get_results) {
-      $rc = self::get_results($call_id);
+    if($timeout_results) {
+      $rc = self::get_results($call_id, $timeout_results);
     }
 dsm($rc, '$rc');
+
+    // reset the PHP timeout timer to its original limit
+    set_time_limit($this->max_execution_time);
+
     return $rc;
   }
 
@@ -207,21 +276,20 @@ dsm($rc, '$rc');
    * Methods that handle communication with voiptwilio_call_handler()
    */
 
-  public static function save_results($call_id, $result) {
+  public static function send_results($call_id, $result) {
     $var_name = 'voiptwilio_' . $call_id;
     $db_id = queryable_variables_set($var_name, $result);
     return $db_id;
   }
 
 // TODO: the following function should be protected
-  static function get_results($call_id) {
+  // Note: $max_time is to be given in 1/100 units of a second
+  static function get_results($call_id, $max_time=100) {
     $result = NULL;
     $var_name = 'voiptwilio_' . $call_id;
     $processing = TRUE;
-//    $max_count = 100;
-    $max_count = 100 * 10;
     $interval = 10000;  // 0.001 of a second // TODO: this should be defined in terms of max_time / max_count
-    for($count=0; ($count < $max_count) && $processing; $count++) {
+    for($count=0; ($count < $max_time) && $processing; $count++) {
       usleep($interval);
       $result = queryable_variables_get($var_name);
       if($result) {

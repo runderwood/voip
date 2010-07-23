@@ -121,6 +121,7 @@ $vars = array();
       break;
   }
 
+// TODO: remove script object and store variables in a variables field...
   // update dial status, if available
   // Note: dial status is only available in case of a previously made
   //        outbound call request
