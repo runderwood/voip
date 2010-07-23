@@ -6,7 +6,7 @@
  * Enables communication between Drupal and VoIP servers.
  */
 
-foreach (array('voip_error.inc', 'voip_log_server.inc', 'voipserver.inc') as $file) {
+foreach (array('voip_error.inc', 'voip_log_server.inc', 'voipserver.inc', 'voipscript.inc') as $file) {
   require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'includes' . DIRECTORY_SEPARATOR . $file);
 }
 
@@ -287,4 +287,7 @@ function voip_process_request($request_id, $options=array())
   return $response;
 }
 
+
+// Handles processing errors associated with the execution of voip scripts
+class VoipException extends Exception {}
 

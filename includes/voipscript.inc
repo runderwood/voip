@@ -8,25 +8,22 @@
  */
 
 
+foreach (array('voipserver.inc') as $file) {
+  require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . $file);
+}
+
+
 /**
  * Class definitions
  */
 
         
 class VoipScript {
-  private $name;
-  private $variables; 
-  private $call_id;
-  protected $is_error;
-  protected $error_message;
+  protected $name;
+  protected $variables; 
+  protected $call_id;
   protected $server;
             
-  /*
-   * Constants
-   */
-
-  const NO_INPUT='no_input';
-
 
   /*
    * Constructors
@@ -36,28 +33,46 @@ class VoipScript {
     $this->name = $name;
     $this->call_id = $call_id;
     $this->variables = $variables;
-    $this->is_error = FALSE;
-    $this->error_message = NULL;
-    // TODO: determine voipserver to be used
+// TODO: determine voipserver to be used
 $account_sid = 'AC4b3755d057cb03b16bbf471916f9e460';
 $auth_token = '8a2d20e93cf5bfa242cce7bdc242bb43';
-    $this->server = new VoipTwilioServer($account_sid, $auth_token);
+$this->server = new VoipTwilioServer($account_sid, $auth_token);
   }
 
-  public static function loadScript($script_name, $call_id, $params = NULL){
-// todo: rewrite this function
+  /*
+   * Public static methods
+   */
+
+  /**
+   * Invoke the desired voip script
+   *
+   * @param $script_name
+   *  string, name of script. should match a <script_name>_voipscript() function
+   *
+   * @param $call_id
+   *  string, the id of the current call
+   * 
+   * @param $params
+   *  array, optional parameters 
+   *  to be passed to implementations of hook_voipscript_load_script
+   */
+  public static function runScript($script_name, $call_id, $params = NULL){
     $rc = NULL;
-    $script_tmp = new VoipScript($script_name, $call_id);
-    $script_tmp->runLoad($script_name, $params);
-    if(!$script_tmp->isError()) {
-      $rc = $script_tmp;
+    $function = $script_name . '_voipscript';
+    $exists = function_exists($function);
+    if(!$exists) {
+      $msg = t('Invalid voip script name: @name', array('@name' => $script_name));
+      throw new VoipScriptException($msg);
+    }
+    else {
+      $rc = call_user_func($function, $call_id, $params);
     }
     return $rc;
   }
         
 
   /*
-   * Public methods
+   * Public non-static methods
    */
 
   function getName() {
@@ -76,23 +91,16 @@ $auth_token = '8a2d20e93cf5bfa242cce7bdc242bb43';
     $this->variables[$name] = $value;
   }
 
-  function isError(){
-    return $this->is_error;
-  }
-
-  function getErrorMessage() {
-    return $this->error_message;
-  }
-
   /*
    * Supported script commands
    */
 
   function dial($number, $timeout=30, $hangup_key='*', $max_length=3600, $caller_id=''){
-    $rc = $this->server->runDial($this->call_id, $number, $timeout, $hangup_key, $time_limit, $caller_number);
-    if($server->isError()) {
-      $this->is_error = TRUE;
-      $this->error_message = $server->getErrorMessage();
+    try {
+      $rc = $this->server->runDial($this->call_id, $number, $timeout, $hangup_key, $time_limit, $caller_number);
+    }
+    catch(VoipServerException $e) {
+      throw new VoipScriptException($e->errorMessage());
     }
     return $rc;
   }
@@ -101,87 +109,58 @@ $auth_token = '8a2d20e93cf5bfa242cce7bdc242bb43';
    * Read input from phone keypad
    */
   function getInput($text='', $url='', $timeout=5, $end_key='#', $num_digits=NULL) {
+    try {
+      $rc = $this->server->runGetInput($text, $url, $timeout, $end_key, $num_digits);
+    }
+    catch(VoipServerException $e) {
+      throw new VoipScriptException($e->errorMessage());
+    }
+    return $rc;
   }
 
   function hangup() {
-    $rc = $this->server->runHangup($this->call_id);
+    try {
+      $rc = $this->server->runHangup($this->call_id);
+    }
+    catch(VoipServerException $e) {
+      throw new VoipScriptException($e->errorMessage());
+    }
     return $rc;
   }
 
   function play($url, $loop=1) {
+    try {
+      $rc = $this->server->runPlay($this->call_id, $url, $loop);
+    }
+    catch(VoipServerException $e) {
+      throw new VoipScriptException($e->errorMessage());
+    }
+    return $rc;
   }
 
   function record($timeout=5, $end_key='#', $max_length=3600) {
+    try {
+      $rc = $this->server->runRecord($this->call_id, $timeout, $end_key, $max_length);
+    }
+    catch(VoipServerException $e) {
+      throw new VoipScriptException($e->errorMessage());
+    }
+    return $rc;
   }
 
   function say($text, $loop=1, $voice=NULL, $language=NULL) {
+    try {
+      $rc = $this->server->runSay($this->call_id, $text, $loop, $voice, $language);
+    }
+    catch(VoipServerException $e) {
+      throw new VoipScriptException($e->errorMessage());
+    }
+    return $rc;
   }
 
-  /**
-   * @param $script_name
-   *  string, name of script to be loaded
-   * 
-   * @param $params
-   *  array, optional parameters 
-   *  to be passed to implementations of hook_voipscript_load_script
-   */
-  function runLoad($script_name, $params = NULL) {
-    $rc = TRUE;
-    $found = FALSE;
-
-    // Invoke hook_voipscript_load_script() giving modules the 
-    // opportunity to return a custom script. 
-/*****
-    $new_script = module_invoke_all('voipscript_load_script', $script_name, $params);
-    if(isset($new_script)) {
-      $found = TRUE;
-      // loads new name and commands
-      $this->name = $new_script->getName();
-      $this->commands = $new_script->getCommands();
-      $this->index = 0;
-      // override variables with the same name and preserve the others
-      $this->variables = array_merge($this->variables, $new_script->getVariables());
-      // preserve the stack as is
-        // $this->stack = array();
-      $this->is_error = FALSE;
-      // scripts must have unique names. end here.
-    }
-// *******/
-
-// todo Consider replacing hook invocation below with conventional hook invocation above. As it is now, module_invoke_all() isn't working right. I'm not sure why yet.
-
-    // evoke hook_voipscript_load_script() giving modules the opportunity to return a
-    // custom script
-    foreach (module_implements('voipscript_load_script') as $module) {
-      $function = $module .'_'. 'voipscript_load_script';
-      $new_script = call_user_func($function, $script_name, $params);
-      if(isset($new_script)) {
-        $found = TRUE;
-        // loads new name and commands
-        $this->name = $new_script->getName();
-        $this->commands = $new_script->getCommands();
-        $this->index = 0;
-        // override variables with the same name and preserve the others
-        $this->variables = array_merge($this->variables, $new_script->getVariables());
-        // preserve the stack as is
-          // $this->stack = array();
-        $this->is_error = FALSE;
-        // scripts must have unique names. exit the foreach
-        break;
-      }
-    }
-// ************/
-
-    if(!$found) {
-      // no script found with the given name
-      $rc = FALSE;
-      $this->is_error = TRUE;
-      $this->error_message = "Script '$script_name' not found for script '" . $this->name . "': " . print_r($this->commands, TRUE);
-    }
-
-    return $rc;
-  } 
 
 }
 
+// Handles processing errors associated with the execution of voip scripts
+class VoipScriptException extends VoipException {}
 

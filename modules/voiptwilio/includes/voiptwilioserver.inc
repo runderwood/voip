@@ -7,8 +7,8 @@
  * Implementation of the VoipTwilioServer class
  */
 
-// TODO: remove the line below once testing is done
-require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . '../../../includes/voipserver.inc');
+// include voipserver.inc
+module_load_include('inc', 'voip', 'includes/voipserver');
 
 
 /**
@@ -49,14 +49,11 @@ class VoipTwilioServer extends VoipServer {
     $client = new TwilioRestClient($this->account_sid, $this->auth_token);
 
     // Request a call log as a way to test the server connectivity
-    $this->is_error = FALSE;
     $path = "/$api_version/Accounts/$this->account_sid/Calls";
     $vars = array();
     $response = $client->request($path, "GET", $vars);
 
     if($response->IsError){
-      $this->is_error = TRUE;
-      $this->error_message = "Twilio command Ping failed: " . $response->ErrorMessage;
       return FALSE;
     }
 
@@ -91,8 +88,8 @@ class VoipTwilioServer extends VoipServer {
     $rc = $this->send_command($call_id, $command, $dial_timeout);
     if(!$rc) {
       // no response from the server
-      $this->is_error = TRUE;
-      $this->error_message = "Timeout expecting response for dial command in call $call_id";
+      $msg = "Timeout expecting response for dial command in call $call_id";
+      throw new VoipServerException($msg);
     }
     else {
       // return the result of the dial command
@@ -131,12 +128,12 @@ class VoipTwilioServer extends VoipServer {
       $command .= '<Play>' . $url . '</Play>';
     }
     $command .= '</Gather>';
-    // in case of timeout or empty input, set Digits to VoipScript::NO_INPUT
-// TODO: move VoipScript::NO_INPUT to VoipServer
-    $action_timeout = $action . '&amp;Digits=' . VoipScript::NO_INPUT;
+    // in case of user timeout or empty input, set Digits to VoipServer::NO_INPUT
+    $action_timeout = $action . '&amp;Digits=' . VoipServer::NO_INPUT;
     $command = '<Redirect method="GET">'
                   . $action_timeout
                   . '</Redirect>';
+    // determine server timeout
     if($num_digits) {
       $get_input_timeout = $num_digits * $timeout;
     }
@@ -147,8 +144,8 @@ class VoipTwilioServer extends VoipServer {
     $rc = $this->send_command($call_id, $command, $get_input_timeout);
     if(!$rc) {
       // no response from the server
-      $this->is_error = TRUE;
-      $this->error_message = "Timeout expecting response for getInput command in call $call_id";
+      $msg = "Timeout expecting response for getInput command in call $call_id";
+      throw new VoipServerException($msg);
     }
     else {
       // return the result of the getInput command
@@ -205,8 +202,8 @@ class VoipTwilioServer extends VoipServer {
     $rc = $this->send_command($call_id, $command, $record_timeout);
     if(!$rc) {
       // no response from the server
-      $this->is_error = TRUE;
-      $this->error_message = "Timeout expecting response for record command in call $call_id";
+      $msg = "Timeout expecting response for record command in call $call_id";
+      throw new VoipServerException($msg);
     }
     else {
       // return the result of the record command
@@ -259,11 +256,9 @@ class VoipTwilioServer extends VoipServer {
 
     print $output;
 
-dsm($output, 'sending $output: ');
     if($timeout_results) {
       $rc = self::get_results($call_id, $timeout_results);
     }
-dsm($rc, '$rc');
 
     // reset the PHP timeout timer to its original limit
     set_time_limit($this->max_execution_time);
@@ -302,7 +297,7 @@ dsm($rc, '$rc');
   }
 
 // TODO: the following function should be protected
-// TODO: add dependency to voipcall
+// TODO: add module dependency to voipcall
   static function is_hangup($call_id) {
     $is_hangup = FALSE;
     $var_name = 'voiptwilio_' . $call_id;

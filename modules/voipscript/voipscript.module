@@ -189,3 +189,12 @@ watchdog('voipscript', "in _voipscript_record_callback($call_id, $recording_url,
 }
 
 
+// test new script
+function voipscript_test_voipscript($call_id, $params=NULL) {
+dsm("in: voipscript_test_voipscript($call_id, $params)");
+  $s = new VoipScript('test', '1234');
+  $s->say('hello there');
+  $s->hangup();
+
+  return TRUE;
+}

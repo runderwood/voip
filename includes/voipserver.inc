@@ -7,12 +7,6 @@
  * Implementation of the VoipServer-related classes
  */
 
-foreach (array('voipscript.inc') as $file) {
-  require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . $file);
-}
-
-
-
 
 /**
  * Class definitions
@@ -20,22 +14,11 @@ foreach (array('voipscript.inc') as $file) {
         
 abstract class VoipServer {
 
-  protected $is_error = FALSE; // error flag
-
-  protected $error_message = NULL; // error message
-
-
   /*
-   * Error-related methods
+   * Constants
    */
 
-  function isError(){
-    return $this->is_error;
-  }
-
-  function getErrorMessage() {
-    return $this->error_message;
-  }
+  const NO_INPUT='no_input';
 
 
   /*
@@ -67,10 +50,15 @@ abstract class VoipServer {
 }
 
 
+// Handles errors and signals associated with the Voip Server processing
+// TODO: why can't we have something like: class VoipServerException extends VoipException (like in voipscript.inc)?
+class VoipServerException extends Exception {}
+
+
 /* VoipServer classes throws VoipHangupException whenever a call hangup is 
  * detected during the execution of script commands.   
  * The 'message' field of the exception contains the id of the call being hangup
  */
-class VoipHangupException extends Exception {}
+class VoipHangupException extends VoipServerException {}
 
 
