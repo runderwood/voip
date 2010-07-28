@@ -6,7 +6,7 @@
  * Enables communication between Drupal and VoIP servers.
  */
 
-foreach (array('voip_error.inc', 'voip_log_server.inc') as $file) {
+foreach (array('voip_error.inc', 'voipserver.inc', 'voip_log_server.inc') as $file) {
   require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'includes' . DIRECTORY_SEPARATOR . $file);
 }
 
