@@ -32,14 +32,14 @@ class VoipLogServer extends VoipServer {
    * API methods
    */
 
-  function dial($voipcall) {
-    $options = $voipcall;
+  function dial($voipcall, $server_config=NULL) {
+    $options = array('server_config' => $server_config, 'voipcall' => $voipcall);
     watchdog('voip', 'VoipLogServer dial() called with: @options', array('@options' => print_r($options, TRUE)), WATCHDOG_INFO);
     return TRUE;
   }
 
-  function ping() {
-    $options = array();
+  function ping($server_config=NULL) {
+    $options = array('server_config' => $server_config);
     watchdog('voip', 'VoipLogServer ping() called with: @options', array('@options' => print_r($options, TRUE)), WATCHDOG_INFO);
     return TRUE;
   }

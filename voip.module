@@ -13,60 +13,28 @@ foreach (array('voip_error.inc', 'voipserver.inc', 'voiplogserver.inc', 'voip_lo
 
 
 /**
- * Sends a request to the active voip server
- *
- * @param $request_id
- *   The id of the request to be executed
- *
- * @param $options
- *   An array of additional options as defined by each request
+ * Make a phone call
  */
-function voip_send_request($request_id, $options = array()) {
-  if(is_object($options)){
-    $options = (array)$options;
+function voip_dial($voipcall) {
+  if(is_object($voipcall)){
+    $voipcall = (array)$voipcall;
   }
 
-  $response[status] = TRUE;
   $voip_server = voip_default_server();
-
-  if (function_exists($voip_server['send'])) {
-    $response = $voip_server['send']($request_id, $options);
-  }
+  $response = $voip_server->dial($voipcall);
 
   if (voip_error()) {
-    $error_message = 'Failure executing request %request_id with options %options.';
-    $variables['%request_id'] = $request_id;
-    $variables['%options'] = print_r($options, TRUE);
+    $error_message = 'Failure executing voip_dial() with %options.';
+    $variables['%options'] = print_r($voipcall, TRUE);
     if (voip_error_message()) {
       $error_message .= ' The server said: '. voip_error_message();
     }
     watchdog('voip', $error_message, $variables, WATCHDOG_ERROR);
-
-    // TODO: remove the following code block after xmlrpc testing is over
-    if($options['xmlrpc_test']) {
-      $error_message = ' The server said: '. voip_error_message();
-      // report processing errors with http code 500 ('internal server error')
-      $response = services_error($error_message, 500);
-    }
-
   }
+
   return $response;
 }
 
-
-/*
-* Implementation of hook_disable()
-*/
-function voip_disable() {
-  cache_clear_all('services:methods', 'cache');
-}
-
-/*
-* Implementation of hook_enable()
-*/
-function voip_enable() {
-  cache_clear_all('services:methods', 'cache');
-}
 
 /*
 * Implementation of hook_service()
@@ -184,78 +152,19 @@ function voip_theme() {
  * Voip server menu title callback.
  */
 function voip_admin_server_title($server_id) {
-  $server = voip_servers('server', $server_id);
-  return sprintf('%s server', $server['name']);
+  $server = VoipServer::getServer($server_id);
+  return sprintf('%s server', $server->getName());
 }
 
 /**
  * Returns the current default voip server.
  */
 function voip_default_server() {
-  return voip_servers('server', variable_get('voip_default_server', 'log'));
+  $server_id = variable_get('voip_default_server', 'log');
+  $server = VoipServer::getServer($server_id);
+  return $server;
 }
 
-/**
- * Calls hook_voip_server_info to retrieve a list of all voip servers
- * defined in the system.
- *
- * Similar to the SMS framework (http://drupal.org/node/362261),
- * hook_voip_server_info() might be defined as follows:
- *
- * function mymodule_voip_server_info() {
- *   return array(
- *     'my_voip_server_id' => array(
- *       'name' => 'My Voip Server',
- *       'send' => 'mymodule_send',
- *       'configure form' => 'mymodule_admin_form',
- *     );
- *   );
- * }
- * 
- * Where
- *    * name - Human readable name for the voip server.
- *    * send - Callback function that the Voip Framework will call to send a comand to the server
- *    * configure form (optional) - Form function for server configuration options
- *
- *
- * @param $op
- *   The format in which to return the list. When set to 'server' or 'name',
- *   only the specified server is returned. When set to 'servers' or 'names',
- *   all servers are returned.
- *
- * @param $server
- *   A server identifier string that indicates the server to return. Leave
- *   at the default value (NULL) to return all servers.
- *
- * @return
- *   Either an array of all servers or a single server, in a variable format.
- */
-function voip_servers($op = 'servers', $server = NULL) {
-  $_servers = array();
-  $_names = array();
-
-  $server_array = module_invoke_all('voip_server_info');
-  foreach ($server_array as $identifier => $info) {
-    // retrieve server-specific configuration
-    $info['configuration'] = variable_get('voip_'. $identifier .'_settings', '');
-    $_servers[$identifier] = $info;
-    $_names[$identifier] = $info['name'];
-  }
-  asort($_names);
-
-  switch ($op) {
-    case 'servers':
-      return $_servers;
-    case 'server':
-      $rc = $_servers[$server];
-      $rc['identifier'] = $server;
-      return $rc;
-    case 'names':
-      return $_names;
-    case 'name':
-      return $_names[$server];
-  }
-}
 
 /**
  * Process requests received from VoIP servers.

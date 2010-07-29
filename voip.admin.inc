@@ -2,16 +2,18 @@
 // $Id$
 
 function voip_admin_default_form() {
-  $servers = voip_servers();
+  $server_array = VoipServer::getServers();
   
-  foreach ($servers as $identifier => $server) {
-    $options[$identifier] = '';
-    $form[$server['name']]['id'] = array('#value' => $identifier);
-    if (function_exists($server['configure form'])) {
-      $form[$server['name']]['configure'] = array('#value' => l(t('configure'), 'admin/voip/servers/'. $identifier));
+  foreach ($server_array as $server) {
+    $id = $server->getId();
+    $name = $server->getName();
+    $options[$id] = '';
+    $form[$name]['id'] = array('#value' => $id);
+    if (function_exists($server->getConfigForm())) {
+      $form[$name]['configure'] = array('#value' => l(t('configure'), 'admin/voip/servers/'. $id));
     }
     else {
-      $form[$server['name']]['configure'] = array('#value' => t('No configuration options'));
+      $form[$name]['configure'] = array('#value' => t('No configuration options'));
     }
   }
   $form['default'] = array('#type' => 'radios', '#options' => $options, '#default_value' => variable_get('voip_default_server', 'log'));
@@ -52,10 +54,12 @@ function theme_voip_admin_default_form($form) {
 }
 
 function voip_admin_server_form(&$form_state, $server_id) {
-  $server = voip_servers('server', $server_id);
-  if ($server && function_exists($server['configure form'])) {
-    drupal_set_title(t('@server configuration', array('@server' => $server['name'])));
-    $form = $server['configure form']($server['configuration']);
+  $server = VoipServer::getServer($server_id);
+  $config_form = $server->getConfigForm();
+  $config = $server->getConfig();
+  if ($server && function_exists($config_form)) {
+    drupal_set_title(t('@server configuration', array('@server' => $server->getName())));
+    $form = $config_form($config);
 
     $form['submit'] = array(
       '#type' => 'submit', 
@@ -75,7 +79,8 @@ function voip_admin_server_form(&$form_state, $server_id) {
  */
 function voip_admin_server_form_validate($form, &$form_state) {
   // Pass validation to voip server
-  $function = $form_state['values']['server']['configure form'] .'_validate';
+  $config_form = $form_state['values']['server']->getConfigForm();
+  $function = $config_form .'_validate';
   if (function_exists($function)) {
     $function($form, $form_state);
   }
@@ -88,7 +93,8 @@ function voip_admin_server_form_submit($form, &$form_state) {
   unset($form_state['values']['op'], $form_state['values']['submit'], $form_state['values']['server'], $form_state['values']['form_token'], $form_state['values']['form_id']);
 
   // store server configuration
-  variable_set('voip_'. $server['identifier'] .'_settings', $form_state['values']);
+  $server_id = $server->getId();
+  variable_set('voip_'. $id .'_settings', $form_state['values']);
   drupal_set_message(t('The server settings have been saved.'));
 
   $form_state['redirect'] = 'admin/voip/servers';

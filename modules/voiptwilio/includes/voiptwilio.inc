@@ -36,8 +36,9 @@ $vars = array();
 //dsm($msg);
 
   // validate $_REQUEST['AccountSid'] to avoid hack attempts
-  $server = voip_servers('server', 'twilio');
-  $account_sid = $server['configuration']['voiptwilio_account_sid'];
+  $server = VoipServer::getServer('twilio');
+  $server_config = $server->getConfig();
+  $account_sid = $server_config['voiptwilio_account_sid'];
   $incoming_sid = $_REQUEST['AccountSid'];
   if ($account_sid != $incoming_sid) {
      $msg = '_voip_twilio_call_handler called with invalid AccountSid: @sid';
@@ -499,108 +500,6 @@ function _voiptwilio_send_response($response) {
 
 dsm('sending: ' . $output);
   return TRUE;
-}
-
-
-/**
- * Test the connection with the Twilio server
- */
-function _voiptwilio_ping($server_config) {
-
-  // Twilio configuration
-  $api_version = '2008-08-01';
-  $account_sid = $server_config['voiptwilio_account_sid'];
-  $auth_token = $server_config['voiptwilio_auth_token'];
-    
-  // Instantiate a new Twilio Rest Client
-  $client = new TwilioRestClient($account_sid, $auth_token);
-    
-  // Request a call log as a way to test the server connectivity
-  voip_error_reset();
-  $path = "/$api_version/Accounts/$account_sid/Calls";
-  $vars = array();
-  $response = $client->request($path, "GET", $vars);
-
-  if($response->IsError){
-    voip_error("Twilio command Ping failed: " . $response->ErrorMessage);
-    return FALSE;
-  }
-  return TRUE;
-}
-
-
-/**
- * Establish a new call by dialing the number in the voipcall object and
- * executing the script associated with that object.
- */
-function _voiptwilio_dial_out($server_config, $voipcall) {
-//dsm('In twilio dial_out');
-//dsm($server_config, '$server_config');
-//dsm($voipcall, '$voipcall');
-
-  $rc = FALSE;
-  voip_error_reset();
-
-  if(is_object($voipcall)) {
-    $voipcall = (array)$voipcall;
-  }
-
-  // Twilio configuration
-  $api_version = '2008-08-01';
-  $account_sid = $server_config['voiptwilio_account_sid'];
-  $auth_token = $server_config['voiptwilio_auth_token'];
-    
-  // Update call variables
-  $voipcall['call_status'] = VOIPCALL_DIALING;
-  $voipcall['source'] = 'drupal';
-  $voipcall = (array)voipcall_save($voipcall);
-//dsm($voipcall,'right after save. everything is ok');
-
-  // Instantiate a new Twilio Rest Client
-  $client = new TwilioRestClient($account_sid, $auth_token);
-    
-  // Initiate a new outbound call by POST'ing to the Calls resource 
-  $twilio_path = "/$api_version/Accounts/$account_sid/Calls";
-  $caller_number = ($voipcall['field_voipcall_caller_number'][0]['value'])
-                     ? $voipcall['field_voipcall_caller_number'][0]['value']
-                     : variable_get('voipcall_cid_number', NULL);
-  $dest_number = $voipcall['field_voipcall_dest_number'][0]['value'];
-
-  $menu_path = 'voip/twilio/callhandler';
-  $call_id = $voipcall['field_voipcall_call_id'][0]['value'];
-  $response_url = $menu_path . '/' . $call_id;
-  $call_handler_url = url($response_url, array('absolute' => TRUE));
- 
-  $vars =    array(
-      "Caller" => $caller_number,
-      "Called" => $dest_number,
-      "Url" => $call_handler_url,
-      'Method' => 'POST',
-      'SendDigits' => '',  // TODO: shall we encode extra digits with dest_number?
-// TODO: ideally, IfMachine should be set via field 'check_machine' with options such as 'do not check', 'continue' and 'hangup'
-      'IfMachine' => 'Continue', // Note: adding any value in here -- even 'Continue' -- adds a 5 sec delay to the call. To prevent that, use NULL
-      'Timeout' => 60 // TODO: Set to 15 in order to avoid answering machines?
-    );
-
-  $response = $client->request($twilio_path, "POST", $vars);
-
-  // update call based on response
-  if($response->IsError){
-    $msg = "Twilio dial command failed: @error";
-    $params = array('@error' => $response->ErrorMessage);
-    voipcall_processing_error('voiptwilio', $voipcall, $msg, $params);
-    $rc = FALSE;
-  }
-  else {
-    // Note: call_status will be updated by call_handler
-    $voipcall['start_time'] = time();
-    $voipcall = voipcall_save($voipcall);
-    $rc = $call_id;
-  }
- 
-//dsm($voipcall, "Dial result");
-
-  return $rc;
 }
 
 

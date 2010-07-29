@@ -17,7 +17,7 @@ abstract class VoipServer {
   private $id;  // internal server id
   private $name; // human-readable name of the server
   private $config_form; // (optional) name of form function for server configuration options
-  private $configuration = NULL; // current configuration
+  private $config = NULL; // current configuration
 
   /*
    * Constructors
@@ -58,15 +58,15 @@ abstract class VoipServer {
     return $this->config_form;
   }
 
-  function getConfiguration() {
-    return $this->configuration;
+  function getConfig() {
+    return $this->config;
   }
 
   public static function getServers() {
     $server_array = module_invoke_all('voipserver_info');
     foreach ($server_array as $server) {
       // retrieve server-specific configuration
-      $server->configuration = variable_get('voip_'. $server->id .'_settings', '');
+      $server->config = variable_get('voip_'. $server->id .'_settings', '');
     }
     return $server_array;
   }
@@ -77,8 +77,8 @@ abstract class VoipServer {
    * API methods
    */
 
-  abstract function dial($voipcall);
+  abstract function dial($voipcall, $server_config=NULL);
 
-  abstract function ping();
+  abstract function ping($server_config=NULL);
 
 }

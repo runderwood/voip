@@ -9,7 +9,7 @@
 //-----------------------------------------------------------------------------
 // Include files
 //-----------------------------------------------------------------------------
-foreach (array('voiptwilio.inc') as $file) {
+foreach (array('voiptwilio.inc', 'voiptwilioserver.inc') as $file) {
   require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'includes' . DIRECTORY_SEPARATOR . $file);
 }
 
@@ -19,16 +19,11 @@ foreach (array('voiptwilio.inc') as $file) {
 //-----------------------------------------------------------------------------
 
 /**
- * Implementation of hook_voip_server_info().
+ * Implementation of hook_voip_serverinfo().
  */
-function voiptwilio_voip_server_info() {
-  return array(
-    'twilio' => array(
-      'name' => 'Twilio',
-      'configure form' => 'voiptwilio_admin_form',
-      'send' => 'voiptwilio_send',
-    ),
-  );
+function voiptwilio_voipserver_info() {
+  $server = new VoipTwilioServer();
+  return $server;
 }
 
 function voiptwilio_admin_form($configuration) {
@@ -56,48 +51,11 @@ function voiptwilio_admin_form_validate($form, &$form_state) {
 
   // Send a test request to validate the configuration of the Twilio server
   $values = $form_state['values'];
-  $result = _voiptwilio_ping($values);
+  $result = VoipTwilioServer::ping($values);
 
   if(voip_error()){
     form_set_error('', t('A Twilio-related error occurred: @error', array('@error' => voip_error_message())));
   }
-}
-
-/**
- * Callback for sending requests to Twilio
- */
-function voiptwilio_send($request_id, $options) {
-  $server = voip_servers('server', 'twilio');
-  $config = $server['configuration'];
-  $result =  voiptwilio_send_request($config, $request_id, $options);
-  return $result;
-}
-
-/**
- * Sends a request to Twilio
- */
-function voiptwilio_send_request($server_config, $request_id, $options) {
-//dsm("in send_request config is: " . print_r($server_config,true));
-
-
-  switch($request_id) {
-    default:
-      // Invalid request id
-      $response = FALSE;
-      $error_message = "Invalid request id received: %request_id.";
-      $variables = array('%request_id' => $request_id);
-      watchdog('voiptwilio', $error_message, $variables, WATCHDOG_ERROR);
-      voip_error("(voiptwilio) Invalid request id received: " . $request_id);
-      break;
-
-    case 'voip_dial_out': // dial the given call node
-      // call node
-      $call_node = (object)$options;
-      $response = _voiptwilio_dial_out($server_config, $call_node);
-      break;
-  }
-
-  return $response;
 }
 
 /*
