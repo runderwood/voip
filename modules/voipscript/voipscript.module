@@ -14,14 +14,12 @@ foreach (array('voipscript.features.inc') as $file) {
 /**
  * Implementation of hook_voipscript_load_script()
  */
-function voipscript_voipscript_load_script($script_name) {
+function voipscript_voipscript_load_script($script_name, $params=NULL) {
   $script = NULL;
   $param = array('type' => 'voipscript', 'title' => $script_name, 'status' => 1);
   $script_node = node_load($param);
   if($script_node) {
-dsm($script_node, '$script_node');
     $script_code = $script_node->field_voipscript_code[0]['value'];
-dsm($script_code, '$script_code');
     ob_start();
     if(eval("$script_code")===false) {
       ob_end_clean();
@@ -78,8 +76,8 @@ function _voipscript_load_sample_scripts($script_name) {
     $script->addReturn();
   }
 
-  if($script_name == 'voipscript_test') {
-    $script = _voipscript_get_test_script();
+  if($script_name == 'voipscript_dial_test') {
+    $script = _voipscript_get_dial_test_script();
   }
 
   if($script_name == 'voipscript_record') {
@@ -90,7 +88,7 @@ function _voipscript_load_sample_scripts($script_name) {
 }
 
 
-function _voipscript_get_test_script() {
+function _voipscript_get_dial_test_script() {
     $script = new VoipScript('voipscript_test');
 
     $script->addLabel('start');

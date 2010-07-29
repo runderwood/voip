@@ -27,10 +27,11 @@
  *   );  
  */
 function callblast_voipscript_load_script($script_name, $vars) {
-  $script = new VoipScript($script_name);
 
+  $script = NULL;
   switch ($script_name) {
     case 'callblast_message':
+      $script = new VoipScript($script_name);
       // start here
       $script->addLabel('start');
       // play main message      

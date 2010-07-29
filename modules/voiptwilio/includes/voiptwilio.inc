@@ -223,7 +223,7 @@ function _voiptwilio_script_handler($voipcall) {
 //dsm('entering voiptwilio_script_handler()');
 //dsm($voipcall);
 $msg = 'Entering script_handler with voipcall: ' . print_r($voipcall,true);
-//watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
+watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
 
   if(is_object($voipcall)){
     $voipcall = (array)$voipcall;
