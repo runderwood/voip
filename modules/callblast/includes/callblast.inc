@@ -317,9 +317,6 @@ function _callblast_send_now($form, $form_state) {
 function _callblast_call($voipcall_nid) {
     $voipcall_node = node_load($voipcall_nid);    
 
-    // $request_id, Type of call being requested.
-    $request_id = 'voip_dial_out';
-
     // place outgoing call
-    voip_send_request($request_id, $voipcall_node);
+    voip_dial($voipcall_node);
 }
