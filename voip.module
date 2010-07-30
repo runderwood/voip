@@ -6,7 +6,7 @@
  * Enables communication between Drupal and VoIP servers.
  */
 
-foreach (array('voip_error.inc', 'voipserver.inc', 'voiplogserver.inc', 'voip_log_server.inc') as $file) {
+foreach (array('voip_error.inc', 'voipserver.inc', 'voiplogserver.inc') as $file) {
   require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'includes' . DIRECTORY_SEPARATOR . $file);
 }
 
@@ -36,56 +36,6 @@ function voip_dial($voipcall) {
 }
 
 
-/*
-* Implementation of hook_service()
-*/
-function voip_service() {
-  $methods = array();
-
-  $methods[] = array(
-    '#method'   => 'voip.processRequest',
-    '#callback' => 'voip_process_request',
-    //'#key'     => FALSE,
-    //'#auth'     => FALSE,
-    '#args'     => array(
-      array(
-        '#name'         => 'request_id',
-        '#type'         => 'string',
-        '#description'  => t('Id of the request.'),
-      ),
-      array(
-        '#name'         => 'options',
-        '#type'         => 'array',
-        '#description'  => t('Options associated with the specified request.'),
-      ),
-    ),
-    '#return'   => 'array',
-    '#help'     => t('Processes incoming requests from VoIP servers.')
-  );
-
-  $methods[] = array(
-    '#method'   => 'voip.sendRequest',
-    '#callback' => 'voip_send_request',
-    //'#key'     => FALSE,
-    //'#auth'     => FALSE,
-    '#args'     => array(
-      array(
-        '#name'         => 'request_id',
-        '#type'         => 'string',
-        '#description'  => t('Id of the request.'),
-      ),
-      array(
-        '#name'         => 'options',
-        '#type'         => 'array',
-        '#description'  => t('Options associated with the specified request.'),
-      ),
-    ),
-    '#return'   => 'array',
-    '#help'     => t('Send request to current VoIP server.')
-  );
-
-  return $methods;
-}
 
 /**
  * Implementation of hook_menu().
@@ -165,35 +115,5 @@ function voip_default_server() {
   return $server;
 }
 
-
-/**
- * Process requests received from VoIP servers.
- */
-function voip_process_request($request_id, $options=array())
-{
-  $response = array();
-  voip_error_reset();
-  // process request
-  foreach (module_implements('voip_process_request') as $module) {
-    $function = $module .'_'. 'voip_process_request';
-    $result = call_user_func($function, $request_id, $options);
-    // stop at the first execution error
-    if(voip_error()) {
-      $error_message = voip_error_message(); // voip_error()->message;
-      // report processing errors with http code 500 ('internal server error')
-      $response = services_error($error_message, 500);
-      break;
-    }
-    if (isset($result)) {
-      $response = array_merge_recursive($response, $result);
-    }
-  }
-  if (!$response) {
-    $error_message = "(voip.module) Request $request_id not processed by any module.";
-    // report http code 501 ('not implemented')
-    $response = services_error($error_message, 501);
-  }
-  return $response;
-}
 
 
