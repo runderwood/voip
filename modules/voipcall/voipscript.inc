@@ -190,6 +190,11 @@ class VoipScript {
     $this->commands[] = new VoipCommand('VoipCmdSet', $params);
   }
 
+  function addUnset($var_name) {
+    $params['var_name'] = $var_name;
+    $this->commands[] = new VoipCommand('VoipCmdUnset');
+  }
+
 
   /*
    * Execution of basic script commands that are not dependent on the voip server
