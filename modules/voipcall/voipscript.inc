@@ -70,6 +70,10 @@ class VoipScript {
     $this->variables[$name] = $value;
   }
 
+  function unsetVar($name) {
+    unset($this->variables[$name]);
+  }
+
 
   // Methods used during script execution
 
