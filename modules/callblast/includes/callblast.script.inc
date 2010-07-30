@@ -64,25 +64,25 @@ function callblast_voipscript_load_script($script_name, $vars) {
       // #, end call
       $script->addGotoIf('end_call', "^%input_digits == '#'");
       // 0, go to call forwarding
-      $script->addGotoIf('forward', "(^%input_digits == '0') && @<forward_to_number>@");
+      $script->addGotoIf('forward', "^(%input_digits == '0') && @<forward_to_number>@");
       // go to one 
-      $script->addGotoIf('one', "(^%input_digits == '1') && @<one_url>@");
+      $script->addGotoIf('one', "^(%input_digits == '1') && @<one_url>@");
       // go to two 
-      $script->addGotoIf('two', "(^%input_digits == '2') && @<two_url>@");
+      $script->addGotoIf('two', "^(%input_digits == '2') && @<two_url>@");
       // go to three 
-      $script->addGotoIf('three', "(^%input_digits == '3') && @<three_url>@");
+      $script->addGotoIf('three', "^(%input_digits == '3') && @<three_url>@");
       // go to four
-      $script->addGotoIf('four', "(^%input_digits == '4') && @<four_url>@");
+      $script->addGotoIf('four', "^(%input_digits == '4') && @<four_url>@");
       // go to five
-      $script->addGotoIf('five', "(^%input_digits == '5') && @<five_url>@");
+      $script->addGotoIf('five', "^(%input_digits == '5') && @<five_url>@");
       // go to six
-      $script->addGotoIf('six', "(^%input_digits == '6') && @<six_url>@");
+      $script->addGotoIf('six', "^(%input_digits == '6') && @<six_url>@");
       // go to seven
-      $script->addGotoIf('seven', "(^%input_digits == '7') && @<seven_url>@");
+      $script->addGotoIf('seven', "^(%input_digits == '7') && @<seven_url>@");
       // go to eight
-      $script->addGotoIf('eight', "(^%input_digits == '8') && @<eight_url>@");
+      $script->addGotoIf('eight', "^(%input_digits == '8') && @<eight_url>@");
       // go to nine
-      $script->addGotoIf('nine', "(^%input_digits == '9') && @<nine_url>@");
+      $script->addGotoIf('nine', "^(%input_digits == '9') && @<nine_url>@");
       // If invalid option selected, go back to the options menu
       $script->addSay("Invalid option selected. Please try again.");
       $script->addGoto('options');
