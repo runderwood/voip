@@ -221,8 +221,6 @@ $vars = array();
  * @return boolean.  TRUE on success or FALSE on failure.  Check voip_error() for processing failure.
  */
 function _voiptwilio_script_handler($voipcall) {
-//dsm('entering voiptwilio_script_handler()');
-//dsm($voipcall);
 $msg = 'Entering script_handler with voipcall: ' . print_r($voipcall,true);
 watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
 
@@ -472,13 +470,12 @@ watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
   $voipcall['script'] = $script;
   $voipcall = voipcall_save($voipcall);
 
-$msg = 'Leaving script_handler with voipcall: ' . print_r($voipcall,true) . ", and response: $response";
-//watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
-
   // send response back to Twilio
   if($response) {
-$response .= '<!--' . "_REQUEST: " . print_r($_REQUEST,true) .  "\n" . '-->';
+
+//$response .= '<!--' . "_REQUEST: " . print_r($_REQUEST,true) .  "\n" . '-->';
 //$response .= '<!--' . "voipcall: " . print_r($voipcall,true) .  "\n" . '-->';
+
     _voiptwilio_send_response($response);
   }
 

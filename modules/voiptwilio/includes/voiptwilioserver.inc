@@ -42,7 +42,6 @@ class VoipTwilioServer extends VoipServer {
    */
 
   function dial($voipcall, $server_config=NULL) {
-//dsm('In twilio dial_out');
 
     $rc = FALSE;
     voip_error_reset();
@@ -54,8 +53,6 @@ class VoipTwilioServer extends VoipServer {
     if(!$server_config) {
       $server_config = $this->getConfig();
     }
-//dsm($server_config, '$server_config');
-//dsm($voipcall, '$voipcall');
 
     // Twilio configuration
     $api_version = '2008-08-01';
@@ -108,8 +105,6 @@ class VoipTwilioServer extends VoipServer {
       $voipcall = voipcall_save($voipcall);
       $rc = $call_id;
     }
-
-//dsm($voipcall, "Dial result");
 
     return $rc;
   }
