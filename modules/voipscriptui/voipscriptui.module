@@ -19,10 +19,12 @@ function voipscriptui_voipscript_load_script($script_name, $params=NULL) {
   $param = array('type' => 'voipscriptui', 'title' => $script_name, 'status' => 1);
   $script_node = node_load($param);
   if($script_node) {
+    $script = new VoipScript($script_name);
     $script_code = $script_node->field_voipscriptui_code[0]['value'];
     ob_start();
     if(eval("$script_code")===false) {
       ob_end_clean();
+      $script = NULL;
       watchdog('voipscriptui', 'PHP syntax error in script: @script', array('@script' => $script_code), WATCHDOG_ERROR);
       return;
     }

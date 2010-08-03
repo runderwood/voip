@@ -43,14 +43,14 @@ function _voipscriptui_content_default_fields() {
       'size' => 60,
       'default_value' => array(
         '0' => array(
-          'value' => '$script = new VoipScript(\'your script name here\');',
+          'value' => "\$script->addSay('your message here');\n\$script->addHangup();",
           '_error_element' => 'default_value_widget][field_voipscriptui_code][0][value',
         ),
       ),
       'default_value_php' => NULL,
       'label' => 'Script code',
       'weight' => '-4',
-      'description' => 'Write your script above.  It will be returned whenever a module requests your script name via <i>hook_voipscript_load_script($script_name)</i>.',
+      'description' => 'Write your script above. The variable <i>$script</i> is automatically provided.  The script will be returned whenever a module requests its name via <i>hook_voipscript_load_script($script_name)</i>.',
       'type' => 'text_textarea',
       'module' => 'text',
     ),
