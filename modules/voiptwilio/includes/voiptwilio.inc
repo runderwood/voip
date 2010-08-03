@@ -460,6 +460,11 @@ watchdog('voiptwilio', $msg, array(), WATCHDOG_INFO);
           $script->setVar($var_name, $var_value);
           break;
 
+        case 'VoipCmdUnset';
+          $var_name = $script->evalString($cmd->getParam('var_name'));
+          $script->unsetVar($var_name);
+          break;
+
       }
 
       // go to next command
