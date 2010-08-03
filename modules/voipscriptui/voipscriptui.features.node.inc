@@ -3,9 +3,9 @@
 /**
  * Helper to implementation of hook_node_info().
  */
-function _voipscript_node_info() {
+function _voipscriptui_node_info() {
   $items = array(
-    'voipscript' => array(
+    'voipscriptui' => array(
       'name' => t('Voip Script'),
       'module' => 'features',
       'description' => t('Dialplan script used in Voip Drupal calls.'),

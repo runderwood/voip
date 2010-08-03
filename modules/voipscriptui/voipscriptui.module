@@ -3,33 +3,33 @@
  * @file Handles scripts associated with the Voip Drupal platform
  */ 
 
-foreach (array('voipscript_weather.inc') as $file) {
+foreach (array('voipscriptui_weather.inc') as $file) {
   require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'includes' . DIRECTORY_SEPARATOR . $file);
 }
 
-foreach (array('voipscript.features.inc') as $file) {
+foreach (array('voipscriptui.features.inc') as $file) {
   require_once($file);
 }
 
 /**
  * Implementation of hook_voipscript_load_script()
  */
-function voipscript_voipscript_load_script($script_name, $params=NULL) {
+function voipscriptui_voipscript_load_script($script_name, $params=NULL) {
   $script = NULL;
-  $param = array('type' => 'voipscript', 'title' => $script_name, 'status' => 1);
+  $param = array('type' => 'voipscriptui', 'title' => $script_name, 'status' => 1);
   $script_node = node_load($param);
   if($script_node) {
-    $script_code = $script_node->field_voipscript_code[0]['value'];
+    $script_code = $script_node->field_voipscriptui_code[0]['value'];
     ob_start();
     if(eval("$script_code")===false) {
       ob_end_clean();
-      watchdog('voipscript', 'PHP syntax error in script: @script', array('@script' => $script_code), WATCHDOG_ERROR);
+      watchdog('voipscriptui', 'PHP syntax error in script: @script', array('@script' => $script_code), WATCHDOG_ERROR);
       return;
     }
     ob_end_clean();
   }
   else {
-    $script = _voipscript_load_sample_scripts($script_name);
+    $script = _voipscriptui_load_sample_scripts($script_name);
   }
   return $script;
 }
@@ -37,14 +37,14 @@ function voipscript_voipscript_load_script($script_name, $params=NULL) {
 /**
  * Implementation of hook_validate()
  */
-function voipscript_validate($node, &$form) {
+function voipscriptui_validate($node, &$form) {
 // TODO: why this function is not called?
-  $script_code = $node->field_voipscript_code[0]['value'];
+  $script_code = $node->field_voipscriptui_code[0]['value'];
 dsm($script_code, '$script_code');
   ob_start();
   if(eval("$script_code")===false) {
     ob_end_clean();
-    form_set_error('field_voipscript_code',
+    form_set_error('field_voipscriptui_code',
         t('PHP syntax error in script: @script',
           array('@script' => $script_code)));
   }
@@ -56,9 +56,9 @@ dsm($script_code, '$script_code');
 /*
  * Sample scripts that highlight Voip Drupal capabilities
  */
-function _voipscript_load_sample_scripts($script_name) {
+function _voipscriptui_load_sample_scripts($script_name) {
   if($script_name == 'voipscript_weather_report') {
-    $script = _voipscript_get_weather_report();
+    $script = _voipscriptui_get_weather_report();
   }
   
   if($script_name == 'voipscript_gosub_test_a') {
@@ -77,18 +77,18 @@ function _voipscript_load_sample_scripts($script_name) {
   }
 
   if($script_name == 'voipscript_dial_test') {
-    $script = _voipscript_get_dial_test_script();
+    $script = _voipscriptui_get_dial_test_script();
   }
 
   if($script_name == 'voipscript_record') {
-    $script = _voipscript_get_record_script();
+    $script = _voipscriptui_get_record_script();
   }
 
   return $script;
 }
 
 
-function _voipscript_get_dial_test_script() {
+function _voipscriptui_get_dial_test_script() {
     $script = new VoipScript('voipscript_test');
 
     $script->addLabel('start');
@@ -128,7 +128,7 @@ function _voipscript_get_dial_test_script() {
   }
 
 
-function _voipscript_get_record_script() {
+function _voipscriptui_get_record_script() {
   $script = new VoipScript('voipscript_record');
 
   $script->addLabel('start');
@@ -161,7 +161,7 @@ function _voipscript_get_record_script() {
   $script->addLabel('accept recording');
   $script->addSay('About to start processing the recorded file.');
   $script->addSet('callback_result',
-    '^_voipscript_record_callback(%call_id, %recording_url, %recording_duration)');
+    '^_voipscriptui_record_callback(%call_id, %recording_url, %recording_duration)');
   $script->addSay('The callback returned: %callback_result');
   $script->addGoto('end call');
 
@@ -180,8 +180,8 @@ function _voipscript_get_record_script() {
  * Callback function associated with the script voipscript_record.  It is called
  * whenever that script records a new entry from the user.
  */
-function _voipscript_record_callback($call_id, $recording_url, $recording_duration=NULL) {
-watchdog('voipscript', "in _voipscript_record_callback($call_id, $recording_url, $recording_duration)");
+function _voipscriptui_record_callback($call_id, $recording_url, $recording_duration=NULL) {
+watchdog('voipscriptui', "in _voipscriptui_record_callback($call_id, $recording_url, $recording_duration)");
 
   return 'Success';
 }
