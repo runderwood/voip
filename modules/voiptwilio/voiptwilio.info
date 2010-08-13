@@ -4,4 +4,4 @@ description = "Allows the Voip Drupal framework to work with the Twilio service.
 package = Voip Drupal
 dependencies[] = voip
 core = 6.x
-
+version = "6.x-1.0-alpha0"
