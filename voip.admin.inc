@@ -94,7 +94,7 @@ function voip_admin_server_form_submit($form, &$form_state) {
 
   // store server configuration
   $server_id = $server->getId();
-  variable_set('voip_'. $id .'_settings', $form_state['values']);
+  variable_set('voip_'. $server_id .'_settings', $form_state['values']);
   drupal_set_message(t('The server settings have been saved.'));
 
   $form_state['redirect'] = 'admin/voip/servers';

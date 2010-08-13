@@ -500,7 +500,6 @@ function _voiptwilio_send_response($response) {
 
   print $output;
 
-dsm('sending: ' . $output);
   return TRUE;
 }
 
